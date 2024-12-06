@@ -141,16 +141,9 @@ export function initializeEventHandlers(canvas) {
 
         if (selectedTable) {
             const pos = getCanvasPosition(e, canvas);
-            const command = createMoveTableCommand(
-                selectedTable,
-                selectedTable.x - selectedTable.width / 2,
-                selectedTable.y - selectedTable.height / 2,
-                pos.x - selectedTable.width / 2,
-                pos.y - selectedTable.height / 2
-            );
-            canvas.history.execute(command);
+            selectedTable.x = pos.x - selectedTable.width / 2;
+            selectedTable.y = pos.y - selectedTable.height / 2;
             saveToStorage(canvas.toJSON());
-            updateUndoRedoButtons();
         }
         isDragging = false;
         selectedTable = null;
