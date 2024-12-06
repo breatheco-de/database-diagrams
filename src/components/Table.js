@@ -82,7 +82,7 @@ export class Table {
             // Draw edit pencil icon
             ctx.font = '14px FontAwesome';
             ctx.fillStyle = 'var(--bs-primary)';
-            ctx.fillText('\uf040', this.x + this.width - 30, yPos); // fa-pencil unicode
+            ctx.fillText('\uf040', this.x + this.width - 25, yPos); // fa-pencil unicode
         });
         
         // Draw add attribute button
@@ -134,15 +134,16 @@ export class Table {
         const attributes = this.attributes;
         for (let i = 0; i < attributes.length; i++) {
             const yPos = this.y + 65 + (i * 30);
-            const iconX = this.x + this.width - 30;
+            // Adjust icon position to better align with the text
+            const iconX = this.x + this.width - 25;
             const iconY = yPos - 12;
             
-            // Increased click detection area and adjusted positioning
+            // Define a more precise click detection area
             const clickArea = {
-                left: iconX - 15,
-                right: iconX + 15,
-                top: iconY - 15,
-                bottom: iconY + 15
+                left: iconX - 10,
+                right: iconX + 10,
+                top: iconY - 8,
+                bottom: iconY + 8
             };
 
             if (x >= clickArea.left && x <= clickArea.right &&

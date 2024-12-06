@@ -120,13 +120,17 @@ export function initializeEventHandlers(canvas) {
                     input.value = `${attribute.name}: ${attribute.type}`;
                     input.style.position = 'absolute';
                     input.style.left = `${(table.x + 15) * canvas.scale + canvas.offset.x}px`;
-                    input.style.top = `${(table.y + 53 + attributeIndex * 30) * canvas.scale + canvas.offset.y}px`;
-                    input.style.width = '150px';
+                    input.style.top = `${(table.y + 50 + attributeIndex * 30) * canvas.scale + canvas.offset.y}px`;
+                    input.style.width = `${160 * canvas.scale}px`;
+                    input.style.height = '24px';
                     input.style.font = '14px Arial';
                     input.style.border = '2px solid var(--bs-primary)';
                     input.style.borderRadius = '4px';
-                    input.style.padding = '2px';
+                    input.style.padding = '2px 6px';
+                    input.style.backgroundColor = 'var(--bs-body-bg)';
+                    input.style.color = 'var(--bs-body-color)';
                     input.style.zIndex = '1000';
+                    input.style.outline = 'none';
                     
                     document.body.appendChild(input);
                     input.focus();
