@@ -58,10 +58,11 @@ export class AttributeForm {
         // Add hidden.bs.modal event listener
         const onHidden = () => {
             // Force reset of all drag states when modal closes
-            if (typeof isDragging !== 'undefined') isDragging = false;
-            if (typeof selectedTable !== 'undefined') selectedTable = null;
-            if (typeof isCreatingRelationship !== 'undefined') isCreatingRelationship = false;
-            if (typeof relationshipStart !== 'undefined') relationshipStart = null;
+            isDragging = false;
+            selectedTable = null;
+            isCreatingRelationship = false;
+            relationshipStart = null;
+            canvas.render();
             // Remove the event listener to prevent memory leaks
             this.modal.removeEventListener('hidden.bs.modal', onHidden);
         };

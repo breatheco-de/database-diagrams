@@ -263,11 +263,13 @@ export function initializeEventHandlers(canvas) {
     });
 
     canvas.canvas.addEventListener('mouseup', (e) => {
+        // Force reset of all drag states
+        isDragging = false;
+        selectedTable = null;
+        isCreatingRelationship = false;
+        relationshipStart = null;
+        
         if (isModalOpen()) {
-            isDragging = false;
-            selectedTable = null;
-            isCreatingRelationship = false;
-            relationshipStart = null;
             canvas.render();
             return;
         }
