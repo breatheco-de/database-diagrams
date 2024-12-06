@@ -24,7 +24,7 @@ export class Table {
 
     draw(ctx) {
         // Draw table background
-        ctx.fillStyle = 'var(--bs-secondary)';
+        ctx.fillStyle = 'white';
         ctx.strokeStyle = 'var(--bs-border-color)';
         ctx.lineWidth = 1;
         
@@ -35,7 +35,7 @@ export class Table {
         ctx.stroke();
         
         // Draw table name
-        ctx.fillStyle = 'white';
+        ctx.fillStyle = 'black';
         ctx.font = 'bold 16px Arial';
         ctx.textAlign = 'center';
         ctx.fillText(this.name, this.x + this.width / 2, this.y + 25);
@@ -47,22 +47,18 @@ export class Table {
         ctx.stroke();
         
         // Draw attributes
-        ctx.fillStyle = 'white';
+        ctx.fillStyle = 'black';
         ctx.font = '14px Arial';
         ctx.textAlign = 'left';
         this.attributes.forEach((attr, index) => {
             const yPos = this.y + 65 + (index * 30);
             // Draw attribute icon (key for primary)
             const icon = attr.isPrimary ? '🔑 ' : '';
-            // Add text shadow for better contrast
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-            ctx.shadowBlur = 2;
             ctx.fillText(
                 `${icon}${attr.name}: ${attr.type}`,
                 this.x + 15,
                 yPos
             );
-            ctx.shadowBlur = 0;
         });
         
         // Draw add attribute button
