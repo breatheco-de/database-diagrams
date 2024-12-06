@@ -119,11 +119,13 @@ export function initializeEventHandlers(canvas) {
                 // Check if clicking edit icon
                 const attributeIndex = table.isEditIconClicked(pos.x, pos.y);
                 if (attributeIndex !== -1) {
-                    // Stop any ongoing drag operation
-                    isDragging = false;
-                    selectedTable = null;
-                    isCreatingRelationship = false;
-                    relationshipStart = null;
+                    // Simulate mouseup to properly end any drag operation
+                    const simulatedMouseUp = new MouseEvent('mouseup', {
+                        bubbles: true,
+                        cancelable: true,
+                        view: window
+                    });
+                    canvas.canvas.dispatchEvent(simulatedMouseUp);
                     
                     // Get the attribute and show modal
                     const attribute = table.attributes[attributeIndex];
