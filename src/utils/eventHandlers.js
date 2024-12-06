@@ -4,17 +4,17 @@ import { RelationshipTypeModal } from '../components/RelationshipTypeModal';
 import { createMoveTableCommand, createAddAttributeCommand, createDeleteTableCommand } from './history';
 import { ZOOM_LEVELS } from './constants';
 
-// Module-level state for relationship creation
+// Module-level state
 let relationshipStart = null;
 let isCreatingRelationship = false;
+let isDragging = false;
+let selectedTable = null;
 
 function isModalOpen() {
     return document.querySelector('.modal.show') !== null;
 }
 
 export function initializeEventHandlers(canvas) {
-    let isDragging = false;
-    let selectedTable = null;
     let activeConnectionPoint = null;
     
     const attributeForm = new AttributeForm();
