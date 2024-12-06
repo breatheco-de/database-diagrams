@@ -136,9 +136,17 @@ export class Table {
             const yPos = this.y + 65 + (i * 30);
             const iconX = this.x + this.width - 30;
             const iconY = yPos - 12;
+            
+            // Increased click detection area and adjusted positioning
+            const clickArea = {
+                left: iconX - 15,
+                right: iconX + 15,
+                top: iconY - 15,
+                bottom: iconY + 15
+            };
 
-            if (x >= iconX - 10 && x <= iconX + 10 &&
-                y >= iconY - 10 && y <= iconY + 10) {
+            if (x >= clickArea.left && x <= clickArea.right &&
+                y >= clickArea.top && y <= clickArea.bottom) {
                 return i;
             }
         }
