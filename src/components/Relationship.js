@@ -6,29 +6,38 @@ export class Relationship {
     }
 
     draw(ctx) {
+        ctx.save();  // Save the current context state
+        
         const source = this.getNearestPoints(
             this.sourceTable.getConnectionPoints(),
             this.targetTable.getConnectionPoints()
         );
         
+        // Ensure we're drawing with proper styles
+        ctx.strokeStyle = '#0d6efd';  // Bootstrap primary color
+        ctx.lineWidth = 2;
+        
+        // Draw the main line
         ctx.beginPath();
         ctx.moveTo(source.start.x, source.start.y);
         ctx.lineTo(source.end.x, source.end.y);
-        ctx.strokeStyle = '#0d6efd'; // Bootstrap primary color
-        ctx.lineWidth = 2;
         ctx.stroke();
         
+        // Draw the relationship endings
         this.drawCrowFoot(ctx, source);
+        
+        ctx.restore();  // Restore the context state
     }
 
     drawCrowFoot(ctx, points) {
-        ctx.strokeStyle = '#0d6efd';
-        ctx.lineWidth = 2;
-        
         const angle = Math.atan2(
             points.end.y - points.start.y,
             points.end.x - points.start.x
         );
+        
+        // Ensure we're using the same styles
+        ctx.strokeStyle = '#0d6efd';
+        ctx.lineWidth = 2;
         
         ctx.beginPath();
         
