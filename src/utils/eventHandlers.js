@@ -8,6 +8,10 @@ import { ZOOM_LEVELS } from './constants';
 let relationshipStart = null;
 let isCreatingRelationship = false;
 
+function isModalOpen() {
+    return document.querySelector('.modal.show') !== null;
+}
+
 export function initializeEventHandlers(canvas) {
     let isDragging = false;
     let selectedTable = null;
@@ -59,6 +63,7 @@ export function initializeEventHandlers(canvas) {
     });
 
     canvas.canvas.addEventListener('mousedown', (e) => {
+        if (isModalOpen()) return;
         const pos = getCanvasPosition(e, canvas);
         
         // Check if clicking on a table
@@ -165,6 +170,7 @@ export function initializeEventHandlers(canvas) {
     });
 
     canvas.canvas.addEventListener('mousemove', (e) => {
+        if (isModalOpen()) return;
         const pos = getCanvasPosition(e, canvas);
         
         // Reset all table hover states
@@ -238,6 +244,11 @@ export function initializeEventHandlers(canvas) {
     });
 
     canvas.canvas.addEventListener('mouseup', (e) => {
+        if (isModalOpen()) {
+            isDragging = false;
+            selectedTable = null;
+            return;
+        }
         if (isCreatingRelationship && relationshipStart) {
             const pos = getCanvasPosition(e, canvas);
             canvas.tables.forEach(table => {
