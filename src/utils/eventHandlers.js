@@ -15,6 +15,7 @@ export function initializeEventHandlers(canvas) {
     const resetViewBtn = document.getElementById('resetView');
     const undoBtn = document.getElementById('undo');
     const redoBtn = document.getElementById('redo');
+    const exportBtn = document.getElementById('exportImage');
 
     function updateUndoRedoButtons() {
         undoBtn.disabled = !canvas.history.canUndo();
@@ -46,6 +47,10 @@ export function initializeEventHandlers(canvas) {
         canvas.offset = { x: 0, y: 0 };
         canvas.scale = 1;
         canvas.render();
+    });
+
+    exportBtn.addEventListener('click', () => {
+        canvas.exportAsImage();
     });
 
     canvas.canvas.addEventListener('mousedown', (e) => {

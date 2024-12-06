@@ -113,4 +113,53 @@ export class Canvas {
         
         this.render();
     }
+
+    exportAsImage(filename = 'erd-diagram.png') {
+        // Create a temporary canvas with the current diagram
+        const tempCanvas = document.createElement('canvas');
+        const tempCtx = tempCanvas.getContext('2d');
+        
+        // Calculate the bounds of all tables
+        let minX = Infinity;
+        let minY = Infinity;
+        let maxX = -Infinity;
+        let maxY = -Infinity;
+        
+        this.tables.forEach(table => {
+            minX = Math.min(minX, table.x);
+            minY = Math.min(minY, table.y);
+            maxX = Math.max(maxX, table.x + table.width);
+            maxY = Math.max(maxY, table.y + table.height);
+        });
+        
+        // Add padding
+        const padding = 50;
+        minX -= padding;
+        minY -= padding;
+        maxX += padding;
+        maxY += padding;
+        
+        // Set canvas size to fit the diagram
+        tempCanvas.width = maxX - minX;
+        tempCanvas.height = maxY - minY;
+        
+        // Fill background
+        tempCtx.fillStyle = 'white';
+        tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+        
+        // Translate context to move diagram into view
+        tempCtx.translate(-minX, -minY);
+        
+        // Draw relationships
+        this.relationships.forEach(rel => rel.draw(tempCtx));
+        
+        // Draw tables
+        this.tables.forEach(table => table.draw(tempCtx));
+        
+        // Create download link
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = tempCanvas.toDataURL('image/png');
+        link.click();
+    }
 }
