@@ -24,6 +24,7 @@ export function initializeEventHandlers(canvas) {
     undoBtn.addEventListener('click', () => {
         if (canvas.history.undo()) {
             saveToStorage(canvas.toJSON());
+            canvas.render();
             updateUndoRedoButtons();
         }
     });
@@ -31,6 +32,7 @@ export function initializeEventHandlers(canvas) {
     redoBtn.addEventListener('click', () => {
         if (canvas.history.redo()) {
             saveToStorage(canvas.toJSON());
+            canvas.render();
             updateUndoRedoButtons();
         }
     });
