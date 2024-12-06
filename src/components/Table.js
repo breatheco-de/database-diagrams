@@ -67,12 +67,19 @@ export class Table {
         
         // Draw attributes
         ctx.fillStyle = 'black';
-        ctx.font = '14px Arial';
+        ctx.font = '14px Arial';  // Use this same font for all property text
         ctx.textAlign = 'left';
+        
         this.attributes.forEach((attr, index) => {
             const yPos = this.y + 65 + (index * 30);
             // Draw attribute icon (key for primary, link for foreign key)
             const icon = attr.isPrimary ? '🔑 ' : (attr.isForeignKey ? '🔗 ' : '');
+            
+            // Save current font settings
+            const currentFont = ctx.font;
+            
+            // Draw the attribute text
+            ctx.font = '14px Arial';  // Consistent font for attribute text
             ctx.fillText(
                 `${icon}${attr.name}: ${attr.type}`,
                 this.x + 15,
@@ -80,9 +87,13 @@ export class Table {
             );
             
             // Draw edit pencil icon
-            ctx.font = '14px FontAwesome';
+            ctx.font = '14px FontAwesome';  // Only change font for the icon
             ctx.fillStyle = 'var(--bs-primary)';
             ctx.fillText('\uf040', this.x + this.width - 25, yPos); // fa-pencil unicode
+            
+            // Restore font settings
+            ctx.font = currentFont;
+            ctx.fillStyle = 'black';
         });
         
         // Draw add attribute button
@@ -160,9 +171,9 @@ export class Table {
             const iconX = this.x + this.width - 25;
             const iconY = yPos;
             
-            // Expand click detection area slightly
-            if (x >= iconX - 12 && x <= iconX + 12 &&
-                y >= iconY - 12 && y <= iconY + 12) {
+            // Expand click detection area for better usability
+            if (x >= iconX - 15 && x <= iconX + 15 &&
+                y >= iconY - 15 && y <= iconY + 5) {
                 return i;
             }
         }
