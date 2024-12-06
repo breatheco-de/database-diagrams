@@ -56,7 +56,7 @@ export class Table {
                 width: 16,
                 height: 16
             };
-            ctx.fillText('', deleteBtn.x, deleteBtn.y); // fa-trash unicode
+            ctx.fillText('\uf1f8', deleteBtn.x, deleteBtn.y); // fa-trash unicode
         }
         
         // Draw separator line
