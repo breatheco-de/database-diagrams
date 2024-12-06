@@ -67,22 +67,24 @@ export class Relationship {
         const length = 15;
         const spread = Math.PI / 6; // 30 degrees spread
         
-        // Draw the main line
-        ctx.moveTo(point.x - length * Math.cos(angle), point.y - length * Math.sin(angle));
-        ctx.lineTo(point.x, point.y);
-        
         // Draw the three lines of the crow's foot
-        // Center line
-        ctx.moveTo(point.x - length * Math.cos(angle), point.y - length * Math.sin(angle));
-        ctx.lineTo(point.x, point.y);
+        // Base line at center
+        ctx.moveTo(point.x, point.y);
+        ctx.lineTo(point.x - length * Math.cos(angle), point.y - length * Math.sin(angle));
         
         // Upper line
-        ctx.moveTo(point.x - length * Math.cos(angle - spread), point.y - length * Math.sin(angle - spread));
-        ctx.lineTo(point.x, point.y);
+        ctx.moveTo(point.x, point.y);
+        ctx.lineTo(
+            point.x - length * Math.cos(angle - spread),
+            point.y - length * Math.sin(angle - spread)
+        );
         
         // Lower line
-        ctx.moveTo(point.x - length * Math.cos(angle + spread), point.y - length * Math.sin(angle + spread));
-        ctx.lineTo(point.x, point.y);
+        ctx.moveTo(point.x, point.y);
+        ctx.lineTo(
+            point.x - length * Math.cos(angle + spread),
+            point.y - length * Math.sin(angle + spread)
+        );
     }
 
     drawManyToMany(ctx, point, angle) {
