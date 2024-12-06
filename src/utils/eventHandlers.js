@@ -14,11 +14,7 @@ export function initializeEventHandlers(canvas) {
     const resetViewBtn = document.getElementById('resetView');
 
     addTableBtn.addEventListener('click', () => {
-        const table = canvas.addTable(
-            'New Table',
-            canvas.canvas.width / 2 - canvas.offset.x,
-            canvas.canvas.height / 2 - canvas.offset.y
-        );
+        canvas.addTable();
         saveToStorage(canvas.toJSON());
     });
 
@@ -68,7 +64,7 @@ export function initializeEventHandlers(canvas) {
     canvas.canvas.addEventListener('mousemove', (e) => {
         const pos = getCanvasPosition(e, canvas);
 
-        if (isCreatingRelationship) {
+        if (isCreatingRelationship && relationshipStart) {
             canvas.render();
             // Draw temporary relationship line
             const ctx = canvas.ctx;
@@ -85,21 +81,6 @@ export function initializeEventHandlers(canvas) {
         }
 
         if (!isDragging) return;
-function findNearestConnectionPoint(table, pos) {
-    const points = table.getConnectionPoints();
-    let nearest = null;
-    let minDistance = 10; // Connection point detection radius
-    
-    points.forEach(point => {
-        const distance = Math.hypot(pos.x - point.x, pos.y - point.y);
-        if (distance < minDistance) {
-            minDistance = distance;
-            nearest = point;
-        }
-    });
-    
-    return nearest;
-}
 
         if (selectedTable) {
             selectedTable.x = pos.x - selectedTable.width / 2;
@@ -115,7 +96,7 @@ function findNearestConnectionPoint(table, pos) {
     });
 
     canvas.canvas.addEventListener('mouseup', (e) => {
-        if (isCreatingRelationship) {
+        if (isCreatingRelationship && relationshipStart) {
             const pos = getCanvasPosition(e, canvas);
             canvas.tables.forEach(table => {
                 if (table !== relationshipStart.table && table.containsPoint(pos.x, pos.y)) {
@@ -146,6 +127,22 @@ function findNearestConnectionPoint(table, pos) {
         canvas.scale = Math.max(0.5, Math.min(canvas.scale, 2));
         canvas.render();
     });
+}
+
+function findNearestConnectionPoint(table, pos) {
+    const points = table.getConnectionPoints();
+    let nearest = null;
+    let minDistance = 10; // Connection point detection radius
+    
+    points.forEach(point => {
+        const distance = Math.hypot(pos.x - point.x, pos.y - point.y);
+        if (distance < minDistance) {
+            minDistance = distance;
+            nearest = point;
+        }
+    });
+    
+    return nearest;
 }
 
 function getCanvasPosition(event, canvas) {
