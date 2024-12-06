@@ -55,13 +55,6 @@ export class AttributeForm {
         const form = this.modal.querySelector('#attributeForm');
         const modalTitle = this.modal.querySelector('.modal-title');
 
-        // Add hidden.bs.modal event listener
-        const onHidden = () => {
-            // Remove the event listener to prevent memory leaks
-            this.modal.removeEventListener('hidden.bs.modal', onHidden);
-        };
-        this.modal.addEventListener('hidden.bs.modal', onHidden);
-
         // Update modal title and button text based on mode
         modalTitle.textContent = existingAttribute ? 'Edit Attribute' : 'Add Attribute';
         saveBtn.textContent = existingAttribute ? 'Save Changes' : 'Add';
