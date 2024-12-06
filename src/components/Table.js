@@ -83,9 +83,10 @@ export class Table {
             const trashY = this.y + this.height - trashIconSize - 10;
             
             ctx.font = '16px "Font Awesome 6 Free"';
-            ctx.fontWeight = '900';  // Required for solid icons
             ctx.fillStyle = 'var(--bs-danger)';
-            ctx.fillText('', trashX, trashY);  // Unicode for trash icon
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('', trashX + trashIconSize/2, trashY + trashIconSize/2);
             this.drawConnectionPoints(ctx);
         }
     }
