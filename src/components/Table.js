@@ -79,6 +79,13 @@ export class Table {
         ctx.textAlign = 'center';
         ctx.fillText('+', this.x + this.width / 2, buttonY + 5);
 
+        // Draw trash can icon
+        const trashX = this.x + this.width - 30;
+        const trashY = this.y + this.height - 25;
+        ctx.fillStyle = '#dc3545'; // Bootstrap danger color
+        ctx.font = '16px "Font Awesome 5 Free"';
+        ctx.fillText('', trashX, trashY); // Trash icon Unicode
+
         // Draw connection points only when hovered
         if (this.isHovered) {
             this.getConnectionPoints().forEach(point => {
@@ -118,6 +125,12 @@ export class Table {
         const buttonX = this.x + this.width / 2;
         const radius = 10;
         return Math.hypot(x - buttonX, y - buttonY) <= radius;
+    }
+
+    isDeleteButtonClicked(x, y) {
+        const buttonX = this.x + this.width - 30;
+        const buttonY = this.y + this.height - 25;
+        return Math.abs(x - buttonX) < 15 && Math.abs(y - buttonY) < 15;
     }
 
     addAttribute(name, type = 'string', isPrimary = false) {

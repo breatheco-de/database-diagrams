@@ -1,304 +1,230 @@
-import { saveToStorage } from './storage';
 import { AttributeForm } from '../components/AttributeForm';
 import { RelationshipTypeModal } from '../components/RelationshipTypeModal';
-import { createMoveTableCommand, createAddAttributeCommand } from './history';
-import { ZOOM_LEVELS } from './constants';
+import { RELATIONSHIP_TYPES, ZOOM_LEVELS } from './constants';
+import { saveToStorage } from './storage';
+import { createDeleteTableCommand } from './history';
 
-// Module-level state for relationship creation
-let relationshipStart = null;
-let isCreatingRelationship = false;
+let startTable = null;
+let startPoint = null;
+const attributeForm = new AttributeForm();
+const relationshipTypeModal = new RelationshipTypeModal();
 
-export function initializeEventHandlers(canvas) {
-    let isDragging = false;
-    let selectedTable = null;
-    let activeConnectionPoint = null;
-    
-    const attributeForm = new AttributeForm();
-    const relationshipTypeModal = new RelationshipTypeModal();
+function updateZoomDisplay() {
+    const zoomText = document.getElementById('zoomLevel');
+    if (zoomText) {
+        zoomText.textContent = `${Math.round(canvas.scale * 100)}%`;
+    }
+}
 
-    const addTableBtn = document.getElementById('addTable');
-    const resetViewBtn = document.getElementById('resetView');
+function updateUndoRedoButtons() {
     const undoBtn = document.getElementById('undo');
     const redoBtn = document.getElementById('redo');
-    const exportBtn = document.getElementById('exportImage');
-
-    function updateUndoRedoButtons() {
+    
+    if (undoBtn) {
         undoBtn.disabled = !canvas.history.canUndo();
+    }
+    if (redoBtn) {
         redoBtn.disabled = !canvas.history.canRedo();
     }
+}
 
-    undoBtn.addEventListener('click', () => {
-        if (canvas.history.undo()) {
-            saveToStorage(canvas.toJSON());
-            canvas.render();
-            updateUndoRedoButtons();
-        }
-    });
-
-    redoBtn.addEventListener('click', () => {
-        if (canvas.history.redo()) {
-            saveToStorage(canvas.toJSON());
-            canvas.render();
-            updateUndoRedoButtons();
-        }
-    });
-
-    addTableBtn.addEventListener('click', () => {
-        canvas.addTable();
-        saveToStorage(canvas.toJSON());
-    });
-
-    resetViewBtn.addEventListener('click', () => {
-        canvas.offset = { x: 0, y: 0 };
-        canvas.scale = 1;
+export function initializeEventHandlers(canvas) {
+    // Mouse move handler
+    canvas.canvas.addEventListener('mousemove', (e) => {
+        const pos = getCanvasPosition(e, canvas);
+        let hoveredTable = null;
+        
+        canvas.tables.forEach(table => {
+            if (table.containsPoint(pos.x, pos.y)) {
+                hoveredTable = table;
+            }
+            table.isHovered = table === hoveredTable;
+        });
+        
         canvas.render();
     });
 
-    exportBtn.addEventListener('click', () => {
-        canvas.exportAsImage();
-    });
-
+    // Mouse down handler
     canvas.canvas.addEventListener('mousedown', (e) => {
         const pos = getCanvasPosition(e, canvas);
+        let handled = false;
         
-        // Check if clicking on a table
         canvas.tables.forEach(table => {
-            if (table.containsPoint(pos.x, pos.y)) {
-                // Check if clicking add attribute button
-                if (table.isAddButtonClicked(pos.x, pos.y)) {
-                    attributeForm.show((attribute) => {
-                        const command = createAddAttributeCommand(table, {
-                            name: attribute.name,
-                            type: attribute.type,
-                            isPrimary: attribute.isPrimary
-                        });
+            if (!handled && table.containsPoint(pos.x, pos.y)) {
+                // Check if clicking delete button
+                if (table.isDeleteButtonClicked(pos.x, pos.y)) {
+                    const deleteModal = createDeleteModal();
+                    document.body.appendChild(deleteModal);
+                    const bsModal = new bootstrap.Modal(deleteModal);
+                    
+                    deleteModal.querySelector('#confirmDelete').onclick = () => {
+                        const command = createDeleteTableCommand(canvas, table);
                         canvas.history.execute(command);
-                        canvas.render();
                         saveToStorage(canvas.toJSON());
                         updateUndoRedoButtons();
-                    });
+                        bsModal.hide();
+                        deleteModal.addEventListener('hidden.bs.modal', () => {
+                            if (deleteModal.parentNode) {
+                                document.body.removeChild(deleteModal);
+                            }
+                        });
+                    };
+                    
+                    bsModal.show();
+                    handled = true;
                     return;
                 }
 
-                // Check if clicking on connection points
+                // Check if clicking add attribute button
+                if (table.isAddButtonClicked(pos.x, pos.y)) {
+                    attributeForm.show(({ name, type, isPrimary }) => {
+                        table.addAttribute(name, type, isPrimary);
+                        saveToStorage(canvas.toJSON());
+                        canvas.render();
+                    });
+                    handled = true;
+                    return;
+                }
+
+                // Check if clicking connection point
                 const connectionPoint = findNearestConnectionPoint(table, pos);
                 if (connectionPoint) {
-                    isCreatingRelationship = true;
-                    relationshipStart = { table, point: connectionPoint };
+                    startTable = table;
+                    startPoint = connectionPoint;
+                    handled = true;
                     return;
                 }
 
-                selectedTable = table;
-                isDragging = true;
-                return;
+                // Start dragging table
+                canvas.isDragging = true;
+                canvas.draggedTable = table;
+                canvas.dragStart = { x: pos.x - table.x, y: pos.y - table.y };
+                handled = true;
             }
         });
 
-        // If not clicking on a table, start canvas drag
-        if (!selectedTable && !isCreatingRelationship) {
-            isDragging = true;
+        // Start panning if not handling any table interactions
+        if (!handled) {
+            canvas.isDragging = true;
             canvas.dragStart = { x: e.clientX - canvas.offset.x, y: e.clientY - canvas.offset.y };
         }
     });
 
-    canvas.canvas.addEventListener('mousemove', (e) => {
-        const pos = getCanvasPosition(e, canvas);
-        
-        // Reset all table hover states
-        canvas.tables.forEach(table => table.isHovered = false);
-        
-        // Set hover state for table under cursor
-        canvas.tables.forEach(table => {
-            if (table.containsPoint(pos.x, pos.y)) {
-                table.isHovered = true;
-            }
-        });
-
-        if (isCreatingRelationship && relationshipStart) {
-            canvas.render();
-            // Draw temporary relationship line
-            const ctx = canvas.ctx;
-            ctx.save();
-            ctx.translate(canvas.offset.x, canvas.offset.y);
-            ctx.scale(canvas.scale, canvas.scale);
-            ctx.beginPath();
-            ctx.moveTo(relationshipStart.point.x, relationshipStart.point.y);
-            ctx.lineTo(pos.x, pos.y);
-            ctx.strokeStyle = 'var(--bs-primary)';
-            ctx.stroke();
-            ctx.restore();
-            return;
-        }
-
-        if (!isDragging) {
-            canvas.render();
-            return;
-        }
-
-        if (selectedTable) {
-            selectedTable.x = pos.x - selectedTable.width / 2;
-            selectedTable.y = pos.y - selectedTable.height / 2;
-        } else {
-            canvas.offset = {
-                x: e.clientX - canvas.dragStart.x,
-                y: e.clientY - canvas.dragStart.y
-            };
-        }
-        
-        canvas.render();
-    });
-
+    // Mouse up handler
     canvas.canvas.addEventListener('mouseup', (e) => {
-        if (isCreatingRelationship && relationshipStart) {
+        if (startTable) {
             const pos = getCanvasPosition(e, canvas);
+            let endTable = null;
+            let endPoint = null;
+            
             canvas.tables.forEach(table => {
-                if (table !== relationshipStart.table && table.containsPoint(pos.x, pos.y)) {
-                    const connectionPoint = findNearestConnectionPoint(table, pos);
-                    if (connectionPoint) {
-                        const sourceTable = relationshipStart.table;
-                        const targetTable = table;
-                        
-                        relationshipTypeModal.show((type) => {
-                            if (type === 'manyToMany') {
-                                // Create and show an alert or modal with the message
-                                const infoModal = document.createElement('div');
-                                infoModal.className = 'modal fade';
-                                infoModal.innerHTML = `
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title">Many-to-Many Relationship</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <p>Many-to-many connections don't exist directly in relational databases. They need to be represented using a pivot/junction table.</p>
-                                                <p>To properly model this relationship:</p>
-                                                <ol>
-                                                    <li>Create a new table to serve as the pivot table</li>
-                                                    <li>Create one-to-many relationships from each original table to the pivot table</li>
-                                                </ol>
-                                                <a href="https://en.wikipedia.org/wiki/Many-to-many_(data_model)" target="_blank">Learn more about many-to-many relationships</a>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Got it!</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                `;
-                                document.body.appendChild(infoModal);
-                                const bsModal = new bootstrap.Modal(infoModal);
-                                bsModal.show();
-                                infoModal.addEventListener('hidden.bs.modal', () => {
-                                    document.body.removeChild(infoModal);
-                                });
-                            } else if (sourceTable && targetTable) {
-                                canvas.addRelationship(sourceTable, targetTable, type);
-                                saveToStorage(canvas.toJSON());
-                                updateUndoRedoButtons();
-                            }
-                        });
-                    }
+                if (table !== startTable && table.containsPoint(pos.x, pos.y)) {
+                    endTable = table;
+                    endPoint = findNearestConnectionPoint(table, pos);
                 }
             });
-            canvas.render();
+            
+            if (endTable && endPoint) {
+                relationshipTypeModal.show(type => {
+                    canvas.addRelationship(startTable, endTable, type);
+                    saveToStorage(canvas.toJSON());
+                    updateUndoRedoButtons();
+                });
+            }
         }
-        isCreatingRelationship = false;
-        relationshipStart = null;
-
-        if (selectedTable) {
-            const pos = getCanvasPosition(e, canvas);
-            selectedTable.x = pos.x - selectedTable.width / 2;
-            selectedTable.y = pos.y - selectedTable.height / 2;
-            saveToStorage(canvas.toJSON());
-        }
-        isDragging = false;
-        selectedTable = null;
-        canvas.render();
+        
+        startTable = null;
+        startPoint = null;
+        canvas.isDragging = false;
+        canvas.draggedTable = null;
     });
 
-    // Zoom handling
-    function updateZoomDisplay() {
-        const zoomLevel = document.getElementById('zoomLevel');
-        zoomLevel.textContent = `${Math.round(canvas.scale * 100)}%`;
-    }
+    // Mouse move handler
+    canvas.canvas.addEventListener('mousemove', (e) => {
+        if (canvas.isDragging) {
+            if (canvas.draggedTable) {
+                const pos = getCanvasPosition(e, canvas);
+                canvas.draggedTable.x = Math.round((pos.x - canvas.dragStart.x) / 20) * 20;
+                canvas.draggedTable.y = Math.round((pos.y - canvas.dragStart.y) / 20) * 20;
+            } else {
+                canvas.offset.x = e.clientX - canvas.dragStart.x;
+                canvas.offset.y = e.clientY - canvas.dragStart.y;
+            }
+            canvas.render();
+        }
+    });
 
-    function setZoomLevel(index) {
-        canvas.zoomIndex = Math.max(0, Math.min(index, ZOOM_LEVELS.length - 1));
-        canvas.scale = ZOOM_LEVELS[canvas.zoomIndex];
-        canvas.render();
-        updateZoomDisplay();
-    }
+    // Add table button
+    document.getElementById('addTable').addEventListener('click', () => {
+        const table = canvas.addTable();
+        saveToStorage(canvas.toJSON());
+        updateUndoRedoButtons();
+    });
 
+    // Undo/Redo buttons
+    document.getElementById('undo').addEventListener('click', () => {
+        canvas.history.undo();
+        saveToStorage(canvas.toJSON());
+        updateUndoRedoButtons();
+    });
+
+    document.getElementById('redo').addEventListener('click', () => {
+        canvas.history.redo();
+        saveToStorage(canvas.toJSON());
+        updateUndoRedoButtons();
+    });
+
+    // Export button
+    document.getElementById('exportImage').addEventListener('click', () => {
+        canvas.exportAsImage();
+    });
+
+    // Zoom controls
     document.getElementById('zoomIn').addEventListener('click', () => {
-        setZoomLevel(canvas.zoomIndex + 1);
+        if (canvas.zoomIndex < ZOOM_LEVELS.length - 1) {
+            canvas.zoomIndex++;
+            canvas.scale = ZOOM_LEVELS[canvas.zoomIndex];
+            canvas.render();
+            updateZoomDisplay();
+        }
     });
 
     document.getElementById('zoomOut').addEventListener('click', () => {
-        setZoomLevel(canvas.zoomIndex - 1);
+        if (canvas.zoomIndex > 0) {
+            canvas.zoomIndex--;
+            canvas.scale = ZOOM_LEVELS[canvas.zoomIndex];
+            canvas.render();
+            updateZoomDisplay();
+        }
     });
 
+    // Reset view button
+    document.getElementById('resetView').addEventListener('click', () => {
+        canvas.offset = { x: 0, y: 0 };
+        canvas.zoomIndex = 2; // Default zoom level
+        canvas.scale = ZOOM_LEVELS[canvas.zoomIndex];
+        canvas.render();
+        updateZoomDisplay();
+    });
+
+    // Mouse wheel zoom
     canvas.canvas.addEventListener('wheel', (e) => {
-        e.preventDefault();
-        const delta = e.deltaY > 0 ? -1 : 1;
-        setZoomLevel(canvas.zoomIndex + delta);
+        if (e.ctrlKey) {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? -1 : 1;
+            const newIndex = Math.min(Math.max(0, canvas.zoomIndex + delta), ZOOM_LEVELS.length - 1);
+            
+            if (newIndex !== canvas.zoomIndex) {
+                canvas.zoomIndex = newIndex;
+                canvas.scale = ZOOM_LEVELS[canvas.zoomIndex];
+                canvas.render();
+                updateZoomDisplay();
+            }
+        }
     });
 
     // Initialize zoom display
     updateZoomDisplay();
-
-    // Add double-click handler for table name editing
-    canvas.canvas.addEventListener('dblclick', (e) => {
-        const pos = getCanvasPosition(e, canvas);
-        
-        canvas.tables.forEach(table => {
-            if (table.containsPoint(pos.x, pos.y)) {
-                // Check if click is in the header area
-                if (pos.y <= table.y + 40) {
-                    const input = document.createElement('input');
-                    input.type = 'text';
-                    input.value = table.name;
-                    input.style.position = 'absolute';
-                    input.style.left = `${(table.x + table.width/2) * canvas.scale + canvas.offset.x - 75}px`;
-                    input.style.top = `${(table.y + 10) * canvas.scale + canvas.offset.y}px`;
-                    input.style.width = '150px';
-                    input.style.textAlign = 'center';
-                    input.style.font = 'bold 16px Arial';
-                    input.style.border = '2px solid var(--bs-primary)';
-                    input.style.borderRadius = '4px';
-                    input.style.padding = '2px';
-                    input.style.zIndex = '1000';
-                    
-                    document.body.appendChild(input);
-                    input.focus();
-                    input.select();
-                    
-                    table.isEditingName = true;
-                    
-                    const finishEditing = () => {
-                        if (input.value.trim()) {
-                            table.name = input.value.trim();
-                            saveToStorage(canvas.toJSON());
-                        }
-                        table.isEditingName = false;
-                        document.body.removeChild(input);
-                        canvas.render();
-                    };
-                    
-                    input.addEventListener('blur', finishEditing);
-                    input.addEventListener('keydown', (e) => {
-                        if (e.key === 'Enter') {
-                            finishEditing();
-                        }
-                        if (e.key === 'Escape') {
-                            table.isEditingName = false;
-                            document.body.removeChild(input);
-                            canvas.render();
-                        }
-                    });
-                }
-            }
-        });
-    });
 }
 
 function findNearestConnectionPoint(table, pos) {
@@ -323,4 +249,28 @@ function getCanvasPosition(event, canvas) {
         x: (event.clientX - rect.left - canvas.offset.x) / canvas.scale,
         y: (event.clientY - rect.top - canvas.offset.y) / canvas.scale
     };
+}
+
+function createDeleteModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.innerHTML = `
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Delete Table</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete this table?</p>
+                    <p class="text-danger">This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmDelete">Delete</button>
+                </div>
+            </div>
+        </div>
+    `;
+    return modal;
 }
