@@ -4,19 +4,26 @@ import { RelationshipTypeModal } from '../components/RelationshipTypeModal';
 import { createMoveTableCommand, createAddAttributeCommand, createDeleteTableCommand } from './history';
 import { ZOOM_LEVELS } from './constants';
 
-// Module-level state
-let relationshipStart = null;
-let isCreatingRelationship = false;
+// State variables
 let isDragging = false;
 let selectedTable = null;
+let isCreatingRelationship = false;
+let relationshipStart = null;
+let activeConnectionPoint = null;
 
 function isModalOpen() {
     return document.querySelector('.modal.show') !== null;
 }
 
+function resetDragStates() {
+    isDragging = false;
+    selectedTable = null;
+    isCreatingRelationship = false;
+    relationshipStart = null;
+    activeConnectionPoint = null;
+}
+
 export function initializeEventHandlers(canvas) {
-    let activeConnectionPoint = null;
-    
     const attributeForm = new AttributeForm();
     const relationshipTypeModal = new RelationshipTypeModal();
 
@@ -63,7 +70,10 @@ export function initializeEventHandlers(canvas) {
     });
 
     canvas.canvas.addEventListener('mousedown', (e) => {
-        if (isModalOpen()) return;
+        if (isModalOpen()) {
+            resetDragStates();
+            return;
+        }
         const pos = getCanvasPosition(e, canvas);
         
         // Check if clicking on a table
@@ -119,18 +129,11 @@ export function initializeEventHandlers(canvas) {
                 // Check if clicking edit icon
                 const attributeIndex = table.isEditIconClicked(pos.x, pos.y);
                 if (attributeIndex !== -1) {
-                    // Simulate mouseup to properly end any drag operation
-                    const simulatedMouseUp = new MouseEvent('mouseup', {
-                        bubbles: true,
-                        cancelable: true,
-                        view: window
-                    });
-                    canvas.canvas.dispatchEvent(simulatedMouseUp);
+                    // Reset all drag states before showing modal
+                    resetDragStates();
                     
-                    // Get the attribute and show modal
                     const attribute = table.attributes[attributeIndex];
                     attributeForm.show((updatedAttribute) => {
-                        // Update existing attribute
                         attribute.name = updatedAttribute.name;
                         attribute.type = updatedAttribute.type;
                         attribute.isPrimary = updatedAttribute.isPrimary;
@@ -139,13 +142,13 @@ export function initializeEventHandlers(canvas) {
                         saveToStorage(canvas.toJSON());
                     }, attribute);
                     
-                    // Prevent event propagation
                     e.stopPropagation();
                     return;
                 }
 
                 // Check if clicking add attribute button
                 if (table.isAddButtonClicked(pos.x, pos.y)) {
+                    resetDragStates();
                     attributeForm.show((attribute) => {
                         const command = createAddAttributeCommand(table, {
                             name: attribute.name,
@@ -183,10 +186,7 @@ export function initializeEventHandlers(canvas) {
 
     canvas.canvas.addEventListener('mousemove', (e) => {
         if (isModalOpen()) {
-            isDragging = false;
-            selectedTable = null;
-            isCreatingRelationship = false;
-            relationshipStart = null;
+            resetDragStates();
             canvas.render();
             return;
         }
@@ -263,25 +263,20 @@ export function initializeEventHandlers(canvas) {
     });
 
     canvas.canvas.addEventListener('mouseup', (e) => {
-        // Force reset of all drag states
-        isDragging = false;
-        selectedTable = null;
-        isCreatingRelationship = false;
-        relationshipStart = null;
-        
         if (isModalOpen()) {
+            resetDragStates();
             canvas.render();
             return;
         }
-        if (isCreatingRelationship && relationshipStart) {
-            const pos = getCanvasPosition(e, canvas);
+
+        const wasCreatingRelationship = isCreatingRelationship && relationshipStart;
+        const pos = getCanvasPosition(e, canvas);
+
+        if (wasCreatingRelationship) {
             canvas.tables.forEach(table => {
                 if (table !== relationshipStart.table && table.containsPoint(pos.x, pos.y)) {
                     const connectionPoint = findNearestConnectionPoint(table, pos);
                     if (connectionPoint) {
-                        const sourceTable = relationshipStart.table;
-                        const targetTable = table;
-                        
                         relationshipTypeModal.show((type) => {
                             if (type === 'manyToMany') {
                                 // Create and show an alert or modal with the message
@@ -315,8 +310,8 @@ export function initializeEventHandlers(canvas) {
                                 infoModal.addEventListener('hidden.bs.modal', () => {
                                     document.body.removeChild(infoModal);
                                 });
-                            } else if (sourceTable && targetTable) {
-                                canvas.addRelationship(sourceTable, targetTable, type);
+                            } else {
+                                canvas.addRelationship(relationshipStart.table, table, type);
                                 saveToStorage(canvas.toJSON());
                                 updateUndoRedoButtons();
                             }
@@ -324,19 +319,9 @@ export function initializeEventHandlers(canvas) {
                     }
                 }
             });
-            canvas.render();
         }
-        isCreatingRelationship = false;
-        relationshipStart = null;
 
-        if (selectedTable) {
-            const pos = getCanvasPosition(e, canvas);
-            selectedTable.x = pos.x - selectedTable.width / 2;
-            selectedTable.y = pos.y - selectedTable.height / 2;
-            saveToStorage(canvas.toJSON());
-        }
-        isDragging = false;
-        selectedTable = null;
+        resetDragStates();
         canvas.render();
     });
 
