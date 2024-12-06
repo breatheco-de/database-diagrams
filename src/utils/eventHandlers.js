@@ -140,11 +140,17 @@ export function initializeEventHandlers(canvas) {
                 if (table !== relationshipStart.table && table.containsPoint(pos.x, pos.y)) {
                     const connectionPoint = findNearestConnectionPoint(table, pos);
                     if (connectionPoint) {
-                        relationshipTypeModal.show((type) => {
-                            canvas.addRelationship(relationshipStart.table, table, type);
-                            saveToStorage(canvas.toJSON());
-                            updateUndoRedoButtons();
-                        });
+                        console.log('Connection point found, showing relationship modal');
+                        try {
+                            relationshipTypeModal.show((type) => {
+                                console.log('Relationship type selected:', type);
+                                canvas.addRelationship(relationshipStart.table, table, type);
+                                saveToStorage(canvas.toJSON());
+                                updateUndoRedoButtons();
+                            });
+                        } catch (error) {
+                            console.error('Error showing relationship modal:', error);
+                        }
                     }
                 }
             });

@@ -38,12 +38,25 @@ export class RelationshipTypeModal {
     }
 
     show(onSelect) {
-        const modal = new bootstrap.Modal(this.modal);
-        const typeButtons = this.modal.querySelectorAll('.list-group-item');
+        console.log('RelationshipTypeModal.show() called');
+        const modalElement = document.getElementById('relationshipTypeModal');
+        console.log('Modal element:', modalElement);
+        
+        if (!modalElement) {
+            console.error('Modal element not found in DOM');
+            return;
+        }
+
+        const modal = new bootstrap.Modal(modalElement);
+        console.log('Bootstrap modal initialized');
+        
+        const typeButtons = modalElement.querySelectorAll('.list-group-item');
+        console.log('Type buttons found:', typeButtons.length);
         
         typeButtons.forEach(button => {
             button.onclick = () => {
                 const type = button.dataset.type;
+                console.log('Selected relationship type:', type);
                 onSelect(type);
                 modal.hide();
             };
