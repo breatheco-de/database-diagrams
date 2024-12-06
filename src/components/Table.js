@@ -73,7 +73,7 @@ export class Table {
         ctx.fillText('+', this.x + this.width / 2, buttonY + 5);
 
         // Draw connection points
-        getConnectionPoints().forEach(point => {
+        this.getConnectionPoints().forEach(point => {
             ctx.beginPath();
             ctx.arc(point.x, point.y, 7, 0, Math.PI * 2);
             ctx.fillStyle = 'white';
