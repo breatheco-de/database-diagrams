@@ -247,6 +247,39 @@ export function initializeEventHandlers(canvas) {
                         const sourceTable = relationshipStart.table;
                         const targetTable = table;
                         
+                        // Check if both tables have primary keys
+                        const sourcePrimaryKey = sourceTable.attributes.find(attr => attr.isPrimary);
+                        const targetPrimaryKey = targetTable.attributes.find(attr => attr.isPrimary);
+                        
+                        if (!sourcePrimaryKey || !targetPrimaryKey) {
+                            // Show error modal
+                            const errorModal = document.createElement('div');
+                            errorModal.className = 'modal fade';
+                            errorModal.innerHTML = `
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Error</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p>Tables need to have primary keys before you can add relationships.</p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            document.body.appendChild(errorModal);
+                            const bsModal = new bootstrap.Modal(errorModal);
+                            bsModal.show();
+                            errorModal.addEventListener('hidden.bs.modal', () => {
+                                document.body.removeChild(errorModal);
+                            });
+                            return;
+                        }
+                        
                         relationshipTypeModal.show((type) => {
                             if (type === 'manyToMany') {
                                 // Show existing many-to-many modal code
