@@ -112,20 +112,43 @@ export class Table {
 
     getConnectionPoints() {
         const points = [];
-        const connectionPoints = [
-            { x: this.x + this.width / 2, y: this.y, position: 'top' },
-            { x: this.x + this.width / 2, y: this.y + this.height, position: 'bottom' },
-            { x: this.x, y: this.y + this.height / 2, position: 'left' },
-            { x: this.x + this.width, y: this.y + this.height / 2, position: 'right' }
-        ];
+        const numPointsPerSide = 3; // Number of points on each side
         
-        connectionPoints.forEach(point => {
+        // Top points
+        for (let i = 0; i < numPointsPerSide; i++) {
             points.push({
-                x: point.x,
-                y: point.y,
-                position: point.position
+                x: this.x + (this.width * (i + 1)) / (numPointsPerSide + 1),
+                y: this.y,
+                position: 'top'
             });
-        });
+        }
+        
+        // Bottom points
+        for (let i = 0; i < numPointsPerSide; i++) {
+            points.push({
+                x: this.x + (this.width * (i + 1)) / (numPointsPerSide + 1),
+                y: this.y + this.height,
+                position: 'bottom'
+            });
+        }
+        
+        // Left points
+        for (let i = 0; i < numPointsPerSide; i++) {
+            points.push({
+                x: this.x,
+                y: this.y + (this.height * (i + 1)) / (numPointsPerSide + 1),
+                position: 'left'
+            });
+        }
+        
+        // Right points
+        for (let i = 0; i < numPointsPerSide; i++) {
+            points.push({
+                x: this.x + this.width,
+                y: this.y + (this.height * (i + 1)) / (numPointsPerSide + 1),
+                position: 'right'
+            });
+        }
         
         return points;
     }
