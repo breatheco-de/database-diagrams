@@ -171,9 +171,9 @@ export class Table {
             const iconX = this.x + this.width - 25;
             const iconY = yPos;
             
-            // Expand click detection area for better usability
-            if (x >= iconX - 15 && x <= iconX + 15 &&
-                y >= iconY - 15 && y <= iconY + 5) {
+            // Expand click detection area for better usability and make it more symmetrical
+            if (x >= iconX - 20 && x <= iconX + 20 &&
+                y >= iconY - 15 && y <= iconY + 15) {
                 return i;
             }
         }
