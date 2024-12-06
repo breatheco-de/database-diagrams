@@ -1,5 +1,6 @@
 import { saveToStorage } from './storage';
 import { AttributeForm } from '../components/AttributeForm';
+import { createMoveTableCommand, createAddAttributeCommand } from './history';
 
 export function initializeEventHandlers(canvas) {
     let isDragging = false;
@@ -12,6 +13,27 @@ export function initializeEventHandlers(canvas) {
 
     const addTableBtn = document.getElementById('addTable');
     const resetViewBtn = document.getElementById('resetView');
+    const undoBtn = document.getElementById('undo');
+    const redoBtn = document.getElementById('redo');
+
+    function updateUndoRedoButtons() {
+        undoBtn.disabled = !canvas.history.canUndo();
+        redoBtn.disabled = !canvas.history.canRedo();
+    }
+
+    undoBtn.addEventListener('click', () => {
+        if (canvas.history.undo()) {
+            saveToStorage(canvas.toJSON());
+            updateUndoRedoButtons();
+        }
+    });
+
+    redoBtn.addEventListener('click', () => {
+        if (canvas.history.redo()) {
+            saveToStorage(canvas.toJSON());
+            updateUndoRedoButtons();
+        }
+    });
 
     addTableBtn.addEventListener('click', () => {
         canvas.addTable();
@@ -33,9 +55,15 @@ export function initializeEventHandlers(canvas) {
                 // Check if clicking add attribute button
                 if (table.isAddButtonClicked(pos.x, pos.y)) {
                     attributeForm.show((attribute) => {
-                        table.addAttribute(attribute.name, attribute.type, attribute.isPrimary);
+                        const command = createAddAttributeCommand(table, {
+                            name: attribute.name,
+                            type: attribute.type,
+                            isPrimary: attribute.isPrimary
+                        });
+                        canvas.history.execute(command);
                         canvas.render();
                         saveToStorage(canvas.toJSON());
+                        updateUndoRedoButtons();
                     });
                     return;
                 }
@@ -112,7 +140,16 @@ export function initializeEventHandlers(canvas) {
         }
 
         if (selectedTable) {
+            const command = createMoveTableCommand(
+                selectedTable,
+                selectedTable.x - selectedTable.width / 2,
+                selectedTable.y - selectedTable.height / 2,
+                pos.x - selectedTable.width / 2,
+                pos.y - selectedTable.height / 2
+            );
+            canvas.history.execute(command);
             saveToStorage(canvas.toJSON());
+            updateUndoRedoButtons();
         }
         isDragging = false;
         selectedTable = null;

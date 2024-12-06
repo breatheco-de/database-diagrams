@@ -1,6 +1,7 @@
 import { Table } from './Table';
 import { Relationship } from './Relationship';
 import { GRID_SIZE } from '../utils/constants';
+import { HistoryManager, createAddTableCommand, createAddRelationshipCommand } from '../utils/history';
 
 export class Canvas {
     constructor(canvasId) {
@@ -12,6 +13,7 @@ export class Canvas {
         this.scale = 1;
         this.isDragging = false;
         this.dragStart = { x: 0, y: 0 };
+        this.history = new HistoryManager();
         
         this.resize();
         this.setupGrid();
@@ -68,15 +70,15 @@ export class Canvas {
 
     addTable(name = 'New Table', x = 100, y = 100) {
         const table = new Table(name, x, y);
-        this.tables.set(table.id, table);
-        this.render();
+        const command = createAddTableCommand(this, table);
+        this.history.execute(command);
         return table;
     }
 
     addRelationship(sourceTable, targetTable, type) {
         const relationship = new Relationship(sourceTable, targetTable, type);
-        this.relationships.add(relationship);
-        this.render();
+        const command = createAddRelationshipCommand(this, relationship);
+        this.history.execute(command);
         return relationship;
     }
 
