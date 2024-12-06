@@ -71,8 +71,8 @@ export class Table {
         ctx.textAlign = 'left';
         this.attributes.forEach((attr, index) => {
             const yPos = this.y + 65 + (index * 30);
-            // Draw attribute icon (key for primary)
-            const icon = attr.isPrimary ? '🔑 ' : '';
+            // Draw attribute icon (key for primary, link for foreign key)
+            const icon = attr.isPrimary ? '🔑 ' : (attr.isForeignKey ? '🔗 ' : '');
             ctx.fillText(
                 `${icon}${attr.name}: ${attr.type}`,
                 this.x + 15,
