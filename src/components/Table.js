@@ -71,6 +71,17 @@ export class Table {
         ctx.fillStyle = 'white';
         ctx.textAlign = 'center';
         ctx.fillText('+', this.x + this.width / 2, buttonY + 5);
+
+        // Draw connection points
+        getConnectionPoints().forEach(point => {
+            ctx.beginPath();
+            ctx.arc(point.x, point.y, 7, 0, Math.PI * 2);
+            ctx.fillStyle = 'white';
+            ctx.fill();
+            ctx.strokeStyle = 'var(--bs-primary)';
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+        });
     }
 
     getConnectionPoints() {
