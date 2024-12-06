@@ -13,69 +13,36 @@ export class Relationship {
             this.targetTable.getConnectionPoints()
         );
         
+        // Set line styles
         ctx.strokeStyle = '#0d6efd';
         ctx.lineWidth = 2;
         
-        // Draw the main line with explicit path handling
+        // Draw the main connection line
         ctx.beginPath();
         ctx.moveTo(source.start.x, source.start.y);
         ctx.lineTo(source.end.x, source.end.y);
-        ctx.stroke();  // Stroke the main line immediately
-        ctx.closePath();
+        ctx.stroke();
         
-        // Draw relationship endings
-        this.drawEndings(ctx, source);
+        // Calculate angle for the endings
+        const angle = Math.atan2(
+            source.end.y - source.start.y,
+            source.end.x - source.start.x
+        );
+        
+        // Draw the appropriate ending based on relationship type
+        switch(this.type) {
+            case 'oneToMany':
+                this.drawOneToMany(ctx, source.end, angle);
+                break;
+            case 'oneToOne':
+                this.drawOneToOne(ctx, source.end, angle);
+                break;
+            case 'manyToMany':
+                this.drawManyToMany(ctx, source.end, angle);
+                break;
+        }
         
         ctx.restore();
-    }
-
-    drawEndings(ctx, points) {
-        const angle = Math.atan2(
-            points.end.y - points.start.y,
-            points.end.x - points.start.x
-        );
-        
-        ctx.strokeStyle = '#0d6efd';
-        ctx.lineWidth = 2;
-        
-        switch(this.type) {
-            case 'oneToMany':
-                this.drawOneToMany(ctx, points.end, angle);
-                break;
-            case 'oneToOne':
-                this.drawOneToOne(ctx, points.end, angle);
-                break;
-            case 'manyToMany':
-                this.drawManyToMany(ctx, points.end, angle);
-                break;
-        }
-    }
-
-    drawCrowFoot(ctx, points) {
-        const angle = Math.atan2(
-            points.end.y - points.start.y,
-            points.end.x - points.start.x
-        );
-        
-        // Ensure we're using the same styles
-        ctx.strokeStyle = '#0d6efd';
-        ctx.lineWidth = 2;
-        
-        ctx.beginPath();
-        
-        switch(this.type) {
-            case 'oneToMany':
-                this.drawOneToMany(ctx, points.end, angle);
-                break;
-            case 'oneToOne':
-                this.drawOneToOne(ctx, points.end, angle);
-                break;
-            case 'manyToMany':
-                this.drawManyToMany(ctx, points.end, angle);
-                break;
-        }
-        
-        ctx.stroke();
     }
 
     drawOneToOne(ctx, point, angle) {
@@ -110,33 +77,24 @@ export class Relationship {
         const length = 15;
         const spread = Math.PI / 6;
         
-        // Draw each line of the crow's foot separately
-        // Center line
+        // Draw the three lines of the crow's foot
         ctx.beginPath();
+        // Center line
         ctx.moveTo(point.x, point.y);
         ctx.lineTo(point.x - length * Math.cos(angle), point.y - length * Math.sin(angle));
-        ctx.stroke();
-        ctx.closePath();
-        
         // Upper line
-        ctx.beginPath();
         ctx.moveTo(point.x, point.y);
         ctx.lineTo(
             point.x - length * Math.cos(angle - spread),
             point.y - length * Math.sin(angle - spread)
         );
-        ctx.stroke();
-        ctx.closePath();
-        
         // Lower line
-        ctx.beginPath();
         ctx.moveTo(point.x, point.y);
         ctx.lineTo(
             point.x - length * Math.cos(angle + spread),
             point.y - length * Math.sin(angle + spread)
         );
         ctx.stroke();
-        ctx.closePath();
     }
 
     drawManyToMany(ctx, point, angle) {
