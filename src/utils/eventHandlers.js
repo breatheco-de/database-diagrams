@@ -1,6 +1,7 @@
 import { saveToStorage } from './storage';
 import { AttributeForm } from '../components/AttributeForm';
 import { createMoveTableCommand, createAddAttributeCommand } from './history';
+import { ZOOM_LEVELS } from './constants';
 
 export function initializeEventHandlers(canvas) {
     let isDragging = false;
