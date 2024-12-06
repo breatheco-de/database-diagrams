@@ -203,16 +203,24 @@ export function initializeEventHandlers(canvas) {
 function findNearestConnectionPoint(table, pos) {
     const points = table.getConnectionPoints();
     let nearest = null;
-    let minDistance = 10; // Connection point detection radius
+    let minDistance = 15; // Increased detection radius for better usability
+    
+    console.log('Finding nearest connection point:', {
+        mousePosition: pos,
+        tablePosition: { x: table.x, y: table.y },
+        availablePoints: points
+    });
     
     points.forEach(point => {
         const distance = Math.hypot(pos.x - point.x, pos.y - point.y);
+        console.log(`Distance to ${point.position} point:`, distance);
         if (distance < minDistance) {
             minDistance = distance;
             nearest = point;
         }
     });
     
+    console.log('Nearest connection point:', nearest);
     return nearest;
 }
 

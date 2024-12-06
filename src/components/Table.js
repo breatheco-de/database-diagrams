@@ -75,14 +75,21 @@ export class Table {
 
     getConnectionPoints() {
         const points = [];
-        // Top center
-        points.push({ x: this.x + this.width / 2, y: this.y });
-        // Bottom center
-        points.push({ x: this.x + this.width / 2, y: this.y + this.height });
-        // Left center
-        points.push({ x: this.x, y: this.y + this.height / 2 });
-        // Right center
-        points.push({ x: this.x + this.width, y: this.y + this.height / 2 });
+        const connectionPoints = [
+            { x: this.x + this.width / 2, y: this.y, position: 'top' },
+            { x: this.x + this.width / 2, y: this.y + this.height, position: 'bottom' },
+            { x: this.x, y: this.y + this.height / 2, position: 'left' },
+            { x: this.x + this.width, y: this.y + this.height / 2, position: 'right' }
+        ];
+        
+        connectionPoints.forEach(point => {
+            points.push({
+                x: point.x,
+                y: point.y,
+                position: point.position
+            });
+        });
+        
         return points;
     }
 
