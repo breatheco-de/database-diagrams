@@ -6,27 +6,49 @@ export class Relationship {
     }
 
     draw(ctx) {
-        ctx.save();  // Save the current context state
+        ctx.save();
         
         const source = this.getNearestPoints(
             this.sourceTable.getConnectionPoints(),
             this.targetTable.getConnectionPoints()
         );
         
-        // Ensure we're drawing with proper styles
-        ctx.strokeStyle = '#0d6efd';  // Bootstrap primary color
+        ctx.strokeStyle = '#0d6efd';
         ctx.lineWidth = 2;
         
-        // Draw the main line
+        // Draw the main line with explicit path handling
         ctx.beginPath();
         ctx.moveTo(source.start.x, source.start.y);
         ctx.lineTo(source.end.x, source.end.y);
-        ctx.stroke();
+        ctx.stroke();  // Stroke the main line immediately
+        ctx.closePath();
         
-        // Draw the relationship endings
-        this.drawCrowFoot(ctx, source);
+        // Draw relationship endings
+        this.drawEndings(ctx, source);
         
-        ctx.restore();  // Restore the context state
+        ctx.restore();
+    }
+
+    drawEndings(ctx, points) {
+        const angle = Math.atan2(
+            points.end.y - points.start.y,
+            points.end.x - points.start.x
+        );
+        
+        ctx.strokeStyle = '#0d6efd';
+        ctx.lineWidth = 2;
+        
+        switch(this.type) {
+            case 'oneToMany':
+                this.drawOneToMany(ctx, points.end, angle);
+                break;
+            case 'oneToOne':
+                this.drawOneToOne(ctx, points.end, angle);
+                break;
+            case 'manyToMany':
+                this.drawManyToMany(ctx, points.end, angle);
+                break;
+        }
     }
 
     drawCrowFoot(ctx, points) {
@@ -58,13 +80,20 @@ export class Relationship {
 
     drawOneToOne(ctx, point, angle) {
         const length = 15;
+        
+        // Draw the main line
+        ctx.beginPath();
         ctx.moveTo(point.x - length * Math.cos(angle), point.y - length * Math.sin(angle));
         ctx.lineTo(point.x, point.y);
+        ctx.stroke();
+        ctx.closePath();
         
         // Draw the vertical line
         const verticalOffset = 8;
         const x = point.x - (length - 5) * Math.cos(angle);
         const y = point.y - (length - 5) * Math.sin(angle);
+        
+        ctx.beginPath();
         ctx.moveTo(
             x + verticalOffset * Math.sin(angle),
             y - verticalOffset * Math.cos(angle)
@@ -73,32 +102,45 @@ export class Relationship {
             x - verticalOffset * Math.sin(angle),
             y + verticalOffset * Math.cos(angle)
         );
+        ctx.stroke();
+        ctx.closePath();
     }
 
     drawOneToMany(ctx, point, angle) {
         const length = 15;
-        const spread = Math.PI / 6; // 30 degrees spread
+        const spread = Math.PI / 6;
         
-        // Draw the base line
+        // Draw each line of the crow's foot separately
+        // Center line
+        ctx.beginPath();
         ctx.moveTo(point.x, point.y);
         ctx.lineTo(point.x - length * Math.cos(angle), point.y - length * Math.sin(angle));
+        ctx.stroke();
+        ctx.closePath();
         
-        // Draw the upper line of the crow's foot
+        // Upper line
+        ctx.beginPath();
         ctx.moveTo(point.x, point.y);
         ctx.lineTo(
             point.x - length * Math.cos(angle - spread),
             point.y - length * Math.sin(angle - spread)
         );
+        ctx.stroke();
+        ctx.closePath();
         
-        // Draw the lower line of the crow's foot
+        // Lower line
+        ctx.beginPath();
         ctx.moveTo(point.x, point.y);
         ctx.lineTo(
             point.x - length * Math.cos(angle + spread),
             point.y - length * Math.sin(angle + spread)
         );
+        ctx.stroke();
+        ctx.closePath();
     }
 
     drawManyToMany(ctx, point, angle) {
+        // Draw first crow's foot
         this.drawOneToMany(ctx, point, angle);
         
         // Add second crow's foot
@@ -108,15 +150,25 @@ export class Relationship {
         const x = point.x - offset * Math.cos(angle);
         const y = point.y - offset * Math.sin(angle);
         
+        // Draw upper line
+        ctx.beginPath();
         ctx.moveTo(
             x - length * Math.cos(angle - spread),
             y - length * Math.sin(angle - spread)
         );
         ctx.lineTo(x, y);
+        ctx.stroke();
+        ctx.closePath();
+        
+        // Draw lower line
+        ctx.beginPath();
+        ctx.moveTo(x, y);
         ctx.lineTo(
             x - length * Math.cos(angle + spread),
             y - length * Math.sin(angle + spread)
         );
+        ctx.stroke();
+        ctx.closePath();
     }
 
     getNearestPoints(sourcePoints, targetPoints) {
