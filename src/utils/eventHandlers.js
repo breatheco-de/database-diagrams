@@ -208,16 +208,42 @@ export function initializeEventHandlers(canvas) {
 
         if (isCreatingRelationship && relationshipStart) {
             canvas.render();
-            // Draw temporary relationship line
+            // Draw temporary relationship line with arrow
             const ctx = canvas.ctx;
             ctx.save();
             ctx.translate(canvas.offset.x, canvas.offset.y);
             ctx.scale(canvas.scale, canvas.scale);
+            
+            // Draw dashed line
             ctx.beginPath();
+            ctx.setLineDash([5, 3]);
             ctx.moveTo(relationshipStart.point.x, relationshipStart.point.y);
             ctx.lineTo(pos.x, pos.y);
             ctx.strokeStyle = 'var(--bs-primary)';
+            ctx.lineWidth = 2;
             ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Draw direction arrow
+            const angle = Math.atan2(pos.y - relationshipStart.point.y, pos.x - relationshipStart.point.x);
+            const arrowLength = 15;
+            const arrowWidth = Math.PI / 6; // 30 degrees
+            
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+            ctx.lineTo(
+                pos.x - arrowLength * Math.cos(angle - arrowWidth),
+                pos.y - arrowLength * Math.sin(angle - arrowWidth)
+            );
+            ctx.moveTo(pos.x, pos.y);
+            ctx.lineTo(
+                pos.x - arrowLength * Math.cos(angle + arrowWidth),
+                pos.y - arrowLength * Math.sin(angle + arrowWidth)
+            );
+            ctx.strokeStyle = 'var(--bs-primary)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
             ctx.restore();
             return;
         }

@@ -129,15 +129,14 @@ export class Table {
         
         return points;
     }
-
-    isAddButtonClicked(x, y) {
+    
     isEditIconClicked(x, y) {
         const attributes = this.attributes;
         for (let i = 0; i < attributes.length; i++) {
             const yPos = this.y + 65 + (i * 30);
             const iconX = this.x + this.width - 30;
             const iconY = yPos - 12;
-            
+
             if (x >= iconX - 10 && x <= iconX + 10 &&
                 y >= iconY - 10 && y <= iconY + 10) {
                 return i;
@@ -145,6 +144,9 @@ export class Table {
         }
         return -1;
     }
+
+    isAddButtonClicked(x, y) {
+
         const buttonY = this.y + this.height - 25;
         const buttonX = this.x + this.width / 2;
         const radius = 10;

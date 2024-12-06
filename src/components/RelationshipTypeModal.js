@@ -38,25 +38,30 @@ export class RelationshipTypeModal {
     }
 
     show(onSelect) {
-        console.log('RelationshipTypeModal.show() called');
         const modalElement = document.getElementById('relationshipTypeModal');
-        console.log('Modal element:', modalElement);
         
         if (!modalElement) {
-            console.error('Modal element not found in DOM');
             return;
         }
 
         const modal = new bootstrap.Modal(modalElement);
-        console.log('Bootstrap modal initialized');
-        
         const typeButtons = modalElement.querySelectorAll('.list-group-item');
-        console.log('Type buttons found:', typeButtons.length);
         
+        // Remove any existing click handlers
         typeButtons.forEach(button => {
+            button.onclick = null;
+            // Add visual feedback on hover
+            button.onmouseenter = () => {
+                button.style.backgroundColor = 'var(--bs-primary)';
+                button.style.color = 'white';
+            };
+            button.onmouseleave = () => {
+                button.style.backgroundColor = '';
+                button.style.color = '';
+            };
+            // Add click handler
             button.onclick = () => {
                 const type = button.dataset.type;
-                console.log('Selected relationship type:', type);
                 onSelect(type);
                 modal.hide();
             };
