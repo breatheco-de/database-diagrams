@@ -33,9 +33,15 @@
             <button id="redo" class="btn btn-secondary btn-sm" disabled>
                 <i class="fas fa-redo"></i> Redo
             </button>
-            <button id="exportImage" class="btn btn-secondary btn-sm">
-                <i class="fas fa-download"></i> Export
-            </button>
+            <div class="dropdown d-inline-block">
+                <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="fas fa-download"></i> Export
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" id="exportImage" href="#"><i class="fas fa-file-image"></i> Export as PNG</a></li>
+                    <li><a class="dropdown-item" id="exportJson" href="#"><i class="fas fa-file-code"></i> Export as JSON</a></li>
+                </ul>
+            </div>
         </div>
         <canvas id="erdCanvas"></canvas>
     </div>

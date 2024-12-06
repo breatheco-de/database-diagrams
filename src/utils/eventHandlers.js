@@ -20,7 +20,7 @@ export function initializeEventHandlers(canvas) {
     const resetViewBtn = document.getElementById('resetView');
     const undoBtn = document.getElementById('undo');
     const redoBtn = document.getElementById('redo');
-    const exportBtn = document.getElementById('exportImage');
+    // Export buttons are handled directly via their IDs
 
     function updateUndoRedoButtons() {
         undoBtn.disabled = !canvas.history.canUndo();
@@ -54,8 +54,19 @@ export function initializeEventHandlers(canvas) {
         canvas.render();
     });
 
-    exportBtn.addEventListener('click', () => {
+    document.getElementById('exportImage').addEventListener('click', () => {
         canvas.exportAsImage();
+    });
+
+    document.getElementById('exportJson').addEventListener('click', () => {
+        const data = canvas.toJSON();
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'erd-diagram.json';
+        link.click();
+        URL.revokeObjectURL(url);
     });
 
     canvas.canvas.addEventListener('mousedown', (e) => {
