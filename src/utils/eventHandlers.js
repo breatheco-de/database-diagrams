@@ -140,6 +140,7 @@ export function initializeEventHandlers(canvas) {
         }
 
         if (selectedTable) {
+            const pos = getCanvasPosition(e, canvas);
             const command = createMoveTableCommand(
                 selectedTable,
                 selectedTable.x - selectedTable.width / 2,
