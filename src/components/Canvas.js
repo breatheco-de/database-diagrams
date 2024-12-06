@@ -1,6 +1,6 @@
 import { Table } from './Table';
 import { Relationship } from './Relationship';
-import { GRID_SIZE } from '../utils/constants';
+import { GRID_SIZE, ZOOM_LEVELS, DEFAULT_ZOOM_INDEX } from '../utils/constants';
 import { HistoryManager, createAddTableCommand, createAddRelationshipCommand } from '../utils/history';
 
 export class Canvas {
@@ -10,7 +10,8 @@ export class Canvas {
         this.tables = new Map();
         this.relationships = new Set();
         this.offset = { x: 0, y: 0 };
-        this.scale = 1;
+        this.zoomIndex = DEFAULT_ZOOM_INDEX;
+        this.scale = ZOOM_LEVELS[this.zoomIndex];
         this.isDragging = false;
         this.dragStart = { x: 0, y: 0 };
         this.history = new HistoryManager();

@@ -158,13 +158,34 @@ export function initializeEventHandlers(canvas) {
     });
 
     // Zoom handling
+    function updateZoomDisplay() {
+        const zoomLevel = document.getElementById('zoomLevel');
+        zoomLevel.textContent = `${Math.round(canvas.scale * 100)}%`;
+    }
+
+    function setZoomLevel(index) {
+        canvas.zoomIndex = Math.max(0, Math.min(index, ZOOM_LEVELS.length - 1));
+        canvas.scale = ZOOM_LEVELS[canvas.zoomIndex];
+        canvas.render();
+        updateZoomDisplay();
+    }
+
+    document.getElementById('zoomIn').addEventListener('click', () => {
+        setZoomLevel(canvas.zoomIndex + 1);
+    });
+
+    document.getElementById('zoomOut').addEventListener('click', () => {
+        setZoomLevel(canvas.zoomIndex - 1);
+    });
+
     canvas.canvas.addEventListener('wheel', (e) => {
         e.preventDefault();
-        const delta = e.deltaY > 0 ? 0.9 : 1.1;
-        canvas.scale *= delta;
-        canvas.scale = Math.max(0.5, Math.min(canvas.scale, 2));
-        canvas.render();
+        const delta = e.deltaY > 0 ? -1 : 1;
+        setZoomLevel(canvas.zoomIndex + delta);
     });
+
+    // Initialize zoom display
+    updateZoomDisplay();
 }
 
 function findNearestConnectionPoint(table, pos) {
