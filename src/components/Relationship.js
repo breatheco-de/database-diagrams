@@ -65,17 +65,24 @@ export class Relationship {
 
     drawOneToMany(ctx, point, angle) {
         const length = 15;
-        const spread = Math.PI / 6;
+        const spread = Math.PI / 6; // 30 degrees spread
         
-        ctx.moveTo(
-            point.x - length * Math.cos(angle - spread),
-            point.y - length * Math.sin(angle - spread)
-        );
+        // Draw the main line
+        ctx.moveTo(point.x - length * Math.cos(angle), point.y - length * Math.sin(angle));
         ctx.lineTo(point.x, point.y);
-        ctx.lineTo(
-            point.x - length * Math.cos(angle + spread),
-            point.y - length * Math.sin(angle + spread)
-        );
+        
+        // Draw the three lines of the crow's foot
+        // Center line
+        ctx.moveTo(point.x - length * Math.cos(angle), point.y - length * Math.sin(angle));
+        ctx.lineTo(point.x, point.y);
+        
+        // Upper line
+        ctx.moveTo(point.x - length * Math.cos(angle - spread), point.y - length * Math.sin(angle - spread));
+        ctx.lineTo(point.x, point.y);
+        
+        // Lower line
+        ctx.moveTo(point.x - length * Math.cos(angle + spread), point.y - length * Math.sin(angle + spread));
+        ctx.lineTo(point.x, point.y);
     }
 
     drawManyToMany(ctx, point, angle) {
