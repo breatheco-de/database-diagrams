@@ -1,8 +1,7 @@
 import { saveToStorage } from './storage';
 import { AttributeForm } from '../components/AttributeForm';
 import { RelationshipTypeModal } from '../components/RelationshipTypeModal';
-import { createMoveTableCommand, createAddAttributeCommand, createEditTableCommand, createDeleteTableCommand } from './history';
-import { EditTableModal } from '../components/EditTableModal';
+import { createMoveTableCommand, createAddAttributeCommand } from './history';
 import { ZOOM_LEVELS } from './constants';
 
 // Module-level state for relationship creation
@@ -16,7 +15,6 @@ export function initializeEventHandlers(canvas) {
     
     const attributeForm = new AttributeForm();
     const relationshipTypeModal = new RelationshipTypeModal();
-    const editTableModal = new EditTableModal();
 
     const addTableBtn = document.getElementById('addTable');
     const resetViewBtn = document.getElementById('resetView');
@@ -60,26 +58,12 @@ export function initializeEventHandlers(canvas) {
         canvas.exportAsImage();
     });
 
-    let lastClickTime = 0;
-    
     canvas.canvas.addEventListener('mousedown', (e) => {
         const pos = getCanvasPosition(e, canvas);
-        const currentTime = new Date().getTime();
-        const isDoubleClick = currentTime - lastClickTime < 300;
-        lastClickTime = currentTime;
         
         // Check if clicking on a table
         canvas.tables.forEach(table => {
             if (table.containsPoint(pos.x, pos.y)) {
-                // Check if clicking trash icon
-                if (table.isTrashIconClicked(pos.x, pos.y)) {
-                    const command = createDeleteTableCommand(canvas, table);
-                    canvas.history.execute(command);
-                    saveToStorage(canvas.toJSON());
-                    updateUndoRedoButtons();
-                    return;
-                }
-                
                 // Check if clicking add attribute button
                 if (table.isAddButtonClicked(pos.x, pos.y)) {
                     attributeForm.show((attribute) => {
@@ -94,34 +78,6 @@ export function initializeEventHandlers(canvas) {
                         updateUndoRedoButtons();
                     });
                     return;
-                }
-                
-                // Handle double-click on table name
-                if (isDoubleClick && table.isTableNameClicked(pos.x, pos.y)) {
-                    editTableModal.show(table, (data) => {
-                        const command = createEditTableCommand(table, table.name, data.name);
-                        canvas.history.execute(command);
-                        canvas.render();
-                        saveToStorage(canvas.toJSON());
-                        updateUndoRedoButtons();
-                    });
-                    return;
-                }
-                
-                // Handle double-click on attributes
-                if (isDoubleClick) {
-                    const attrIndex = table.isAttributeClicked(pos.x, pos.y);
-                    if (attrIndex !== -1) {
-                        const attr = table.attributes[attrIndex];
-                        attributeForm.show((newAttr) => {
-                            const oldAttr = { ...attr };
-                            Object.assign(attr, newAttr);
-                            canvas.render();
-                            saveToStorage(canvas.toJSON());
-                            updateUndoRedoButtons();
-                        });
-                        return;
-                    }
                 }
 
                 // Check if clicking on connection points
