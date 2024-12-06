@@ -75,18 +75,17 @@ export class Table {
         ctx.textAlign = 'center';
         ctx.fillText('+', this.x + this.width / 2, buttonY + 5);
         
-        // Draw trash can icon
-        const trashIconSize = 20;
-        const trashX = this.x + this.width - trashIconSize - 10;
-        const trashY = this.y + this.height - trashIconSize - 10;
-        
-        ctx.font = '16px "Font Awesome 6 Free"';
-        ctx.fontWeight = '900';  // Required for solid icons
-        ctx.fillStyle = 'var(--bs-danger)';
-        ctx.fillText('', trashX, trashY);  // Unicode for trash icon
-
-        // Draw connection points only when hovered
+        // Draw connection points and trash icon only when hovered
         if (this.isHovered) {
+            // Draw trash can icon
+            const trashIconSize = 20;
+            const trashX = this.x + this.width - trashIconSize - 10;
+            const trashY = this.y + this.height - trashIconSize - 10;
+            
+            ctx.font = '16px "Font Awesome 6 Free"';
+            ctx.fontWeight = '900';  // Required for solid icons
+            ctx.fillStyle = 'var(--bs-danger)';
+            ctx.fillText('', trashX, trashY);  // Unicode for trash icon
             this.drawConnectionPoints(ctx);
         }
     }
