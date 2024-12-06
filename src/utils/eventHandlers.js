@@ -4,11 +4,13 @@ import { RelationshipTypeModal } from '../components/RelationshipTypeModal';
 import { createMoveTableCommand, createAddAttributeCommand } from './history';
 import { ZOOM_LEVELS } from './constants';
 
+// Module-level state for relationship creation
+let relationshipStart = null;
+let isCreatingRelationship = false;
+
 export function initializeEventHandlers(canvas) {
     let isDragging = false;
     let selectedTable = null;
-    let isCreatingRelationship = false;
-    let relationshipStart = null;
     let activeConnectionPoint = null;
     
     const attributeForm = new AttributeForm();
@@ -140,23 +142,23 @@ export function initializeEventHandlers(canvas) {
                 if (table !== relationshipStart.table && table.containsPoint(pos.x, pos.y)) {
                     const connectionPoint = findNearestConnectionPoint(table, pos);
                     if (connectionPoint) {
-                        console.log('Connection point found, showing relationship modal');
-                        try {
-                            relationshipTypeModal.show((type) => {
-                                console.log('Relationship type selected:', type);
-                                canvas.addRelationship(relationshipStart.table, table, type);
+                        const sourceTable = relationshipStart.table;
+                        const targetTable = table;
+                        
+                        relationshipTypeModal.show((type) => {
+                            if (sourceTable && targetTable) {
+                                canvas.addRelationship(sourceTable, targetTable, type);
                                 saveToStorage(canvas.toJSON());
                                 updateUndoRedoButtons();
-                            });
-                        } catch (error) {
-                            console.error('Error showing relationship modal:', error);
-                        }
+                            }
+                        });
                     }
                 }
             });
-            isCreatingRelationship = false;
-            relationshipStart = null;
+            canvas.render();
         }
+        isCreatingRelationship = false;
+        relationshipStart = null;
 
         if (selectedTable) {
             const pos = getCanvasPosition(e, canvas);
