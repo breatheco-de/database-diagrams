@@ -83,7 +83,7 @@ export class Table {
         const trashX = this.x + this.width - 30;
         const trashY = this.y + this.height - 25;
         ctx.fillStyle = '#dc3545'; // Bootstrap danger color
-        ctx.font = '16px "Font Awesome 5 Free"';
+        ctx.font = '900 16px "Font Awesome 5 Free"';  // Added 900 weight for solid icons
         ctx.fillText('', trashX, trashY); // Trash icon Unicode
 
         // Draw connection points only when hovered
