@@ -14,7 +14,7 @@ export class Relationship {
         ctx.beginPath();
         ctx.moveTo(source.start.x, source.start.y);
         ctx.lineTo(source.end.x, source.end.y);
-        ctx.strokeStyle = 'var(--bs-primary)';
+        ctx.strokeStyle = '#0d6efd'; // Bootstrap primary color
         ctx.lineWidth = 2;
         ctx.stroke();
         
@@ -22,6 +22,9 @@ export class Relationship {
     }
 
     drawCrowFoot(ctx, points) {
+        ctx.strokeStyle = '#0d6efd';
+        ctx.lineWidth = 2;
+        
         const angle = Math.atan2(
             points.end.y - points.start.y,
             points.end.x - points.start.x
