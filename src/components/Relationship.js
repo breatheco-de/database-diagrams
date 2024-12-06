@@ -67,19 +67,18 @@ export class Relationship {
         const length = 15;
         const spread = Math.PI / 6; // 30 degrees spread
         
-        // Draw the three lines of the crow's foot
-        // Base line at center
+        // Draw the base line
         ctx.moveTo(point.x, point.y);
         ctx.lineTo(point.x - length * Math.cos(angle), point.y - length * Math.sin(angle));
         
-        // Upper line
+        // Draw the upper line of the crow's foot
         ctx.moveTo(point.x, point.y);
         ctx.lineTo(
             point.x - length * Math.cos(angle - spread),
             point.y - length * Math.sin(angle - spread)
         );
         
-        // Lower line
+        // Draw the lower line of the crow's foot
         ctx.moveTo(point.x, point.y);
         ctx.lineTo(
             point.x - length * Math.cos(angle + spread),
