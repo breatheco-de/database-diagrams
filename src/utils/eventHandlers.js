@@ -44,8 +44,60 @@ export function initializeEventHandlers(canvas) {
     });
 
     addTableBtn.addEventListener('click', () => {
-        canvas.addTable();
-        saveToStorage(canvas.toJSON());
+        // Create and show modal for table name input
+        const modal = document.createElement('div');
+        modal.className = 'modal fade';
+        modal.innerHTML = `
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">New Table</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="tableName" class="form-label">Table Name</label>
+                            <input type="text" class="form-control" id="tableName" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="createTable">Create</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        const bsModal = new bootstrap.Modal(modal);
+        
+        // Handle table creation
+        const createTable = () => {
+            const nameInput = modal.querySelector('#tableName');
+            const name = nameInput.value.trim();
+            
+            if (name) {
+                canvas.addTable(name);
+                saveToStorage(canvas.toJSON());
+                bsModal.hide();
+            }
+        };
+        
+        // Add event listeners
+        modal.querySelector('#createTable').onclick = createTable;
+        modal.querySelector('#tableName').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                createTable();
+            }
+        });
+        
+        // Clean up modal after hiding
+        modal.addEventListener('hidden.bs.modal', () => {
+            document.body.removeChild(modal);
+        });
+        
+        bsModal.show();
+        modal.querySelector('#tableName').focus();
     });
 
     resetViewBtn.addEventListener('click', () => {
