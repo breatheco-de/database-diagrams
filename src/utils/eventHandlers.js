@@ -21,6 +21,8 @@ function resetDragStates() {
     isCreatingRelationship = false;
     relationshipStart = null;
     activeConnectionPoint = null;
+    // Force render to clear any temporary relationship lines
+    canvas.render();
 }
 
 export function initializeEventHandlers(canvas) {
@@ -278,6 +280,11 @@ export function initializeEventHandlers(canvas) {
                     const connectionPoint = findNearestConnectionPoint(table, pos);
                     if (connectionPoint) {
                         relationshipTypeModal.show((type) => {
+                            // Add null check
+                            if (!relationshipStart || !relationshipStart.table) {
+                                return;
+                            }
+                            
                             if (type === 'manyToMany') {
                                 // Create and show an alert or modal with the message
                                 const infoModal = document.createElement('div');

@@ -38,6 +38,11 @@ export class RelationshipTypeModal {
     }
 
     show(onSelect) {
+        // Reset states before showing modal
+        if (typeof resetDragStates === 'function') {
+            resetDragStates();
+        }
+        
         const modalElement = document.getElementById('relationshipTypeModal');
         
         if (!modalElement) {
