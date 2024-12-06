@@ -9,6 +9,7 @@ export class Table {
         this.width = 200;
         this.height = 40;
         this.attributes = attributes;
+        this.isHovered = false;
         this.updateHeight();
     }
 
@@ -72,16 +73,18 @@ export class Table {
         ctx.textAlign = 'center';
         ctx.fillText('+', this.x + this.width / 2, buttonY + 5);
 
-        // Draw connection points
-        this.getConnectionPoints().forEach(point => {
-            ctx.beginPath();
-            ctx.arc(point.x, point.y, 7, 0, Math.PI * 2);
-            ctx.fillStyle = 'white';
-            ctx.fill();
-            ctx.strokeStyle = 'var(--bs-primary)';
-            ctx.lineWidth = 2.5;
-            ctx.stroke();
-        });
+        // Draw connection points only when hovered
+        if (this.isHovered) {
+            this.getConnectionPoints().forEach(point => {
+                ctx.beginPath();
+                ctx.arc(point.x, point.y, 7, 0, Math.PI * 2);
+                ctx.fillStyle = 'white';
+                ctx.fill();
+                ctx.strokeStyle = 'var(--bs-primary)';
+                ctx.lineWidth = 2.5;
+                ctx.stroke();
+            });
+        }
     }
 
     getConnectionPoints() {

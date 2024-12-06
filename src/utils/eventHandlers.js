@@ -103,6 +103,16 @@ export function initializeEventHandlers(canvas) {
 
     canvas.canvas.addEventListener('mousemove', (e) => {
         const pos = getCanvasPosition(e, canvas);
+        
+        // Reset all table hover states
+        canvas.tables.forEach(table => table.isHovered = false);
+        
+        // Set hover state for table under cursor
+        canvas.tables.forEach(table => {
+            if (table.containsPoint(pos.x, pos.y)) {
+                table.isHovered = true;
+            }
+        });
 
         if (isCreatingRelationship && relationshipStart) {
             canvas.render();
@@ -120,7 +130,10 @@ export function initializeEventHandlers(canvas) {
             return;
         }
 
-        if (!isDragging) return;
+        if (!isDragging) {
+            canvas.render();
+            return;
+        }
 
         if (selectedTable) {
             selectedTable.x = pos.x - selectedTable.width / 2;
