@@ -21,16 +21,17 @@ function updateUndoRedoButtons() {
     const undoBtn = document.getElementById('undo');
     const redoBtn = document.getElementById('redo');
     
-    if (undoBtn) {
-        undoBtn.disabled = !canvas.history.canUndo();
+    if (undoBtn && canvasInstance) {
+        undoBtn.disabled = !canvasInstance.history.canUndo();
     }
-    if (redoBtn) {
-        redoBtn.disabled = !canvas.history.canRedo();
+    if (redoBtn && canvasInstance) {
+        redoBtn.disabled = !canvasInstance.history.canRedo();
     }
 }
 
 export function initializeEventHandlers(canvas) {
     canvasInstance = canvas;  // Store canvas reference
+    
     // Mouse move handler
     canvas.canvas.addEventListener('mousemove', (e) => {
         const pos = getCanvasPosition(e, canvas);
@@ -89,12 +90,14 @@ export function initializeEventHandlers(canvas) {
                 }
 
                 // Check if clicking connection point
-                const connectionPoint = findNearestConnectionPoint(table, pos);
-                if (connectionPoint) {
-                    startTable = table;
-                    startPoint = connectionPoint;
-                    handled = true;
-                    return;
+                if (table.isHovered) {
+                    const connectionPoint = findNearestConnectionPoint(table, pos);
+                    if (connectionPoint) {
+                        startTable = table;
+                        startPoint = connectionPoint;
+                        handled = true;
+                        return;
+                    }
                 }
 
                 // Start dragging table
@@ -122,26 +125,63 @@ export function initializeEventHandlers(canvas) {
             canvas.tables.forEach(table => {
                 if (table !== startTable && table.containsPoint(pos.x, pos.y)) {
                     endTable = table;
-                    endPoint = findNearestConnectionPoint(table, pos);
+                    if (table.isHovered) {
+                        endPoint = findNearestConnectionPoint(table, pos);
+                    }
                 }
             });
             
             if (endTable && endPoint) {
                 relationshipTypeModal.show(type => {
-                    canvas.addRelationship(startTable, endTable, type);
-                    saveToStorage(canvas.toJSON());
-                    updateUndoRedoButtons();
+                    if (type === 'manyToMany') {
+                        // Show info modal for many-to-many relationships
+                        const infoModal = document.createElement('div');
+                        infoModal.className = 'modal fade';
+                        infoModal.innerHTML = `
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Many-to-Many Relationship</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Many-to-many connections don't exist directly in relational databases. They need to be represented using a pivot/junction table.</p>
+                                        <p>To properly model this relationship:</p>
+                                        <ol>
+                                            <li>Create a new table to serve as the pivot table</li>
+                                            <li>Create one-to-many relationships from each original table to the pivot table</li>
+                                        </ol>
+                                        <a href="https://en.wikipedia.org/wiki/Many-to-many_(data_model)" target="_blank">Learn more about many-to-many relationships</a>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Got it!</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        document.body.appendChild(infoModal);
+                        const bsModal = new bootstrap.Modal(infoModal);
+                        bsModal.show();
+                        infoModal.addEventListener('hidden.bs.modal', () => {
+                            document.body.removeChild(infoModal);
+                        });
+                    } else if (startTable && endTable) {  // Check both tables exist
+                        canvas.addRelationship(startTable, endTable, type);
+                        saveToStorage(canvas.toJSON());
+                        updateUndoRedoButtons();
+                    }
                 });
             }
         }
         
+        // Reset state
         startTable = null;
         startPoint = null;
         canvas.isDragging = false;
         canvas.draggedTable = null;
     });
 
-    // Mouse move handler
+    // Mouse move handler for dragging
     canvas.canvas.addEventListener('mousemove', (e) => {
         if (canvas.isDragging) {
             if (canvas.draggedTable) {
@@ -230,6 +270,8 @@ export function initializeEventHandlers(canvas) {
 }
 
 function findNearestConnectionPoint(table, pos) {
+    if (!table || !table.getConnectionPoints) return null;
+    
     const points = table.getConnectionPoints();
     let nearest = null;
     let minDistance = 25; // Increased detection radius for better usability
