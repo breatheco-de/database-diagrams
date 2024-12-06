@@ -10,6 +10,7 @@ export class Table {
         this.height = 40;
         this.attributes = attributes;
         this.isHovered = false;
+        this.isEditingName = false;
         this.updateHeight();
     }
 
@@ -36,10 +37,15 @@ export class Table {
         ctx.stroke();
         
         // Draw table name
-        ctx.fillStyle = 'black';
-        ctx.font = 'bold 16px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText(this.name, this.x + this.width / 2, this.y + 25);
+        if (this.isEditingName) {
+            // Skip drawing the name text when in edit mode
+            // The input field will be handled by DOM
+        } else {
+            ctx.fillStyle = 'black';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(this.name, this.x + this.width / 2, this.y + 25);
+        }
         
         // Draw separator line
         ctx.beginPath();

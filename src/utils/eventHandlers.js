@@ -245,6 +245,60 @@ export function initializeEventHandlers(canvas) {
 
     // Initialize zoom display
     updateZoomDisplay();
+
+    // Add double-click handler for table name editing
+    canvas.canvas.addEventListener('dblclick', (e) => {
+        const pos = getCanvasPosition(e, canvas);
+        
+        canvas.tables.forEach(table => {
+            if (table.containsPoint(pos.x, pos.y)) {
+                // Check if click is in the header area
+                if (pos.y <= table.y + 40) {
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.value = table.name;
+                    input.style.position = 'absolute';
+                    input.style.left = `${(table.x + table.width/2) * canvas.scale + canvas.offset.x - 75}px`;
+                    input.style.top = `${(table.y + 10) * canvas.scale + canvas.offset.y}px`;
+                    input.style.width = '150px';
+                    input.style.textAlign = 'center';
+                    input.style.font = 'bold 16px Arial';
+                    input.style.border = '2px solid var(--bs-primary)';
+                    input.style.borderRadius = '4px';
+                    input.style.padding = '2px';
+                    input.style.zIndex = '1000';
+                    
+                    document.body.appendChild(input);
+                    input.focus();
+                    input.select();
+                    
+                    table.isEditingName = true;
+                    
+                    const finishEditing = () => {
+                        if (input.value.trim()) {
+                            table.name = input.value.trim();
+                            saveToStorage(canvas.toJSON());
+                        }
+                        table.isEditingName = false;
+                        document.body.removeChild(input);
+                        canvas.render();
+                    };
+                    
+                    input.addEventListener('blur', finishEditing);
+                    input.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            finishEditing();
+                        }
+                        if (e.key === 'Escape') {
+                            table.isEditingName = false;
+                            document.body.removeChild(input);
+                            canvas.render();
+                        }
+                    });
+                }
+            }
+        });
+    });
 }
 
 function findNearestConnectionPoint(table, pos) {
