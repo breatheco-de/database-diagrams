@@ -78,6 +78,11 @@ export class Table {
                 this.x + 15,
                 yPos
             );
+            
+            // Draw edit pencil icon
+            ctx.font = '14px FontAwesome';
+            ctx.fillStyle = 'var(--bs-primary)';
+            ctx.fillText('\uf040', this.x + this.width - 30, yPos); // fa-pencil unicode
         });
         
         // Draw add attribute button
@@ -126,6 +131,20 @@ export class Table {
     }
 
     isAddButtonClicked(x, y) {
+    isEditIconClicked(x, y) {
+        const attributes = this.attributes;
+        for (let i = 0; i < attributes.length; i++) {
+            const yPos = this.y + 65 + (i * 30);
+            const iconX = this.x + this.width - 30;
+            const iconY = yPos - 12;
+            
+            if (x >= iconX - 10 && x <= iconX + 10 &&
+                y >= iconY - 10 && y <= iconY + 10) {
+                return i;
+            }
+        }
+        return -1;
+    }
         const buttonY = this.y + this.height - 25;
         const buttonX = this.x + this.width / 2;
         const radius = 10;
