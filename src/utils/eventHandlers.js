@@ -170,7 +170,14 @@ export function initializeEventHandlers(canvas) {
     });
 
     canvas.canvas.addEventListener('mousemove', (e) => {
-        if (isModalOpen()) return;
+        if (isModalOpen()) {
+            isDragging = false;
+            selectedTable = null;
+            isCreatingRelationship = false;
+            relationshipStart = null;
+            canvas.render();
+            return;
+        }
         const pos = getCanvasPosition(e, canvas);
         
         // Reset all table hover states
@@ -247,6 +254,9 @@ export function initializeEventHandlers(canvas) {
         if (isModalOpen()) {
             isDragging = false;
             selectedTable = null;
+            isCreatingRelationship = false;
+            relationshipStart = null;
+            canvas.render();
             return;
         }
         if (isCreatingRelationship && relationshipStart) {
