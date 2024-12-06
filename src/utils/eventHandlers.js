@@ -10,19 +10,23 @@ let selectedTable = null;
 let isCreatingRelationship = false;
 let relationshipStart = null;
 let activeConnectionPoint = null;
+let editingAttribute = null;
 
 function isModalOpen() {
     return document.querySelector('.modal.show') !== null;
 }
 
-function resetDragStates() {
+function resetDragStates(canvas) {
     isDragging = false;
     selectedTable = null;
     isCreatingRelationship = false;
     relationshipStart = null;
     activeConnectionPoint = null;
+    editingAttribute = null;
     // Force render to clear any temporary relationship lines
-    canvas.render();
+    if (canvas) {
+        canvas.render();
+    }
 }
 
 export function initializeEventHandlers(canvas) {
@@ -73,7 +77,7 @@ export function initializeEventHandlers(canvas) {
 
     canvas.canvas.addEventListener('mousedown', (e) => {
         if (isModalOpen()) {
-            resetDragStates();
+            resetDragStates(canvas);
             return;
         }
         const pos = getCanvasPosition(e, canvas);
@@ -132,16 +136,22 @@ export function initializeEventHandlers(canvas) {
                 const attributeIndex = table.isEditIconClicked(pos.x, pos.y);
                 if (attributeIndex !== -1) {
                     // Reset all drag states before showing modal
-                    resetDragStates();
+                    resetDragStates(canvas);
+                    editingAttribute = { table, index: attributeIndex };
                     
                     const attribute = table.attributes[attributeIndex];
                     attributeForm.show((updatedAttribute) => {
-                        attribute.name = updatedAttribute.name;
-                        attribute.type = updatedAttribute.type;
-                        attribute.isPrimary = updatedAttribute.isPrimary;
-                        table.updateHeight();
-                        canvas.render();
-                        saveToStorage(canvas.toJSON());
+                        if (editingAttribute) {
+                            const { table, index } = editingAttribute;
+                            const attribute = table.attributes[index];
+                            attribute.name = updatedAttribute.name;
+                            attribute.type = updatedAttribute.type;
+                            attribute.isPrimary = updatedAttribute.isPrimary;
+                            table.updateHeight();
+                            canvas.render();
+                            saveToStorage(canvas.toJSON());
+                            editingAttribute = null;
+                        }
                     }, attribute);
                     
                     e.stopPropagation();
@@ -150,7 +160,7 @@ export function initializeEventHandlers(canvas) {
 
                 // Check if clicking add attribute button
                 if (table.isAddButtonClicked(pos.x, pos.y)) {
-                    resetDragStates();
+                    resetDragStates(canvas);
                     attributeForm.show((attribute) => {
                         const command = createAddAttributeCommand(table, {
                             name: attribute.name,
@@ -188,8 +198,7 @@ export function initializeEventHandlers(canvas) {
 
     canvas.canvas.addEventListener('mousemove', (e) => {
         if (isModalOpen()) {
-            resetDragStates();
-            canvas.render();
+            resetDragStates(canvas);
             return;
         }
         const pos = getCanvasPosition(e, canvas);
@@ -266,8 +275,7 @@ export function initializeEventHandlers(canvas) {
 
     canvas.canvas.addEventListener('mouseup', (e) => {
         if (isModalOpen()) {
-            resetDragStates();
-            canvas.render();
+            resetDragStates(canvas);
             return;
         }
 
@@ -280,13 +288,11 @@ export function initializeEventHandlers(canvas) {
                     const connectionPoint = findNearestConnectionPoint(table, pos);
                     if (connectionPoint) {
                         relationshipTypeModal.show((type) => {
-                            // Add null check
                             if (!relationshipStart || !relationshipStart.table) {
                                 return;
                             }
                             
                             if (type === 'manyToMany') {
-                                // Create and show an alert or modal with the message
                                 const infoModal = document.createElement('div');
                                 infoModal.className = 'modal fade';
                                 infoModal.innerHTML = `
@@ -328,8 +334,7 @@ export function initializeEventHandlers(canvas) {
             });
         }
 
-        resetDragStates();
-        canvas.render();
+        resetDragStates(canvas);
     });
 
     // Zoom handling
