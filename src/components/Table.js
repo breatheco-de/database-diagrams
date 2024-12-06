@@ -72,6 +72,15 @@ export class Table {
         ctx.fillStyle = 'white';
         ctx.textAlign = 'center';
         ctx.fillText('+', this.x + this.width / 2, buttonY + 5);
+        
+        // Draw trash can icon
+        const trashIconSize = 20;
+        const trashX = this.x + this.width - trashIconSize - 10;
+        const trashY = this.y + this.height - trashIconSize - 10;
+        
+        ctx.font = '16px "Font Awesome 5 Free"';
+        ctx.fillStyle = 'var(--bs-danger)';
+        ctx.fillText('', trashX, trashY);
 
         // Draw connection points only when hovered
         if (this.isHovered) {
@@ -104,6 +113,32 @@ export class Table {
             });
         });
         
+    isTrashIconClicked(x, y) {
+        const trashIconSize = 20;
+        const trashX = this.x + this.width - trashIconSize - 10;
+        const trashY = this.y + this.height - trashIconSize - 10;
+        
+        return x >= trashX && x <= trashX + trashIconSize &&
+               y >= trashY && y <= trashY + trashIconSize;
+    }
+
+    isTableNameClicked(x, y) {
+        return x >= this.x && x <= this.x + this.width &&
+               y >= this.y && y <= this.y + 40;
+    }
+
+    isAttributeClicked(x, y) {
+        if (x >= this.x && x <= this.x + this.width) {
+            const attributeY = y - (this.y + 40);
+            if (attributeY > 0) {
+                const index = Math.floor((attributeY - 25) / 30);
+                if (index >= 0 && index < this.attributes.length) {
+                    return index;
+                }
+            }
+        }
+        return -1;
+    }
         return points;
     }
 

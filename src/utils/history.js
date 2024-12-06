@@ -114,3 +114,32 @@ export function createAddAttributeCommand(table, attribute) {
         }
     );
 }
+export function createEditTableCommand(table, oldName, newName) {
+    return new Command(
+        () => {
+            table.name = newName;
+        },
+        () => {
+            table.name = oldName;
+        }
+    );
+}
+
+export function createDeleteTableCommand(canvas, table) {
+    return new Command(
+        () => {
+            canvas.tables.delete(table.id);
+            // Remove any relationships connected to this table
+            canvas.relationships.forEach(rel => {
+                if (rel.sourceTable === table || rel.targetTable === table) {
+                    canvas.relationships.delete(rel);
+                }
+            });
+            canvas.render();
+        },
+        () => {
+            canvas.tables.set(table.id, table);
+            canvas.render();
+        }
+    );
+}
