@@ -249,7 +249,7 @@ export function initializeEventHandlers(canvas) {
                         
                         relationshipTypeModal.show((type) => {
                             if (type === 'manyToMany') {
-                                // Create and show an alert or modal with the message
+                                // Show existing many-to-many modal code
                                 const infoModal = document.createElement('div');
                                 infoModal.className = 'modal fade';
                                 infoModal.innerHTML = `
@@ -280,10 +280,37 @@ export function initializeEventHandlers(canvas) {
                                 infoModal.addEventListener('hidden.bs.modal', () => {
                                     document.body.removeChild(infoModal);
                                 });
-                            } else if (sourceTable && targetTable) {
-                                canvas.addRelationship(sourceTable, targetTable, type);
-                                saveToStorage(canvas.toJSON());
-                                updateUndoRedoButtons();
+                            } else {
+                                // Determine which table is the "many" side
+                                const manyTable = type === 'oneToMany' ? targetTable : sourceTable;
+                                const oneTable = type === 'oneToMany' ? sourceTable : targetTable;
+                                
+                                // Show attribute form for foreign key
+                                attributeForm.show((attribute) => {
+                                    // Create the foreign key attribute
+                                    const foreignKey = {
+                                        name: attribute.name || `${oneTable.name.toLowerCase()}_id`,
+                                        type: 'number',  // Default type for foreign keys
+                                        isPrimary: false,
+                                        isForeignKey: true,
+                                        references: oneTable.name
+                                    };
+                                    
+                                    // Add foreign key to the many side table
+                                    const command = createAddAttributeCommand(manyTable, foreignKey);
+                                    canvas.history.execute(command);
+                                    
+                                    // Create the actual relationship
+                                    canvas.addRelationship(sourceTable, targetTable, type);
+                                    saveToStorage(canvas.toJSON());
+                                    updateUndoRedoButtons();
+                                }, {
+                                    name: `${oneTable.name.toLowerCase()}_id`,
+                                    type: 'number',
+                                    isPrimary: false,
+                                    isForeignKey: true,
+                                    references: oneTable.name
+                                });
                             }
                         });
                     }

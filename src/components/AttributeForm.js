@@ -36,6 +36,14 @@ export class AttributeForm {
                                 <input type="checkbox" class="form-check-input" id="isPrimary">
                                 <label class="form-check-label" for="isPrimary">Primary Key</label>
                             </div>
+                            <div class="form-check mb-3">
+                                <input type="checkbox" class="form-check-input" id="isForeignKey" disabled>
+                                <label class="form-check-label" for="isForeignKey">Foreign Key</label>
+                            </div>
+                            <div class="mb-3" id="referencesField" style="display: none;">
+                                <label class="form-label">References Table</label>
+                                <input type="text" class="form-control" id="references" readonly>
+                            </div>
                         </form>
                     </div>
                     <div class="modal-footer">
@@ -54,6 +62,8 @@ export class AttributeForm {
         const saveBtn = this.modal.querySelector('#saveAttribute');
         const form = this.modal.querySelector('#attributeForm');
         const modalTitle = this.modal.querySelector('.modal-title');
+        const referencesField = this.modal.querySelector('#referencesField');
+        const foreignKeyCheckbox = this.modal.querySelector('#isForeignKey');
 
         // Update modal title and button text based on mode
         modalTitle.textContent = existingAttribute ? 'Edit Attribute' : 'Add Attribute';
@@ -64,8 +74,17 @@ export class AttributeForm {
             this.modal.querySelector('#attrName').value = existingAttribute.name;
             this.modal.querySelector('#attrType').value = existingAttribute.type;
             this.modal.querySelector('#isPrimary').checked = existingAttribute.isPrimary;
+            foreignKeyCheckbox.checked = existingAttribute.isForeignKey || false;
+            
+            if (existingAttribute.isForeignKey) {
+                referencesField.style.display = 'block';
+                this.modal.querySelector('#references').value = existingAttribute.references || '';
+            } else {
+                referencesField.style.display = 'none';
+            }
         } else {
             form.reset();
+            referencesField.style.display = 'none';
         }
 
         const handleSave = () => {
@@ -74,7 +93,15 @@ export class AttributeForm {
             const isPrimary = this.modal.querySelector('#isPrimary').checked;
 
             if (name) {
-                onSave({ name, type, isPrimary });
+                const isForeignKey = this.modal.querySelector('#isForeignKey').checked;
+                const references = this.modal.querySelector('#references').value;
+                onSave({ 
+                    name, 
+                    type, 
+                    isPrimary,
+                    isForeignKey,
+                    references
+                });
                 modal.hide();
                 form.reset();
             }
