@@ -44,6 +44,25 @@ export class Relationship {
         ctx.stroke();
     }
 
+    drawOneToOne(ctx, point, angle) {
+        const length = 15;
+        ctx.moveTo(point.x - length * Math.cos(angle), point.y - length * Math.sin(angle));
+        ctx.lineTo(point.x, point.y);
+        
+        // Draw the vertical line
+        const verticalOffset = 8;
+        const x = point.x - (length - 5) * Math.cos(angle);
+        const y = point.y - (length - 5) * Math.sin(angle);
+        ctx.moveTo(
+            x + verticalOffset * Math.sin(angle),
+            y - verticalOffset * Math.cos(angle)
+        );
+        ctx.lineTo(
+            x - verticalOffset * Math.sin(angle),
+            y + verticalOffset * Math.cos(angle)
+        );
+    }
+
     drawOneToMany(ctx, point, angle) {
         const length = 15;
         const spread = Math.PI / 6;
@@ -56,6 +75,27 @@ export class Relationship {
         ctx.lineTo(
             point.x - length * Math.cos(angle + spread),
             point.y - length * Math.sin(angle + spread)
+        );
+    }
+
+    drawManyToMany(ctx, point, angle) {
+        this.drawOneToMany(ctx, point, angle);
+        
+        // Add second crow's foot
+        const length = 15;
+        const spread = Math.PI / 6;
+        const offset = 10;
+        const x = point.x - offset * Math.cos(angle);
+        const y = point.y - offset * Math.sin(angle);
+        
+        ctx.moveTo(
+            x - length * Math.cos(angle - spread),
+            y - length * Math.sin(angle - spread)
+        );
+        ctx.lineTo(x, y);
+        ctx.lineTo(
+            x - length * Math.cos(angle + spread),
+            y - length * Math.sin(angle + spread)
         );
     }
 

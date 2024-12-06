@@ -1,5 +1,6 @@
 import { saveToStorage } from './storage';
 import { AttributeForm } from '../components/AttributeForm';
+import { RelationshipTypeModal } from '../components/RelationshipTypeModal';
 import { createMoveTableCommand, createAddAttributeCommand } from './history';
 import { ZOOM_LEVELS } from './constants';
 
@@ -11,6 +12,7 @@ export function initializeEventHandlers(canvas) {
     let activeConnectionPoint = null;
     
     const attributeForm = new AttributeForm();
+    const relationshipTypeModal = new RelationshipTypeModal();
 
     const addTableBtn = document.getElementById('addTable');
     const resetViewBtn = document.getElementById('resetView');
@@ -138,8 +140,11 @@ export function initializeEventHandlers(canvas) {
                 if (table !== relationshipStart.table && table.containsPoint(pos.x, pos.y)) {
                     const connectionPoint = findNearestConnectionPoint(table, pos);
                     if (connectionPoint) {
-                        canvas.addRelationship(relationshipStart.table, table, 'oneToMany');
-                        saveToStorage(canvas.toJSON());
+                        relationshipTypeModal.show((type) => {
+                            canvas.addRelationship(relationshipStart.table, table, type);
+                            saveToStorage(canvas.toJSON());
+                            updateUndoRedoButtons();
+                        });
                     }
                 }
             });
