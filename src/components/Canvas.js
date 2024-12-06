@@ -93,24 +93,33 @@ export class Canvas {
     loadDiagram(data) {
         this.tables.clear();
         this.relationships.clear();
+        this.history.clear();  // Clear history when loading new diagram
         
-        data.tables.forEach(tableData => {
-            const table = new Table(
-                tableData.name,
-                tableData.x,
-                tableData.y,
-                tableData.attributes
-            );
-            this.tables.set(table.id, table);
-        });
+        // First load all tables
+        if (data.tables) {
+            data.tables.forEach(tableData => {
+                const table = new Table(
+                    tableData.name,
+                    tableData.x,
+                    tableData.y,
+                    tableData.attributes
+                );
+                table.id = tableData.id;  // Ensure we preserve the original ID
+                this.tables.set(table.id, table);
+            });
+        }
         
-        data.relationships.forEach(relData => {
-            const sourceTable = this.tables.get(relData.sourceId);
-            const targetTable = this.tables.get(relData.targetId);
-            if (sourceTable && targetTable) {
-                this.addRelationship(sourceTable, targetTable, relData.type);
-            }
-        });
+        // Then reconstruct relationships
+        if (data.relationships) {
+            data.relationships.forEach(relData => {
+                const sourceTable = this.tables.get(relData.sourceId);
+                const targetTable = this.tables.get(relData.targetId);
+                if (sourceTable && targetTable) {
+                    const relationship = new Relationship(sourceTable, targetTable, relData.type);
+                    this.relationships.add(relationship);
+                }
+            });
+        }
         
         this.render();
     }
