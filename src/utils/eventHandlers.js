@@ -487,8 +487,21 @@ export function initializeEventHandlers(canvas) {
                     table.isEditingName = true;
                     
                     const finishEditing = () => {
-                        if (input.value.trim()) {
-                            table.name = input.value.trim();
+                        const newName = input.value.trim();
+                        if (newName) {
+                            // Check for duplicate names (case-insensitive)
+                            const normalizedName = newName.toLowerCase();
+                            const exists = Array.from(canvas.tables.values()).some(t => 
+                                t !== table && t.name.toLowerCase() === normalizedName
+                            );
+                            
+                            if (exists) {
+                                alert('A table with this name already exists');
+                                input.focus();
+                                return;
+                            }
+                            
+                            table.name = newName;
                             saveToStorage(canvas.toJSON());
                         }
                         table.isEditingName = false;

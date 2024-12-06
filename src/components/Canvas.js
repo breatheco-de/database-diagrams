@@ -70,6 +70,16 @@ export class Canvas {
     }
 
     addTable(name = 'New Table', x = null, y = null) {
+        // Check for duplicate table names (case-insensitive)
+        const normalizedName = name.toLowerCase();
+        const exists = Array.from(this.tables.values()).some(table => 
+            table.name.toLowerCase() === normalizedName
+        );
+        
+        if (exists) {
+            throw new Error('A table with this name already exists');
+        }
+
         // Get visible viewport bounds
         const viewportBounds = {
             left: -this.offset.x / this.scale,
