@@ -4,6 +4,7 @@ import { RELATIONSHIP_TYPES, ZOOM_LEVELS } from './constants';
 import { saveToStorage } from './storage';
 import { createDeleteTableCommand } from './history';
 
+let canvasInstance = null;
 let startTable = null;
 let startPoint = null;
 const attributeForm = new AttributeForm();
@@ -11,8 +12,8 @@ const relationshipTypeModal = new RelationshipTypeModal();
 
 function updateZoomDisplay() {
     const zoomText = document.getElementById('zoomLevel');
-    if (zoomText) {
-        zoomText.textContent = `${Math.round(canvas.scale * 100)}%`;
+    if (zoomText && canvasInstance) {
+        zoomText.textContent = `${Math.round(canvasInstance.scale * 100)}%`;
     }
 }
 
@@ -29,6 +30,7 @@ function updateUndoRedoButtons() {
 }
 
 export function initializeEventHandlers(canvas) {
+    canvasInstance = canvas;  // Store canvas reference
     // Mouse move handler
     canvas.canvas.addEventListener('mousemove', (e) => {
         const pos = getCanvasPosition(e, canvas);
