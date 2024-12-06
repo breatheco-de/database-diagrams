@@ -119,6 +119,13 @@ export function initializeEventHandlers(canvas) {
                 // Check if clicking edit icon
                 const attributeIndex = table.isEditIconClicked(pos.x, pos.y);
                 if (attributeIndex !== -1) {
+                    // Stop any ongoing drag operation
+                    isDragging = false;
+                    selectedTable = null;
+                    isCreatingRelationship = false;
+                    relationshipStart = null;
+                    
+                    // Get the attribute and show modal
                     const attribute = table.attributes[attributeIndex];
                     attributeForm.show((updatedAttribute) => {
                         // Update existing attribute
@@ -128,7 +135,10 @@ export function initializeEventHandlers(canvas) {
                         table.updateHeight();
                         canvas.render();
                         saveToStorage(canvas.toJSON());
-                    }, attribute); // Pass existing attribute data
+                    }, attribute);
+                    
+                    // Prevent event propagation
+                    e.stopPropagation();
                     return;
                 }
 
