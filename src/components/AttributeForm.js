@@ -49,10 +49,24 @@ export class AttributeForm {
         return modal;
     }
 
-    show(onSave) {
+    show(onSave, existingAttribute = null) {
         const modal = new bootstrap.Modal(this.modal);
         const saveBtn = this.modal.querySelector('#saveAttribute');
         const form = this.modal.querySelector('#attributeForm');
+        const modalTitle = this.modal.querySelector('.modal-title');
+
+        // Update modal title and button text based on mode
+        modalTitle.textContent = existingAttribute ? 'Edit Attribute' : 'Add Attribute';
+        saveBtn.textContent = existingAttribute ? 'Save Changes' : 'Add';
+
+        // Pre-fill form if editing existing attribute
+        if (existingAttribute) {
+            this.modal.querySelector('#attrName').value = existingAttribute.name;
+            this.modal.querySelector('#attrType').value = existingAttribute.type;
+            this.modal.querySelector('#isPrimary').checked = existingAttribute.isPrimary;
+        } else {
+            form.reset();
+        }
 
         const handleSave = () => {
             const name = this.modal.querySelector('#attrName').value;
