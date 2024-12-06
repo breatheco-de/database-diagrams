@@ -1,7 +1,7 @@
 import { saveToStorage } from './storage';
 import { AttributeForm } from '../components/AttributeForm';
 import { RelationshipTypeModal } from '../components/RelationshipTypeModal';
-import { createMoveTableCommand, createAddAttributeCommand } from './history';
+import { createMoveTableCommand, createAddAttributeCommand, createDeleteTableCommand } from './history';
 import { ZOOM_LEVELS } from './constants';
 
 // Module-level state for relationship creation

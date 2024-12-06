@@ -46,9 +46,9 @@ export class Table {
             ctx.textAlign = 'center';
             ctx.fillText(this.name, this.x + this.width / 2, this.y + 25);
             
-            // Draw delete button
+            // Draw delete button (trash can icon)
             ctx.fillStyle = 'var(--bs-danger)';
-            ctx.font = '14px Arial';
+            ctx.font = '14px FontAwesome';
             ctx.textAlign = 'center';
             const deleteBtn = {
                 x: this.x + this.width - 20,
@@ -56,7 +56,7 @@ export class Table {
                 width: 16,
                 height: 16
             };
-            ctx.fillText('×', deleteBtn.x, deleteBtn.y);
+            ctx.fillText('', deleteBtn.x, deleteBtn.y); // fa-trash unicode
         }
         
         // Draw separator line
