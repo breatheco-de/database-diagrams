@@ -69,11 +69,55 @@ export class Canvas {
         this.ctx.restore();
     }
 
-    addTable(name = 'New Table', x = 100, y = 100) {
-        const table = new Table(name, x, y);
+    addTable(name = 'New Table', x = null, y = null) {
+        // Get visible viewport bounds
+        const viewportBounds = {
+            left: -this.offset.x / this.scale,
+            top: -this.offset.y / this.scale,
+            right: (this.canvas.width - this.offset.x) / this.scale,
+            bottom: (this.canvas.height - this.offset.y) / this.scale
+        };
+        
+        // If no position provided, calculate center of viewport
+        if (x === null || y === null) {
+            x = (viewportBounds.left + viewportBounds.right) / 2 - 100;
+            y = (viewportBounds.top + viewportBounds.bottom) / 2 - 100;
+        }
+        
+        // Find non-overlapping position
+        let finalX = x;
+        let finalY = y;
+        let attempts = 0;
+        const spacing = 30;
+        
+        while (this.isPositionOccupied(finalX, finalY) && attempts < 100) {
+            // Spiral pattern for new positions
+            const angle = attempts * 0.5;
+            const radius = spacing * (1 + attempts * 0.2);
+            finalX = x + radius * Math.cos(angle);
+            finalY = y + radius * Math.sin(angle);
+            attempts++;
+        }
+        
+        // Create table at valid position
+        const table = new Table(name, finalX, finalY);
         const command = createAddTableCommand(this, table);
         this.history.execute(command);
         return table;
+    }
+
+    // Add helper method to check for table overlap
+    isPositionOccupied(x, y) {
+        const padding = 20;
+        for (const table of this.tables.values()) {
+            if (x < table.x + table.width + padding &&
+                x + 200 + padding > table.x && // 200 is default table width
+                y < table.y + table.height + padding &&
+                y + 100 + padding > table.y) { // 100 is minimum table height
+                return true;
+            }
+        }
+        return false;
     }
 
     addRelationship(sourceTable, targetTable, type) {
