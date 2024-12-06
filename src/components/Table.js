@@ -157,20 +157,12 @@ export class Table {
         const attributes = this.attributes;
         for (let i = 0; i < attributes.length; i++) {
             const yPos = this.y + 65 + (i * 30);
-            // Adjust icon position to better align with the text
             const iconX = this.x + this.width - 25;
-            const iconY = yPos - 12;
+            const iconY = yPos;
             
-            // Define a more precise click detection area
-            const clickArea = {
-                left: iconX - 10,
-                right: iconX + 10,
-                top: iconY - 8,
-                bottom: iconY + 8
-            };
-
-            if (x >= clickArea.left && x <= clickArea.right &&
-                y >= clickArea.top && y <= clickArea.bottom) {
+            // Expand click detection area slightly
+            if (x >= iconX - 12 && x <= iconX + 12 &&
+                y >= iconY - 12 && y <= iconY + 12) {
                 return i;
             }
         }

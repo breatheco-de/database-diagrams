@@ -120,7 +120,7 @@ export function initializeEventHandlers(canvas) {
                     input.value = `${attribute.name}: ${attribute.type}`;
                     input.style.position = 'absolute';
                     input.style.left = `${(table.x + 15) * canvas.scale + canvas.offset.x}px`;
-                    input.style.top = `${(table.y + 50 + attributeIndex * 30) * canvas.scale + canvas.offset.y}px`;
+                    input.style.top = `${(table.y + 53 + attributeIndex * 30) * canvas.scale + canvas.offset.y}px`;
                     input.style.width = `${160 * canvas.scale}px`;
                     input.style.height = '24px';
                     input.style.font = '14px Arial';
