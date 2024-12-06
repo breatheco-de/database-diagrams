@@ -114,3 +114,25 @@ export function createAddAttributeCommand(table, attribute) {
         }
     );
 }
+
+export function createDeleteTableCommand(canvas, table) {
+    const relationships = Array.from(canvas.relationships)
+        .filter(rel => rel.sourceTable === table || rel.targetTable === table);
+    
+    return new Command(
+        () => {
+            // Remove connected relationships
+            relationships.forEach(rel => canvas.relationships.delete(rel));
+            // Remove table
+            canvas.tables.delete(table.id);
+            canvas.render();
+        },
+        () => {
+            // Restore table
+            canvas.tables.set(table.id, table);
+            // Restore relationships
+            relationships.forEach(rel => canvas.relationships.add(rel));
+            canvas.render();
+        }
+    );
+}

@@ -64,6 +64,53 @@ export function initializeEventHandlers(canvas) {
         // Check if clicking on a table
         canvas.tables.forEach(table => {
             if (table.containsPoint(pos.x, pos.y)) {
+                // Check if clicking delete button
+                if (pos.x >= table.x + table.width - 30 && 
+                    pos.x <= table.x + table.width - 10 &&
+                    pos.y >= table.y + 10 &&
+                    pos.y <= table.y + 30) {
+                    
+                    // Create confirmation modal
+                    const modal = document.createElement('div');
+                    modal.className = 'modal fade';
+                    modal.innerHTML = `
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Delete Table</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>Are you sure you want to delete this table? This will also remove all relationships connected to it.</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="button" class="btn btn-danger" id="confirmDelete">Delete</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.body.appendChild(modal);
+                    const bsModal = new bootstrap.Modal(modal);
+                    
+                    const deleteTable = () => {
+                        const command = createDeleteTableCommand(canvas, table);
+                        canvas.history.execute(command);
+                        bsModal.hide();
+                        modal.addEventListener('hidden.bs.modal', () => {
+                            document.body.removeChild(modal);
+                        });
+                        
+                        saveToStorage(canvas.toJSON());
+                        updateUndoRedoButtons();
+                    };
+                    
+                    modal.querySelector('#confirmDelete').onclick = deleteTable;
+                    bsModal.show();
+                    return;
+                }
+                
                 // Check if clicking add attribute button
                 if (table.isAddButtonClicked(pos.x, pos.y)) {
                     attributeForm.show((attribute) => {

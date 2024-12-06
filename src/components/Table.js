@@ -45,6 +45,18 @@ export class Table {
             ctx.font = 'bold 16px Arial';
             ctx.textAlign = 'center';
             ctx.fillText(this.name, this.x + this.width / 2, this.y + 25);
+            
+            // Draw delete button
+            ctx.fillStyle = 'var(--bs-danger)';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            const deleteBtn = {
+                x: this.x + this.width - 20,
+                y: this.y + 20,
+                width: 16,
+                height: 16
+            };
+            ctx.fillText('×', deleteBtn.x, deleteBtn.y);
         }
         
         // Draw separator line
