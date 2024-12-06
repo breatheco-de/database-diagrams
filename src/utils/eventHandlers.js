@@ -1,10 +1,14 @@
 import { saveToStorage } from './storage';
+import { AttributeForm } from '../components/AttributeForm';
 
 export function initializeEventHandlers(canvas) {
     let isDragging = false;
     let selectedTable = null;
     let isCreatingRelationship = false;
     let relationshipStart = null;
+    let activeConnectionPoint = null;
+    
+    const attributeForm = new AttributeForm();
 
     const addTableBtn = document.getElementById('addTable');
     const resetViewBtn = document.getElementById('resetView');
@@ -30,6 +34,24 @@ export function initializeEventHandlers(canvas) {
         // Check if clicking on a table
         canvas.tables.forEach(table => {
             if (table.containsPoint(pos.x, pos.y)) {
+                // Check if clicking add attribute button
+                if (table.isAddButtonClicked(pos.x, pos.y)) {
+                    attributeForm.show((attribute) => {
+                        table.addAttribute(attribute.name, attribute.type, attribute.isPrimary);
+                        canvas.render();
+                        saveToStorage(canvas.toJSON());
+                    });
+                    return;
+                }
+
+                // Check if clicking on connection points
+                const connectionPoint = findNearestConnectionPoint(table, pos);
+                if (connectionPoint) {
+                    isCreatingRelationship = true;
+                    relationshipStart = { table, point: connectionPoint };
+                    return;
+                }
+
                 selectedTable = table;
                 isDragging = true;
                 return;
@@ -37,17 +59,49 @@ export function initializeEventHandlers(canvas) {
         });
 
         // If not clicking on a table, start canvas drag
-        if (!selectedTable) {
+        if (!selectedTable && !isCreatingRelationship) {
             isDragging = true;
             canvas.dragStart = { x: e.clientX - canvas.offset.x, y: e.clientY - canvas.offset.y };
         }
     });
 
     canvas.canvas.addEventListener('mousemove', (e) => {
+        const pos = getCanvasPosition(e, canvas);
+
+        if (isCreatingRelationship) {
+            canvas.render();
+            // Draw temporary relationship line
+            const ctx = canvas.ctx;
+            ctx.save();
+            ctx.translate(canvas.offset.x, canvas.offset.y);
+            ctx.scale(canvas.scale, canvas.scale);
+            ctx.beginPath();
+            ctx.moveTo(relationshipStart.point.x, relationshipStart.point.y);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.strokeStyle = 'var(--bs-primary)';
+            ctx.stroke();
+            ctx.restore();
+            return;
+        }
+
         if (!isDragging) return;
+function findNearestConnectionPoint(table, pos) {
+    const points = table.getConnectionPoints();
+    let nearest = null;
+    let minDistance = 10; // Connection point detection radius
+    
+    points.forEach(point => {
+        const distance = Math.hypot(pos.x - point.x, pos.y - point.y);
+        if (distance < minDistance) {
+            minDistance = distance;
+            nearest = point;
+        }
+    });
+    
+    return nearest;
+}
 
         if (selectedTable) {
-            const pos = getCanvasPosition(e, canvas);
             selectedTable.x = pos.x - selectedTable.width / 2;
             selectedTable.y = pos.y - selectedTable.height / 2;
         } else {
@@ -60,12 +114,28 @@ export function initializeEventHandlers(canvas) {
         canvas.render();
     });
 
-    canvas.canvas.addEventListener('mouseup', () => {
+    canvas.canvas.addEventListener('mouseup', (e) => {
+        if (isCreatingRelationship) {
+            const pos = getCanvasPosition(e, canvas);
+            canvas.tables.forEach(table => {
+                if (table !== relationshipStart.table && table.containsPoint(pos.x, pos.y)) {
+                    const connectionPoint = findNearestConnectionPoint(table, pos);
+                    if (connectionPoint) {
+                        canvas.addRelationship(relationshipStart.table, table, 'oneToMany');
+                        saveToStorage(canvas.toJSON());
+                    }
+                }
+            });
+            isCreatingRelationship = false;
+            relationshipStart = null;
+        }
+
         if (selectedTable) {
             saveToStorage(canvas.toJSON());
         }
         isDragging = false;
         selectedTable = null;
+        canvas.render();
     });
 
     // Zoom handling

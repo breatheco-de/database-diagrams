@@ -33,12 +33,24 @@ export class Table {
         // Draw attributes
         ctx.textAlign = 'left';
         this.attributes.forEach((attr, index) => {
+            const text = `${attr.isPrimary ? '🔑 ' : ''}${attr.name}: ${attr.type}`;
             ctx.fillText(
-                attr.name,
+                text,
                 this.x + 10,
                 this.y + 65 + (index * 30)
             );
         });
+        
+        // Draw add attribute button
+        const plusY = this.y + this.height - 25;
+        ctx.beginPath();
+        ctx.arc(this.x + this.width / 2, plusY, 10, 0, Math.PI * 2);
+        ctx.fillStyle = 'var(--bs-primary)';
+        ctx.fill();
+        
+        ctx.fillStyle = 'white';
+        ctx.textAlign = 'center';
+        ctx.fillText('+', this.x + this.width / 2, plusY + 5);
         
         // Draw connection points
         this.drawConnectionPoints(ctx);
@@ -71,6 +83,13 @@ export class Table {
     addAttribute(name, type = 'string', isPrimary = false) {
         this.attributes.push({ name, type, isPrimary });
         this.height = 40 + (this.attributes.length * 30);
+    isAddButtonClicked(x, y) {
+        const buttonY = this.y + this.height - 25;
+        const buttonX = this.x + this.width / 2;
+        const radius = 10;
+        
+        return Math.hypot(x - buttonX, y - buttonY) <= radius;
+    }
     }
 
     toJSON() {
