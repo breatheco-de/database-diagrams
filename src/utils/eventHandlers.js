@@ -3,6 +3,7 @@ import { AttributeForm } from '../components/AttributeForm';
 import { RelationshipTypeModal } from '../components/RelationshipTypeModal';
 import { createMoveTableCommand, createAddAttributeCommand, createDeleteTableCommand } from './history';
 import { ZOOM_LEVELS } from './constants';
+import { showSnackbar } from './ui';
 
 // Module-level state for relationship creation
 let relationshipStart = null;
@@ -496,7 +497,7 @@ export function initializeEventHandlers(canvas) {
                             );
                             
                             if (exists) {
-                                alert('A table with this name already exists');
+                                showSnackbar('A table with this name already exists');
                                 input.focus();
                                 return;
                             }

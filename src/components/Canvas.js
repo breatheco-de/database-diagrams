@@ -2,6 +2,7 @@ import { Table } from './Table';
 import { Relationship } from './Relationship';
 import { GRID_SIZE, ZOOM_LEVELS, DEFAULT_ZOOM_INDEX } from '../utils/constants';
 import { HistoryManager, createAddTableCommand, createAddRelationshipCommand } from '../utils/history';
+import { showSnackbar } from '../utils/ui';
 
 export class Canvas {
     constructor(canvasId) {
@@ -77,7 +78,8 @@ export class Canvas {
         );
         
         if (exists) {
-            throw new Error('A table with this name already exists');
+            showSnackbar('A table with this name already exists');
+            return null;
         }
 
         // Get visible viewport bounds
