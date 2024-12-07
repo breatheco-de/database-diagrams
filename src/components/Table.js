@@ -86,9 +86,18 @@ export class Table {
                 yPos
             );
             
-            // Draw edit pencil icon
-            ctx.font = '14px FontAwesome';  // Only change font for the icon
-            ctx.fillStyle = 'var(--bs-primary)';
+            // Draw edit pencil icon with hover effect
+            ctx.font = '16px FontAwesome';  // Slightly larger font for better visibility
+            ctx.fillStyle = this.isHovered ? 'var(--bs-primary)' : 'var(--bs-secondary)';
+            
+            // Draw a subtle background circle for the icon
+            ctx.beginPath();
+            ctx.arc(this.x + this.width - 25, yPos - 6, 12, 0, Math.PI * 2);
+            ctx.fillStyle = this.isHovered ? 'rgba(var(--bs-primary-rgb), 0.1)' : 'transparent';
+            ctx.fill();
+            
+            // Draw the pencil icon
+            ctx.fillStyle = this.isHovered ? 'var(--bs-primary)' : 'var(--bs-secondary)';
             ctx.fillText('\uf040', this.x + this.width - 25, yPos); // fa-pencil unicode
             
             // Restore font settings
@@ -171,9 +180,17 @@ export class Table {
             const iconX = this.x + this.width - 25;
             const iconY = yPos;
             
-            // Expand click detection area for better usability and make it more symmetrical
-            if (x >= iconX - 20 && x <= iconX + 20 &&
-                y >= iconY - 15 && y <= iconY + 15) {
+            // Create a larger, more forgiving click detection area
+            const clickArea = {
+                left: iconX - 25,    // Increased from -20
+                right: iconX + 25,   // Increased from +20
+                top: iconY - 20,     // Increased from -15
+                bottom: iconY + 20   // Increased from +15
+            };
+            
+            // Check if click is within the expanded area
+            if (x >= clickArea.left && x <= clickArea.right &&
+                y >= clickArea.top && y <= clickArea.bottom) {
                 return i;
             }
         }
