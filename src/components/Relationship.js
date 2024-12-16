@@ -101,89 +101,105 @@ export class Relationship {
     }
 
     findPathAroundTables(start, end, tables) {
-        // Always use straight paths with right angles
+        // Calculate direction vectors
+        const dx = end.x - start.x;
+        const dy = end.y - start.y;
+        const absDx = Math.abs(dx);
+        const absDy = Math.abs(dy);
+        
+        // Initialize path arrays for different routing options
         const paths = [];
         
-        // Calculate the direct distances for both routing options
-        const directH = Math.abs(end.x - start.x);
-        const directV = Math.abs(end.y - start.y);
+        // Try both horizontal-first and vertical-first paths
+        const horizontalFirst = [
+            start,
+            { x: start.x + dx, y: start.y },
+            end
+        ];
         
-        // Determine primary direction based on the longer distance
-        if (directH >= directV) {
-            // Try horizontal first, then vertical (┌─┐ shape)
-            const pathH = [
-                start,
-                { x: end.x, y: start.y },
-                end
-            ];
-            
-            // Try vertical first, then horizontal (├─┤ shape)
-            const pathV = [
-                start,
-                { x: start.x, y: end.y },
-                end
-            ];
-            
-            // Check path validity
-            if (!this.pathIntersectsTables(pathH[0], pathH[1], tables) &&
-                !this.pathIntersectsTables(pathH[1], pathH[2], tables)) {
-                paths.push(pathH);
-            }
-            
-            if (!this.pathIntersectsTables(pathV[0], pathV[1], tables) &&
-                !this.pathIntersectsTables(pathV[1], pathV[2], tables)) {
-                paths.push(pathV);
-            }
-        } else {
-            // Try vertical first, then horizontal
-            const pathV = [
-                start,
-                { x: start.x, y: end.y },
-                end
-            ];
-            
-            // Try horizontal first, then vertical
-            const pathH = [
-                start,
-                { x: end.x, y: start.y },
-                end
-            ];
-            
-            // Check path validity
-            if (!this.pathIntersectsTables(pathV[0], pathV[1], tables) &&
-                !this.pathIntersectsTables(pathV[1], pathV[2], tables)) {
-                paths.push(pathV);
-            }
-            
-            if (!this.pathIntersectsTables(pathH[0], pathH[1], tables) &&
-                !this.pathIntersectsTables(pathH[1], pathH[2], tables)) {
-                paths.push(pathH);
-            }
-        }
+        const verticalFirst = [
+            start,
+            { x: start.x, y: start.y + dy },
+            end
+        ];
         
-        // If simple paths don't work, try paths with additional segments
+        // Check which path is better based on intersection and length
+        const horizontalValid = !this.pathIntersectsTables(horizontalFirst[0], horizontalFirst[1], tables) &&
+                              !this.pathIntersectsTables(horizontalFirst[1], horizontalFirst[2], tables);
+        
+        const verticalValid = !this.pathIntersectsTables(verticalFirst[0], verticalFirst[1], tables) &&
+                            !this.pathIntersectsTables(verticalFirst[1], verticalFirst[2], tables);
+        
+        // Add valid paths to options
+        if (horizontalValid) paths.push(horizontalFirst);
+        if (verticalValid) paths.push(verticalFirst);
+        
+        // If no simple path works, try middle point routing
         if (paths.length === 0) {
-            // Try path with additional vertical segment
-            const pathExtended = [
+            const midX = start.x + dx / 2;
+            const midY = start.y + dy / 2;
+            
+            // Try routing through middle point
+            const middleRoute = [
                 start,
-                { x: start.x, y: start.y + (end.y - start.y) / 2 },
-                { x: end.x, y: start.y + (end.y - start.y) / 2 },
-                end
+                { x: midX, y: start.y },
+                { x: midX, y: midY },
+                { x: midX, y: end.y },
+                { x: end.x, y: end.y }
             ];
             
-            if (!this.pathIntersectsTables(pathExtended[0], pathExtended[1], tables) &&
-                !this.pathIntersectsTables(pathExtended[1], pathExtended[2], tables) &&
-                !this.pathIntersectsTables(pathExtended[2], pathExtended[3], tables)) {
-                return pathExtended;
+            // Simplify path by removing unnecessary points
+            const simplified = this.simplifyPath(middleRoute);
+            
+            // Check if simplified path is valid
+            let isValid = true;
+            for (let i = 0; i < simplified.length - 1; i++) {
+                if (this.pathIntersectsTables(simplified[i], simplified[i + 1], tables)) {
+                    isValid = false;
+                    break;
+                }
             }
+            
+            if (isValid) return simplified;
         }
         
-        // Return the first valid path or default to simple vertical-horizontal path
-        return paths[0] || [
+        // Return the shortest valid path or default path
+        if (paths.length > 0) {
+            // Sort paths by total length
+            paths.sort((a, b) => this.getPathLength(a) - this.getPathLength(b));
+            return paths[0];
+        }
+        
+        // Default to simple two-segment path if no valid path found
+        return [
             start,
             { x: start.x, y: end.y },
             end
         ];
+    }
+    
+    simplifyPath(path) {
+        if (path.length <= 2) return path;
+        
+        const result = [path[0]];
+        let current = path[0];
+        
+        for (let i = 1; i < path.length - 1; i++) {
+            const prev = path[i - 1];
+            const next = path[i + 1];
+            const point = path[i];
+            
+            // Skip point if it's collinear with previous and next points
+            if ((point.x === prev.x && point.x === next.x) ||
+                (point.y === prev.y && point.y === next.y)) {
+                continue;
+            }
+            
+            result.push(point);
+        }
+        
+        result.push(path[path.length - 1]);
+        return result;
     }
 
     getPathLength(path) {

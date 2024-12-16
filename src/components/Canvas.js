@@ -192,11 +192,7 @@ export class Canvas {
                         );
                     } else if (relData.type === "manyToMany") {
                         // Both tables should have foreign keys referencing each other
-                        hasForeignKey = sourceTable.attributes.some(attr =>
-                            attr.isForeignKey && attr.references === targetTable.name
-                        ) && targetTable.attributes.some(attr =>
-                            attr.isForeignKey && attr.references === sourceTable.name
-                        );
+                        hasForeignKey = true; // We'll allow many-to-many without explicit foreign keys
                     } else if (relData.type === "oneToOne") {
                         // Either table can have the foreign key
                         hasForeignKey = sourceTable.attributes.some(attr =>
@@ -206,6 +202,7 @@ export class Canvas {
                         );
                     }
 
+                    // Create relationship if validation passes
                     if (hasForeignKey) {
                         const relationship = new Relationship(sourceTable, targetTable, relData.type, this);
                         this.relationships.add(relationship);
