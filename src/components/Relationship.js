@@ -12,14 +12,179 @@ export class Relationship {
             this.targetTable.getConnectionPoints(),
         );
 
+        // Get path points avoiding tables
+        const pathPoints = this.getPathAvoidingTables(source.start, source.end);
+
+        // Draw the path
         ctx.beginPath();
-        ctx.moveTo(source.start.x, source.start.y);
-        ctx.lineTo(source.end.x, source.end.y);
+        ctx.moveTo(pathPoints[0].x, pathPoints[0].y);
+        for (let i = 1; i < pathPoints.length; i++) {
+            ctx.lineTo(pathPoints[i].x, pathPoints[i].y);
+        }
         ctx.strokeStyle = "var(--bs-primary)";
         ctx.lineWidth = 2;
         ctx.stroke();
 
-        this.drawCrowFoot(ctx, source);
+        // Draw crow's foot at the end point
+        this.drawCrowFoot(ctx, {
+            start: pathPoints[pathPoints.length - 2] || source.start,
+            end: pathPoints[pathPoints.length - 1]
+        });
+    }
+
+    getPathAvoidingTables(start, end) {
+        // If no canvas or no other tables, return direct path
+        if (!this.canvas || this.canvas.tables.size <= 2) {
+            return [start, end];
+        }
+
+        const tables = Array.from(this.canvas.tables.values())
+            .filter(table => table !== this.sourceTable && table !== this.targetTable);
+
+        // Check if direct path intersects any tables
+        if (!this.pathIntersectsTables(start, end, tables)) {
+            return [start, end];
+        }
+
+        // Find intermediate points to avoid tables
+        const path = this.findPathAroundTables(start, end, tables);
+        return path;
+    }
+
+    pathIntersectsTables(start, end, tables) {
+        return tables.some(table => {
+            const rect = {
+                left: table.x - 10,
+                right: table.x + table.width + 10,
+                top: table.y - 10,
+                bottom: table.y + table.height + 10
+            };
+            return this.lineIntersectsRect(start, end, rect);
+        });
+    }
+
+    lineIntersectsRect(start, end, rect) {
+        // Check if line segment intersects with rectangle
+        const left = this.lineIntersectsLine(
+            start, end,
+            {x: rect.left, y: rect.top},
+            {x: rect.left, y: rect.bottom}
+        );
+        const right = this.lineIntersectsLine(
+            start, end,
+            {x: rect.right, y: rect.top},
+            {x: rect.right, y: rect.bottom}
+        );
+        const top = this.lineIntersectsLine(
+            start, end,
+            {x: rect.left, y: rect.top},
+            {x: rect.right, y: rect.top}
+        );
+        const bottom = this.lineIntersectsLine(
+            start, end,
+            {x: rect.left, y: rect.bottom},
+            {x: rect.right, y: rect.bottom}
+        );
+
+        return left || right || top || bottom;
+    }
+
+    lineIntersectsLine(a, b, c, d) {
+        // Returns true if line segments AB and CD intersect
+        const denominator = ((b.x - a.x) * (d.y - c.y)) - ((b.y - a.y) * (d.x - c.x));
+        if (denominator === 0) return false;
+
+        const ua = (((c.x - a.x) * (d.y - c.y)) - ((c.y - a.y) * (d.x - c.x))) / denominator;
+        const ub = (((c.x - a.x) * (b.y - a.y)) - ((c.y - a.y) * (b.x - a.x))) / denominator;
+
+        return (ua >= 0 && ua <= 1) && (ub >= 0 && ub <= 1);
+    }
+
+    findPathAroundTables(start, end, tables) {
+        // Simple path finding: try going around obstacles using corner points
+        const path = [start];
+        
+        // Get bounding box of all tables
+        const bounds = tables.reduce((acc, table) => {
+            acc.left = Math.min(acc.left, table.x - 20);
+            acc.right = Math.max(acc.right, table.x + table.width + 20);
+            acc.top = Math.min(acc.top, table.y - 20);
+            acc.bottom = Math.max(acc.bottom, table.y + table.height + 20);
+            return acc;
+        }, {
+            left: Infinity,
+            right: -Infinity,
+            top: Infinity,
+            bottom: -Infinity
+        });
+
+        // Try different paths and choose the shortest valid one
+        const paths = [];
+
+        // Try going around horizontally first
+        const horizontalMid = start.y + (end.y - start.y) / 2;
+        const pathH1 = [
+            start,
+            {x: start.x, y: horizontalMid},
+            {x: end.x, y: horizontalMid},
+            end
+        ];
+        if (!this.pathIntersectsTables(start, pathH1[1], tables) &&
+            !this.pathIntersectsTables(pathH1[1], pathH1[2], tables) &&
+            !this.pathIntersectsTables(pathH1[2], end, tables)) {
+            paths.push(pathH1);
+        }
+
+        // Try going around vertically
+        const verticalMid = start.x + (end.x - start.x) / 2;
+        const pathV1 = [
+            start,
+            {x: verticalMid, y: start.y},
+            {x: verticalMid, y: end.y},
+            end
+        ];
+        if (!this.pathIntersectsTables(start, pathV1[1], tables) &&
+            !this.pathIntersectsTables(pathV1[1], pathV1[2], tables) &&
+            !this.pathIntersectsTables(pathV1[2], end, tables)) {
+            paths.push(pathV1);
+        }
+
+        // Try going around the bounds
+        const pathAround = [
+            start,
+            {x: bounds.left - 20, y: start.y},
+            {x: bounds.left - 20, y: end.y},
+            end
+        ];
+        if (!this.pathIntersectsTables(start, pathAround[1], tables) &&
+            !this.pathIntersectsTables(pathAround[1], pathAround[2], tables) &&
+            !this.pathIntersectsTables(pathAround[2], end, tables)) {
+            paths.push(pathAround);
+        }
+
+        // Choose the shortest valid path or fall back to direct path
+        if (paths.length > 0) {
+            const shortestPath = paths.reduce((shortest, current) => {
+                const currentLength = this.getPathLength(current);
+                const shortestLength = this.getPathLength(shortest);
+                return currentLength < shortestLength ? current : shortest;
+            });
+            return shortestPath;
+        }
+
+        // If no valid path found, return direct path
+        return [start, end];
+    }
+
+    getPathLength(path) {
+        let length = 0;
+        for (let i = 1; i < path.length; i++) {
+            length += Math.hypot(
+                path[i].x - path[i-1].x,
+                path[i].y - path[i-1].y
+            );
+        }
+        return length;
     }
 
     drawCrowFoot(ctx, points) {
