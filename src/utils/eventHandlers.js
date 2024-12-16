@@ -41,6 +41,21 @@ function configureToolbar() {
         zoomToolbar.className = "toolbar toolbar-zoom bottom-right";
     }
 
+    // Configure initial zoom level from URL parameter
+    const zoomLevel = params.get("zoomLevel");
+    if (zoomLevel) {
+        const zoomValue = parseFloat(zoomLevel);
+        if (!isNaN(zoomValue) && zoomValue > 0) {
+            // Find the closest zoom level index
+            const index = ZOOM_LEVELS.reduce((prev, curr, idx) => 
+                Math.abs(curr - zoomValue) < Math.abs(ZOOM_LEVELS[prev] - zoomValue) ? idx : prev
+            , 0);
+            canvas.zoomIndex = index;
+            canvas.scale = ZOOM_LEVELS[index];
+            updateZoomDisplay();
+        }
+    }
+
     // Configure Add Table button visibility
     const addTableBtn = document.getElementById("addTable");
     const allowAdd = params.get("allowAdd");
@@ -593,10 +608,10 @@ export function initializeEventHandlers(canvas) {
     });
 
     // Zoom handling
-    function updateZoomDisplay() {
+    window.updateZoomDisplay = function() {
         const zoomLevel = document.getElementById("zoomLevel");
         zoomLevel.textContent = `${Math.round(canvas.scale * 100)}%`;
-    }
+    };
 
     function setZoomLevel(index) {
         canvas.zoomIndex = Math.max(0, Math.min(index, ZOOM_LEVELS.length - 1));
