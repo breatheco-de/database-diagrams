@@ -48,6 +48,16 @@ function configureToolbar() {
         addTableBtn.style.display = "none";
     }
 
+    // Configure Edit-related buttons visibility in readOnly mode
+    const resetViewBtn = document.getElementById("resetView");
+    const undoBtn = document.getElementById("undo");
+    const redoBtn = document.getElementById("redo");
+    if (isReadOnly) {
+        resetViewBtn.style.display = "none";
+        undoBtn.style.display = "none";
+        redoBtn.style.display = "none";
+    }
+
     // Configure Export options
     const exportDropdown = document.querySelector(".dropdown");
     const exportImage = document.getElementById("exportImage");
