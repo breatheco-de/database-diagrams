@@ -111,32 +111,31 @@ export class Relationship {
     getNearestPoints(sourcePoints, targetPoints) {
         let minDistance = Infinity;
         let result = { start: null, end: null };
-        let fallbackResult = { start: null, end: null };
-        let fallbackDistance = Infinity;
-
+        
         // Get all existing relationships, or empty array if canvas not available
         const relationships = this.canvas ? Array.from(this.canvas.relationships) : [];
         
-        // Track used incoming points for each table
+        // Track used incoming points for each table with their relationships
         const usedIncomingPoints = new Map();
         
-        // Track already used connection points from existing relationships
+        // First pass: collect all current connection points usage
         relationships.forEach(rel => {
             if (rel !== this) {
                 const targetId = rel.targetTable.id;
                 if (!usedIncomingPoints.has(targetId)) {
-                    usedIncomingPoints.set(targetId, new Set());
+                    usedIncomingPoints.set(targetId, new Map());
                 }
                 
-                const points = rel.targetTable.getConnectionPoints();
+                const tablePoints = rel.targetTable.getConnectionPoints();
+                
+                // Find the nearest point currently being used by this relationship
                 let nearestPoint = null;
                 let minDist = Infinity;
                 
-                // Find the actual connection point being used
-                points.forEach(point => {
+                tablePoints.forEach(point => {
                     const dist = Math.hypot(
-                        point.x - (rel.targetTable.x + rel.targetTable.width/2),
-                        point.y - (rel.targetTable.y + rel.targetTable.height/2)
+                        point.x - (rel.sourceTable.x + rel.sourceTable.width/2),
+                        point.y - (rel.sourceTable.y + rel.sourceTable.height/2)
                     );
                     if (dist < minDist) {
                         minDist = dist;
@@ -145,42 +144,41 @@ export class Relationship {
                 });
                 
                 if (nearestPoint) {
-                    usedIncomingPoints.get(targetId).add(`${nearestPoint.x},${nearestPoint.y}`);
+                    const pointKey = `${nearestPoint.x},${nearestPoint.y}`;
+                    const relationshipsAtPoint = usedIncomingPoints.get(targetId).get(pointKey) || [];
+                    relationshipsAtPoint.push(rel);
+                    usedIncomingPoints.get(targetId).set(pointKey, relationshipsAtPoint);
                 }
             }
         });
 
-        // Get used points for current target table
+        // For the current relationship's target table
         const targetId = this.targetTable.id;
-        const usedIncoming = usedIncomingPoints.get(targetId) || new Set();
-
-        // Try to find nearest unused target point first
+        const currentTablePoints = usedIncomingPoints.get(targetId) || new Map();
+        
+        // Find the best connection point considering angle and usage
         sourcePoints.forEach((sp) => {
             targetPoints.forEach((tp) => {
                 const pointKey = `${tp.x},${tp.y}`;
+                const relationshipsAtPoint = currentTablePoints.get(pointKey) || [];
                 const distance = Math.hypot(tp.x - sp.x, tp.y - sp.y);
-
-                // If point is unused and closer than current best
-                if (!usedIncoming.has(pointKey) && distance < minDistance) {
-                    minDistance = distance;
+                
+                // Calculate angle score (prefer points that maintain better angles)
+                const angle = Math.atan2(tp.y - sp.y, tp.x - sp.x);
+                const angleScore = Math.abs(angle % (Math.PI / 2)); // Prefer horizontal/vertical connections
+                
+                // Weighted score combining distance and angle
+                const usagePenalty = relationshipsAtPoint.length * 100; // Heavy penalty for used points
+                const totalScore = distance + angleScore * 50 + usagePenalty;
+                
+                if (totalScore < minDistance) {
+                    minDistance = totalScore;
                     result = { start: sp, end: tp };
-                }
-
-                // Keep track of fallback (used points) in case we need them
-                if (distance < fallbackDistance) {
-                    fallbackDistance = distance;
-                    fallbackResult = { start: sp, end: tp };
                 }
             });
         });
-
-        // If we found an unused point, use it
-        if (result.start !== null && result.end !== null) {
-            return result;
-        }
-
-        // Otherwise use the fallback (closest point regardless of usage)
-        return fallbackResult;
+        
+        return result;
     }
 
     containsPoint(x, y) {
