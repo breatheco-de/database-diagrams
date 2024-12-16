@@ -14,6 +14,19 @@ let relationshipStart = null;
 let isCreatingRelationship = false;
 let isReadOnly = false;
 
+// Zoom handling functions
+function updateZoomDisplay(canvas) {
+    const zoomLevel = document.getElementById("zoomLevel");
+    zoomLevel.textContent = `${Math.round(canvas.scale * 100)}%`;
+}
+
+function setZoomLevel(canvas, index) {
+    canvas.zoomIndex = Math.max(0, Math.min(index, ZOOM_LEVELS.length - 1));
+    canvas.scale = ZOOM_LEVELS[canvas.zoomIndex];
+    canvas.render();
+    updateZoomDisplay(canvas);
+}
+
 function configureToolbar(canvas) {
     const params = new URLSearchParams(window.location.search);
     isReadOnly = params.get("readOnly") === "true";
@@ -50,9 +63,7 @@ function configureToolbar(canvas) {
             const index = ZOOM_LEVELS.reduce((prev, curr, idx) => 
                 Math.abs(curr - zoomValue) < Math.abs(ZOOM_LEVELS[prev] - zoomValue) ? idx : prev
             , 0);
-            canvas.zoomIndex = index;
-            canvas.scale = ZOOM_LEVELS[index];
-            updateZoomDisplay();
+            setZoomLevel(canvas, index);
         }
     }
 
@@ -607,35 +618,23 @@ export function initializeEventHandlers(canvas) {
         canvas.render();
     });
 
-    // Zoom handling
-    window.updateZoomDisplay = function() {
-        const zoomLevel = document.getElementById("zoomLevel");
-        zoomLevel.textContent = `${Math.round(canvas.scale * 100)}%`;
-    };
-
-    function setZoomLevel(index) {
-        canvas.zoomIndex = Math.max(0, Math.min(index, ZOOM_LEVELS.length - 1));
-        canvas.scale = ZOOM_LEVELS[canvas.zoomIndex];
-        canvas.render();
-        updateZoomDisplay();
-    }
-
+    // Zoom button handlers
     document.getElementById("zoomIn").addEventListener("click", () => {
-        setZoomLevel(canvas.zoomIndex + 1);
+        setZoomLevel(canvas, canvas.zoomIndex + 1);
     });
 
     document.getElementById("zoomOut").addEventListener("click", () => {
-        setZoomLevel(canvas.zoomIndex - 1);
+        setZoomLevel(canvas, canvas.zoomIndex - 1);
     });
 
     canvas.canvas.addEventListener("wheel", (e) => {
         e.preventDefault();
         const delta = e.deltaY > 0 ? -1 : 1;
-        setZoomLevel(canvas.zoomIndex + delta);
+        setZoomLevel(canvas, canvas.zoomIndex + delta);
     });
 
     // Initialize zoom display
-    updateZoomDisplay();
+    updateZoomDisplay(canvas);
 
     // Add double-click handler for table name editing
     canvas.canvas.addEventListener("dblclick", (e) => {
