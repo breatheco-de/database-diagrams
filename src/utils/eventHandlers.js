@@ -14,29 +14,48 @@ let relationshipStart = null;
 let isCreatingRelationship = false;
 
 function configureToolbar() {
-    const toolbar = document.querySelector('.toolbar');
+    const params = new URLSearchParams(window.location.search);
+    
+    // Configure zoom controls
+    const zoomToolbar = document.querySelector('.toolbar-zoom');
     const zoomControls = [
         document.getElementById('zoomOut'),
         document.getElementById('zoomIn'),
         document.getElementById('zoomLevel')
     ];
     
-    // Parse zoom parameter from URL
-    const params = new URLSearchParams(window.location.search);
     const zoomParam = params.get('zoom');
-    
-    // Configure zoom controls visibility
     if (zoomParam === 'false') {
-        zoomControls.forEach(control => {
-            if (control) control.style.display = 'none';
-        });
+        zoomToolbar.style.display = 'none';
+    } else if (['top-left', 'top-right', 'bottom-left', 'bottom-right'].includes(zoomParam)) {
+        zoomToolbar.className = `toolbar toolbar-zoom ${zoomParam}`;
+    } else {
+        zoomToolbar.className = 'toolbar toolbar-zoom top-left';
     }
     
-    // Configure toolbar position
-    if (zoomParam && ['top-left', 'top-right', 'bottom-left', 'bottom-right'].includes(zoomParam)) {
-        toolbar.className = `toolbar ${zoomParam}`;
-    } else {
-        toolbar.className = 'toolbar top-left'; // Default position
+    // Configure Add Table button visibility
+    const addTableBtn = document.getElementById('addTable');
+    const allowAdd = params.get('allowAdd');
+    if (allowAdd === 'false') {
+        addTableBtn.style.display = 'none';
+    }
+    
+    // Configure Export options
+    const exportDropdown = document.querySelector('.dropdown');
+    const exportImage = document.getElementById('exportImage');
+    const exportJson = document.getElementById('exportJson');
+    const allowExport = params.get('allowExport');
+    
+    if (allowExport === 'false') {
+        exportDropdown.style.display = 'none';
+    } else if (allowExport) {
+        const allowedFormats = allowExport.toLowerCase().split(',');
+        if (!allowedFormats.includes('png')) {
+            exportImage.style.display = 'none';
+        }
+        if (!allowedFormats.includes('json')) {
+            exportJson.style.display = 'none';
+        }
     }
 }
 

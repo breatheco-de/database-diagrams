@@ -13,34 +13,40 @@
 </head>
 <body>
     <div class="erd-container">
-        <div class="toolbar">
-            <button id="addTable" class="btn btn-secondary btn-sm">
-                <i class="fas fa-plus"></i> Add Table
-            </button>
-            <button id="zoomOut" class="btn btn-secondary btn-sm">
-                <i class="fas fa-search-minus"></i>
-            </button>
-            <span id="zoomLevel" class="badge bg-secondary mx-2">100%</span>
-            <button id="zoomIn" class="btn btn-secondary btn-sm">
-                <i class="fas fa-search-plus"></i>
-            </button>
-            <button id="resetView" class="btn btn-secondary btn-sm ms-2">
-                <i class="fas fa-compress-arrows-alt"></i> Reset View
-            </button>
-            <button id="undo" class="btn btn-secondary btn-sm" disabled>
-                <i class="fas fa-undo"></i> Undo
-            </button>
-            <button id="redo" class="btn btn-secondary btn-sm" disabled>
-                <i class="fas fa-redo"></i> Redo
-            </button>
-            <div class="dropdown d-inline-block">
-                <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                    <i class="fas fa-download"></i> Export
+        <div class="toolbar-container">
+            <div class="toolbar toolbar-add">
+                <button id="addTable" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-plus"></i> Add Table
                 </button>
-                <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" id="exportImage" href="#"><i class="fas fa-file-image"></i> Export as PNG</a></li>
-                    <li><a class="dropdown-item" id="exportJson" href="#"><i class="fas fa-file-code"></i> Export as JSON</a></li>
-                </ul>
+            </div>
+            <div class="toolbar toolbar-zoom">
+                <button id="zoomOut" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-search-minus"></i>
+                </button>
+                <span id="zoomLevel" class="badge bg-secondary mx-2">100%</span>
+                <button id="zoomIn" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-search-plus"></i>
+                </button>
+            </div>
+            <div class="toolbar toolbar-actions">
+                <button id="resetView" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-compress-arrows-alt"></i> Reset View
+                </button>
+                <button id="undo" class="btn btn-secondary btn-sm" disabled>
+                    <i class="fas fa-undo"></i> Undo
+                </button>
+                <button id="redo" class="btn btn-secondary btn-sm" disabled>
+                    <i class="fas fa-redo"></i> Redo
+                </button>
+                <div class="dropdown d-inline-block">
+                    <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" id="exportImage" href="#"><i class="fas fa-file-image"></i> Export as PNG</a></li>
+                        <li><a class="dropdown-item" id="exportJson" href="#"><i class="fas fa-file-code"></i> Export as JSON</a></li>
+                    </ul>
+                </div>
             </div>
         </div>
         <canvas id="erdCanvas"></canvas>
