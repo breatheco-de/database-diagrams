@@ -133,8 +133,7 @@ export class Canvas {
     }
 
     addRelationship(sourceTable, targetTable, type) {
-        const relationship = new Relationship(sourceTable, targetTable, type);
-                        relationship.canvas = this;
+        const relationship = new Relationship(sourceTable, targetTable, type, this);
         const command = createAddRelationshipCommand(this, relationship);
         this.history.execute(command);
         return relationship;
@@ -183,8 +182,7 @@ export class Canvas {
 
                     // Only create relationship if foreign key exists
                     if (hasForeignKey) {
-                        const relationship = new Relationship(sourceTable, targetTable, relData.type);
-                        relationship.canvas = this;  // Set the canvas reference
+                        const relationship = new Relationship(sourceTable, targetTable, relData.type, this);
                         this.relationships.add(relationship);
                     }
                 }

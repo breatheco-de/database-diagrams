@@ -1,9 +1,9 @@
 export class Relationship {
-    constructor(sourceTable, targetTable, type = "oneToMany") {
+    constructor(sourceTable, targetTable, type = "oneToMany", canvas = null) {
         this.sourceTable = sourceTable;
         this.targetTable = targetTable;
         this.type = type;
-        this.canvas = null; // Will be set by Canvas class after creation
+        this.canvas = canvas || sourceTable?.canvas || targetTable?.canvas;
     }
 
     draw(ctx) {
@@ -112,8 +112,8 @@ export class Relationship {
         let minDistance = Infinity;
         let result = { start: null, end: null };
 
-        // Get all existing relationships
-        const relationships = Array.from(this.sourceTable.canvas.relationships);
+        // Get all existing relationships, or empty array if canvas not available
+        const relationships = this.canvas ? Array.from(this.canvas.relationships) : [];
         
         // Filter out used connection points
         const usedSourcePoints = relationships
