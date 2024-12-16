@@ -17,11 +17,30 @@ body {
 
 .toolbar {
     position: absolute;
-    top: 1rem;
-    left: 1rem;
     z-index: 100;
     display: flex;
     gap: 0.5rem;
+    padding: 1rem;
+}
+
+.toolbar.top-left {
+    top: 0;
+    left: 0;
+}
+
+.toolbar.top-right {
+    top: 0;
+    right: 0;
+}
+
+.toolbar.bottom-left {
+    bottom: 0;
+    left: 0;
+}
+
+.toolbar.bottom-right {
+    bottom: 0;
+    right: 0;
 }
 
 #erdCanvas {

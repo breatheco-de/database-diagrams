@@ -13,6 +13,33 @@ import { showSnackbar } from "./ui";
 let relationshipStart = null;
 let isCreatingRelationship = false;
 
+function configureToolbar() {
+    const toolbar = document.querySelector('.toolbar');
+    const zoomControls = [
+        document.getElementById('zoomOut'),
+        document.getElementById('zoomIn'),
+        document.getElementById('zoomLevel')
+    ];
+    
+    // Parse zoom parameter from URL
+    const params = new URLSearchParams(window.location.search);
+    const zoomParam = params.get('zoom');
+    
+    // Configure zoom controls visibility
+    if (zoomParam === 'false') {
+        zoomControls.forEach(control => {
+            if (control) control.style.display = 'none';
+        });
+    }
+    
+    // Configure toolbar position
+    if (zoomParam && ['top-left', 'top-right', 'bottom-left', 'bottom-right'].includes(zoomParam)) {
+        toolbar.className = `toolbar ${zoomParam}`;
+    } else {
+        toolbar.className = 'toolbar top-left'; // Default position
+    }
+}
+
 export function initializeEventHandlers(canvas) {
     let isDragging = false;
     let selectedTable = null;
@@ -20,6 +47,8 @@ export function initializeEventHandlers(canvas) {
 
     const attributeForm = new AttributeForm();
     const relationshipTypeModal = new RelationshipTypeModal();
+
+    configureToolbar();
 
     const addTableBtn = document.getElementById("addTable");
     const resetViewBtn = document.getElementById("resetView");
@@ -130,19 +159,22 @@ export function initializeEventHandlers(canvas) {
 
     canvas.canvas.addEventListener("mousedown", (e) => {
         const pos = getCanvasPosition(e, canvas);
-        let handled = false;
+        let isIconClicked = false;
+        let isAddButtonClicked = false;
 
         // Check if clicking on a table
         canvas.tables.forEach((table) => {
-            if (!handled && table.containsPoint(pos.x, pos.y)) {
+            const attributeIndex = table.isEditIconClicked(pos.x, pos.y);
+            isIconClicked = isIconClicked || attributeIndex !== -1;
+            isAddButtonClicked =
+                isAddButtonClicked || table.isAddButtonClicked(pos.x, pos.y);
+
+            if (table.containsPoint(pos.x, pos.y)) {
                 // First check connection points
                 const connectionPoint = findNearestConnectionPoint(table, pos);
                 if (connectionPoint) {
                     isCreatingRelationship = true;
                     relationshipStart = { table, point: connectionPoint };
-                    isDragging = false;
-                    selectedTable = null;
-                    handled = true;
                     return;
                 }
 
@@ -195,8 +227,7 @@ export function initializeEventHandlers(canvas) {
                 }
 
                 // Check if clicking edit icon
-                const attributeIndex = table.isEditIconClicked(pos.x, pos.y);
-                if (attributeIndex !== -1) {
+                if (isIconClicked) {
                     const attribute = table.attributes[attributeIndex];
                     attributeForm.show((updatedAttribute) => {
                         // Update existing attribute
@@ -211,7 +242,7 @@ export function initializeEventHandlers(canvas) {
                 }
 
                 // Check if clicking add attribute button
-                if (table.isAddButtonClicked(pos.x, pos.y)) {
+                if (isAddButtonClicked) {
                     attributeForm.show((attribute) => {
                         const command = createAddAttributeCommand(table, {
                             name: attribute.name,
@@ -226,14 +257,23 @@ export function initializeEventHandlers(canvas) {
                     return;
                 }
 
-                selectedTable = table;
-                isDragging = true;
+                if (!isIconClicked && !isAddButtonClicked) {
+                    console.log("starting drag...");
+                    selectedTable = table;
+                    isDragging = true;
+                }
                 return;
             }
         });
 
         // If not clicking on a table, start canvas drag
-        if (!selectedTable && !isCreatingRelationship) {
+        if (
+            !selectedTable &&
+            !isCreatingRelationship &&
+            !isIconClicked &&
+            !isAddButtonClicked
+        ) {
+            console.log("starting drag 2...");
             isDragging = true;
             canvas.dragStart = {
                 x: e.clientX - canvas.offset.x,
@@ -588,22 +628,13 @@ export function initializeEventHandlers(canvas) {
 function findNearestConnectionPoint(table, pos) {
     const points = table.getConnectionPoints();
     let nearest = null;
-    let minDistance = 15; // Adjusted detection radius for better precision
+    let minDistance = 25; // Increased detection radius for better usability
 
-    points.forEach(point => {
-        // Calculate distance accounting for canvas scale
+    points.forEach((point) => {
         const distance = Math.hypot(pos.x - point.x, pos.y - point.y);
         if (distance < minDistance) {
-            // Additional check to ensure we're close to the edge
-            const isNearEdge = (
-                Math.abs(pos.x - point.x) < 10 || // Near vertical edges
-                Math.abs(pos.y - point.y) < 10    // Near horizontal edges
-            );
-
-            if (isNearEdge) {
-                minDistance = distance;
-                nearest = point;
-            }
+            minDistance = distance;
+            nearest = point;
         }
     });
 

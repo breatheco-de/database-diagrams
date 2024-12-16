@@ -171,11 +171,9 @@ export class Table {
             const iconX = this.x + this.width - 25;
             const iconY = yPos;
             
-            // Create a circular hit area for better usability
-            const radius = 12; // Clickable radius
-            const distance = Math.hypot(x - iconX, y - (iconY - 5));
-            
-            if (distance <= radius) {
+            // Expand click detection area for better usability and make it more symmetrical
+            if (x >= iconX - 20 && x <= iconX + 20 &&
+                y >= iconY - 15 && y <= iconY + 15) {
                 return i;
             }
         }
