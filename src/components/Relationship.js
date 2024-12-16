@@ -3,6 +3,7 @@ export class Relationship {
         this.sourceTable = sourceTable;
         this.targetTable = targetTable;
         this.type = type;
+        this.canvas = null; // Will be set by Canvas class after creation
     }
 
     draw(ctx) {
@@ -111,8 +112,49 @@ export class Relationship {
         let minDistance = Infinity;
         let result = { start: null, end: null };
 
-        sourcePoints.forEach((sp) => {
-            targetPoints.forEach((tp) => {
+        // Get all existing relationships
+        const relationships = Array.from(this.sourceTable.canvas.relationships);
+        
+        // Filter out used connection points
+        const usedSourcePoints = relationships
+            .filter(rel => rel !== this && (rel.sourceTable === this.sourceTable || rel.targetTable === this.sourceTable))
+            .map(rel => {
+                const points = rel.getNearestPoints(
+                    rel.sourceTable.getConnectionPoints(),
+                    rel.targetTable.getConnectionPoints()
+                );
+                return rel.sourceTable === this.sourceTable ? points.start : points.end;
+            });
+
+        const usedTargetPoints = relationships
+            .filter(rel => rel !== this && (rel.sourceTable === this.targetTable || rel.targetTable === this.targetTable))
+            .map(rel => {
+                const points = rel.getNearestPoints(
+                    rel.sourceTable.getConnectionPoints(),
+                    rel.targetTable.getConnectionPoints()
+                );
+                return rel.sourceTable === this.targetTable ? points.start : points.end;
+            });
+
+        // Filter out used points
+        const availableSourcePoints = sourcePoints.filter(sp => 
+            !usedSourcePoints.some(up => 
+                Math.abs(up.x - sp.x) < 1 && Math.abs(up.y - sp.y) < 1
+            )
+        );
+
+        const availableTargetPoints = targetPoints.filter(tp => 
+            !usedTargetPoints.some(up => 
+                Math.abs(up.x - tp.x) < 1 && Math.abs(up.y - tp.y) < 1
+            )
+        );
+
+        // If all points are used, fall back to original points
+        const finalSourcePoints = availableSourcePoints.length > 0 ? availableSourcePoints : sourcePoints;
+        const finalTargetPoints = availableTargetPoints.length > 0 ? availableTargetPoints : targetPoints;
+
+        finalSourcePoints.forEach((sp) => {
+            finalTargetPoints.forEach((tp) => {
                 const distance = Math.hypot(tp.x - sp.x, tp.y - sp.y);
                 if (distance < minDistance) {
                     minDistance = distance;

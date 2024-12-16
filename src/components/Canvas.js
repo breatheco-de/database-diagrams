@@ -134,6 +134,7 @@ export class Canvas {
 
     addRelationship(sourceTable, targetTable, type) {
         const relationship = new Relationship(sourceTable, targetTable, type);
+                        relationship.canvas = this;
         const command = createAddRelationshipCommand(this, relationship);
         this.history.execute(command);
         return relationship;
