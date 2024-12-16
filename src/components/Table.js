@@ -50,17 +50,19 @@ export class Table {
             ctx.textAlign = "center";
             ctx.fillText(this.name, this.x + this.width / 2, this.y + 25);
 
-            // Draw delete button (trash can icon)
-            ctx.fillStyle = "var(--bs-danger)";
-            ctx.font = "14px FontAwesome";
-            ctx.textAlign = "center";
-            const deleteBtn = {
-                x: this.x + this.width - 20,
-                y: this.y + 20,
-                width: 16,
-                height: 16,
-            };
-            ctx.fillText("\uf1f8", deleteBtn.x, deleteBtn.y); // fa-trash unicode
+            // Draw delete button (trash can icon) - conditionally rendered
+            if (!window.isReadOnly) {
+                ctx.fillStyle = "var(--bs-danger)";
+                ctx.font = "14px FontAwesome";
+                ctx.textAlign = "center";
+                const deleteBtn = {
+                    x: this.x + this.width - 20,
+                    y: this.y + 20,
+                    width: 16,
+                    height: 16,
+                };
+                ctx.fillText("\uf1f8", deleteBtn.x, deleteBtn.y); // fa-trash unicode
+            }
         }
 
         // Draw separator line
@@ -94,29 +96,33 @@ export class Table {
                 yPos,
             );
 
-            // Draw edit pencil icon
-            ctx.font = "14px FontAwesome"; // Only change font for the icon
-            ctx.fillStyle = "var(--bs-primary)";
-            ctx.fillText("\uf040", this.x + this.width - 25, yPos); // fa-pencil unicode
+            // Draw edit pencil icon - conditionally rendered
+            if (!window.isReadOnly) {
+                ctx.font = "14px FontAwesome"; // Only change font for the icon
+                ctx.fillStyle = "var(--bs-primary)";
+                ctx.fillText("\uf040", this.x + this.width - 25, yPos); // fa-pencil unicode
+            }
 
             // Restore font settings
             ctx.font = currentFont;
             ctx.fillStyle = "black";
         });
 
-        // Draw add attribute button
-        const buttonY = this.y + this.height - 25;
-        ctx.beginPath();
-        ctx.arc(this.x + this.width / 2, buttonY, 10, 0, Math.PI * 2);
-        ctx.fillStyle = "var(--bs-primary)";
-        ctx.fill();
+        // Draw add attribute button - conditionally rendered
+        if (!window.isReadOnly) {
+            const buttonY = this.y + this.height - 25;
+            ctx.beginPath();
+            ctx.arc(this.x + this.width / 2, buttonY, 10, 0, Math.PI * 2);
+            ctx.fillStyle = "var(--bs-primary)";
+            ctx.fill();
 
-        ctx.fillStyle = "white";
-        ctx.textAlign = "center";
-        ctx.fillText("+", this.x + this.width / 2, buttonY + 5);
+            ctx.fillStyle = "white";
+            ctx.textAlign = "center";
+            ctx.fillText("+", this.x + this.width / 2, buttonY + 5);
+        }
 
-        // Draw connection points only when hovered
-        if (this.isHovered) {
+        // Draw connection points only when hovered and not in readOnly mode
+        if (this.isHovered && !window.isReadOnly) {
             this.getConnectionPoints().forEach((point) => {
                 ctx.beginPath();
                 ctx.arc(point.x, point.y, 7, 0, Math.PI * 2);

@@ -17,6 +17,8 @@ let isReadOnly = false;
 function configureToolbar() {
     const params = new URLSearchParams(window.location.search);
     isReadOnly = params.get("readOnly") === "true";
+    // Make readOnly state globally available for components
+    window.isReadOnly = isReadOnly;
 
     // Configure zoom controls
     const zoomToolbar = document.querySelector(".toolbar-zoom");
