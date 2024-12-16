@@ -118,10 +118,6 @@ export class Relationship {
         // Track used incoming points for each table
         const usedIncomingPoints = new Map();
         
-        // First, get all connection points for both tables to avoid recursive calls
-        const sourceConnectionPoints = this.sourceTable.getConnectionPoints();
-        const targetConnectionPoints = this.targetTable.getConnectionPoints();
-        
         // Track already used connection points from existing relationships
         relationships.forEach(rel => {
             if (rel !== this) {
@@ -130,13 +126,25 @@ export class Relationship {
                     usedIncomingPoints.set(targetId, new Set());
                 }
                 
-                // Simply use the midpoint of the connection for tracking
-                const targetPoint = {
-                    x: rel.targetTable.x + rel.targetTable.width / 2,
-                    y: rel.targetTable.y + (rel.targetTable.height / 2)
-                };
+                const points = rel.targetTable.getConnectionPoints();
+                let nearestPoint = null;
+                let minDist = Infinity;
                 
-                usedIncomingPoints.get(targetId).add(`${targetPoint.x},${targetPoint.y}`);
+                // Find the actual connection point being used
+                points.forEach(point => {
+                    const dist = Math.hypot(
+                        point.x - (rel.targetTable.x + rel.targetTable.width/2),
+                        point.y - (rel.targetTable.y + rel.targetTable.height/2)
+                    );
+                    if (dist < minDist) {
+                        minDist = dist;
+                        nearestPoint = point;
+                    }
+                });
+                
+                if (nearestPoint) {
+                    usedIncomingPoints.get(targetId).add(`${nearestPoint.x},${nearestPoint.y}`);
+                }
             }
         });
 
