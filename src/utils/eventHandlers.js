@@ -9,13 +9,14 @@ import {
 import { ZOOM_LEVELS } from "./constants";
 import { showSnackbar } from "./ui";
 
-// Module-level state for relationship creation
+// Module-level state
 let relationshipStart = null;
 let isCreatingRelationship = false;
+let isReadOnly = false;
 
 function configureToolbar() {
     const params = new URLSearchParams(window.location.search);
-    const isReadOnly = params.get("readOnly") === "true";
+    isReadOnly = params.get("readOnly") === "true";
 
     // Configure zoom controls
     const zoomToolbar = document.querySelector(".toolbar-zoom");
