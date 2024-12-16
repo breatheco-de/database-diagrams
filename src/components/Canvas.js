@@ -180,6 +180,11 @@ export class Canvas {
         this.render();
     }
 
+    // Alias for loadDiagram to maintain consistent naming with export methods
+    loadFromJSON(data) {
+        this.loadDiagram(data);
+    }
+
     exportAsImage(filename = 'erd-diagram.png') {
         // Create a temporary canvas with the current diagram
         const tempCanvas = document.createElement('canvas');
