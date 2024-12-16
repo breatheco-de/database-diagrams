@@ -101,78 +101,85 @@ export class Relationship {
     }
 
     findPathAroundTables(start, end, tables) {
-        // Always generate orthogonal paths
+        // Always use straight paths with right angles
         const paths = [];
         
-        // Try horizontal then vertical path (┌─┐ shape)
-        const pathH = [
-            start,
-            { x: end.x, y: start.y },
-            end
-        ];
+        // Calculate the direct distances for both routing options
+        const directH = Math.abs(end.x - start.x);
+        const directV = Math.abs(end.y - start.y);
         
-        // Try vertical then horizontal path (├─┤ shape)
-        const pathV = [
-            start,
-            { x: start.x, y: end.y },
-            end
-        ];
+        // Determine primary direction based on the longer distance
+        if (directH >= directV) {
+            // Try horizontal first, then vertical (┌─┐ shape)
+            const pathH = [
+                start,
+                { x: end.x, y: start.y },
+                end
+            ];
+            
+            // Try vertical first, then horizontal (├─┤ shape)
+            const pathV = [
+                start,
+                { x: start.x, y: end.y },
+                end
+            ];
+            
+            // Check path validity
+            if (!this.pathIntersectsTables(pathH[0], pathH[1], tables) &&
+                !this.pathIntersectsTables(pathH[1], pathH[2], tables)) {
+                paths.push(pathH);
+            }
+            
+            if (!this.pathIntersectsTables(pathV[0], pathV[1], tables) &&
+                !this.pathIntersectsTables(pathV[1], pathV[2], tables)) {
+                paths.push(pathV);
+            }
+        } else {
+            // Try vertical first, then horizontal
+            const pathV = [
+                start,
+                { x: start.x, y: end.y },
+                end
+            ];
+            
+            // Try horizontal first, then vertical
+            const pathH = [
+                start,
+                { x: end.x, y: start.y },
+                end
+            ];
+            
+            // Check path validity
+            if (!this.pathIntersectsTables(pathV[0], pathV[1], tables) &&
+                !this.pathIntersectsTables(pathV[1], pathV[2], tables)) {
+                paths.push(pathV);
+            }
+            
+            if (!this.pathIntersectsTables(pathH[0], pathH[1], tables) &&
+                !this.pathIntersectsTables(pathH[1], pathH[2], tables)) {
+                paths.push(pathH);
+            }
+        }
         
-        // Check if paths intersect with any tables
-        const pathHValid = !this.pathIntersectsTables(pathH[0], pathH[1], tables) &&
-                          !this.pathIntersectsTables(pathH[1], pathH[2], tables);
-        
-        const pathVValid = !this.pathIntersectsTables(pathV[0], pathV[1], tables) &&
-                          !this.pathIntersectsTables(pathV[1], pathV[2], tables);
-        
-        if (pathHValid) paths.push(pathH);
-        if (pathVValid) paths.push(pathV);
-        
-        // If neither simple path works, try path with two turns
+        // If simple paths don't work, try paths with additional segments
         if (paths.length === 0) {
-            // Calculate midpoints
-            const midX = (start.x + end.x) / 2;
-            const midY = (start.y + end.y) / 2;
-            
-            // Try path with horizontal segment in middle (┌──┐ shape)
-            const pathMH = [
+            // Try path with additional vertical segment
+            const pathExtended = [
                 start,
-                { x: start.x, y: midY },
-                { x: end.x, y: midY },
+                { x: start.x, y: start.y + (end.y - start.y) / 2 },
+                { x: end.x, y: start.y + (end.y - start.y) / 2 },
                 end
             ];
             
-            // Try path with vertical segment in middle (├──┤ shape)
-            const pathMV = [
-                start,
-                { x: midX, y: start.y },
-                { x: midX, y: end.y },
-                end
-            ];
-            
-            const pathMHValid = !this.pathIntersectsTables(pathMH[0], pathMH[1], tables) &&
-                               !this.pathIntersectsTables(pathMH[1], pathMH[2], tables) &&
-                               !this.pathIntersectsTables(pathMH[2], pathMH[3], tables);
-            
-            const pathMVValid = !this.pathIntersectsTables(pathMV[0], pathMV[1], tables) &&
-                               !this.pathIntersectsTables(pathMV[1], pathMV[2], tables) &&
-                               !this.pathIntersectsTables(pathMV[2], pathMV[3], tables);
-            
-            if (pathMHValid) paths.push(pathMH);
-            if (pathMVValid) paths.push(pathMV);
+            if (!this.pathIntersectsTables(pathExtended[0], pathExtended[1], tables) &&
+                !this.pathIntersectsTables(pathExtended[1], pathExtended[2], tables) &&
+                !this.pathIntersectsTables(pathExtended[2], pathExtended[3], tables)) {
+                return pathExtended;
+            }
         }
         
-        // Choose the shortest valid path
-        if (paths.length > 0) {
-            return paths.reduce((shortest, current) => {
-                const currentLength = this.getPathLength(current);
-                const shortestLength = this.getPathLength(shortest);
-                return currentLength < shortestLength ? current : shortest;
-            });
-        }
-        
-        // If no valid paths found, use simple two-segment path
-        return [
+        // Return the first valid path or default to simple vertical-horizontal path
+        return paths[0] || [
             start,
             { x: start.x, y: end.y },
             end
