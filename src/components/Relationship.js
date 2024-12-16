@@ -115,31 +115,34 @@ export class Relationship {
         // Get all existing relationships, or empty array if canvas not available
         const relationships = this.canvas ? Array.from(this.canvas.relationships) : [];
         
-        // Get all used points from existing relationships' current positions
-        const usedPoints = new Set();
+        // Track used incoming points for each table
+        const usedIncomingPoints = new Map();
         relationships.forEach(rel => {
             if (rel !== this) {
-                // Add points that are currently being used by other relationships
-                const startX = rel.sourceTable.x + (rel.sourceTable.width / 2);
-                const startY = rel.sourceTable.y + (rel.sourceTable.height / 2);
-                const endX = rel.targetTable.x + (rel.targetTable.width / 2);
-                const endY = rel.targetTable.y + (rel.targetTable.height / 2);
-                usedPoints.add(`${startX},${startY}`);
-                usedPoints.add(`${endX},${endY}`);
+                // Get the actual connection points being used
+                const points = rel.getNearestPoints(
+                    rel.sourceTable.getConnectionPoints(),
+                    rel.targetTable.getConnectionPoints()
+                );
+                
+                // Track incoming points by table ID
+                const targetTableId = rel.targetTable.id;
+                if (!usedIncomingPoints.has(targetTableId)) {
+                    usedIncomingPoints.set(targetTableId, new Set());
+                }
+                usedIncomingPoints.get(targetTableId).add(`${points.end.x},${points.end.y}`);
             }
         });
 
-        // Filter available points
-        const availableSourcePoints = sourcePoints.filter(sp => 
-            !usedPoints.has(`${sp.x},${sp.y}`)
-        );
-
+        // Filter target (incoming) points that are already used for this table
+        const targetTableId = this.targetTable.id;
+        const usedIncoming = usedIncomingPoints.get(targetTableId) || new Set();
         const availableTargetPoints = targetPoints.filter(tp => 
-            !usedPoints.has(`${tp.x},${tp.y}`)
+            !usedIncoming.has(`${tp.x},${tp.y}`)
         );
 
-        // If no points are available, use all points
-        const finalSourcePoints = availableSourcePoints.length > 0 ? availableSourcePoints : sourcePoints;
+        // Source points don't need to be filtered for uniqueness since they're outgoing
+        const finalSourcePoints = sourcePoints;
         const finalTargetPoints = availableTargetPoints.length > 0 ? availableTargetPoints : targetPoints;
 
         finalSourcePoints.forEach((sp) => {
