@@ -42,7 +42,12 @@ export class AttributeForm {
                             </div>
                             <div class="mb-3" id="referencesField" style="display: none;">
                                 <label class="form-label">References Table</label>
-                                <input type="text" class="form-control" id="references" readonly>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="references" readonly>
+                                    <button type="button" class="btn btn-outline-danger" id="deleteRelationship">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
                             </div>
                         </form>
                     </div>
@@ -64,10 +69,54 @@ export class AttributeForm {
         const modalTitle = this.modal.querySelector('.modal-title');
         const referencesField = this.modal.querySelector('#referencesField');
         const foreignKeyCheckbox = this.modal.querySelector('#isForeignKey');
+        const deleteRelationshipBtn = this.modal.querySelector('#deleteRelationship');
 
         // Update modal title and button text based on mode
         modalTitle.textContent = existingAttribute ? 'Edit Attribute' : 'Add Attribute';
         saveBtn.textContent = existingAttribute ? 'Save Changes' : 'Add';
+
+        // Add delete relationship handler
+        if (deleteRelationshipBtn && existingAttribute?.isForeignKey) {
+            deleteRelationshipBtn.onclick = () => {
+                // Create confirmation modal
+                const confirmModal = document.createElement('div');
+                confirmModal.className = 'modal fade';
+                confirmModal.innerHTML = `
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Delete Relationship</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Are you sure you want to delete this relationship? This will remove the foreign key and its connection.</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-danger" id="confirmDelete">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                document.body.appendChild(confirmModal);
+                const bsConfirmModal = new bootstrap.Modal(confirmModal);
+
+                // Handle deletion confirmation
+                confirmModal.querySelector('#confirmDelete').onclick = () => {
+                    onSave({ ...existingAttribute, deleteRelationship: true });
+                    bsConfirmModal.hide();
+                    modal.hide();
+                };
+
+                // Clean up confirmation modal after hiding
+                confirmModal.addEventListener('hidden.bs.modal', () => {
+                    document.body.removeChild(confirmModal);
+                });
+
+                bsConfirmModal.show();
+            };
+        }
 
         // Pre-fill form if editing existing attribute
         if (existingAttribute) {

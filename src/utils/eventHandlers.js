@@ -322,10 +322,22 @@ export function initializeEventHandlers(canvas) {
                 if (isIconClicked) {
                     const attribute = table.attributes[attributeIndex];
                     attributeForm.show((updatedAttribute) => {
-                        // Update existing attribute
-                        attribute.name = updatedAttribute.name;
-                        attribute.type = updatedAttribute.type;
-                        attribute.isPrimary = updatedAttribute.isPrimary;
+                        if (updatedAttribute.deleteRelationship) {
+                            // Remove the relationship connected to this foreign key
+                            canvas.relationships.forEach(rel => {
+                                if ((rel.sourceTable === table && rel.targetTable.name === attribute.references) ||
+                                    (rel.targetTable === table && rel.sourceTable.name === attribute.references)) {
+                                    canvas.relationships.delete(rel);
+                                }
+                            });
+                            // Remove the attribute
+                            table.attributes.splice(attributeIndex, 1);
+                        } else {
+                            // Update the attribute
+                            attribute.name = updatedAttribute.name;
+                            attribute.type = updatedAttribute.type;
+                            attribute.isPrimary = updatedAttribute.isPrimary;
+                        }
                         table.updateHeight();
                         canvas.render();
                         saveToStorage(canvas.toJSON());
