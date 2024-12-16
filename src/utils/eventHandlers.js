@@ -236,6 +236,13 @@ export function initializeEventHandlers(canvas) {
         });
     }
 
+    // Handle new empty diagram
+    document.getElementById('newEmptyDiagram').addEventListener('click', () => {
+        canvas.loadFromJSON({ tables: [], relationships: [] });
+        canvas.render();
+        saveToStorage(canvas.toJSON());
+    });
+
     // Handle loading sample diagrams
     document.querySelectorAll('.sample-diagram').forEach(item => {
         item.addEventListener('click', () => {
