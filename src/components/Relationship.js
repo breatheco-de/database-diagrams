@@ -117,26 +117,32 @@ export class Relationship {
         
         // Track used incoming points for each table
         const usedIncomingPoints = new Map();
+        
+        // First, get all connection points for both tables to avoid recursive calls
+        const sourceConnectionPoints = this.sourceTable.getConnectionPoints();
+        const targetConnectionPoints = this.targetTable.getConnectionPoints();
+        
+        // Track already used connection points from existing relationships
         relationships.forEach(rel => {
             if (rel !== this) {
-                // Get the actual connection points being used
-                const points = rel.getNearestPoints(
-                    rel.sourceTable.getConnectionPoints(),
-                    rel.targetTable.getConnectionPoints()
-                );
-                
-                // Track incoming points by table ID
-                const targetTableId = rel.targetTable.id;
-                if (!usedIncomingPoints.has(targetTableId)) {
-                    usedIncomingPoints.set(targetTableId, new Set());
+                const targetId = rel.targetTable.id;
+                if (!usedIncomingPoints.has(targetId)) {
+                    usedIncomingPoints.set(targetId, new Set());
                 }
-                usedIncomingPoints.get(targetTableId).add(`${points.end.x},${points.end.y}`);
+                
+                // Simply use the midpoint of the connection for tracking
+                const targetPoint = {
+                    x: rel.targetTable.x + rel.targetTable.width / 2,
+                    y: rel.targetTable.y + (rel.targetTable.height / 2)
+                };
+                
+                usedIncomingPoints.get(targetId).add(`${targetPoint.x},${targetPoint.y}`);
             }
         });
 
-        // Filter target (incoming) points that are already used for this table
-        const targetTableId = this.targetTable.id;
-        const usedIncoming = usedIncomingPoints.get(targetTableId) || new Set();
+        // Filter target points that are already used for this table
+        const targetId = this.targetTable.id;
+        const usedIncoming = usedIncomingPoints.get(targetId) || new Set();
         const availableTargetPoints = targetPoints.filter(tp => 
             !usedIncoming.has(`${tp.x},${tp.y}`)
         );
