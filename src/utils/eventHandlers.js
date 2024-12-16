@@ -30,7 +30,7 @@ function configureToolbar() {
     } else if (['top-left', 'top-right', 'bottom-left', 'bottom-right'].includes(zoomParam)) {
         zoomToolbar.className = `toolbar toolbar-zoom ${zoomParam}`;
     } else {
-        zoomToolbar.className = 'toolbar toolbar-zoom top-left';
+        zoomToolbar.className = 'toolbar toolbar-zoom bottom-right';
     }
     
     // Configure Add Table button visibility
