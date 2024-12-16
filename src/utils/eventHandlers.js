@@ -604,16 +604,16 @@ export function initializeEventHandlers(canvas) {
                             // Check for duplicate names (case-insensitive)
                             const normalizedName = newName.toLowerCase();
                             const exists = Array.from(
-                                canvas.tables.values(),
+                                canvas.tables.values()
                             ).some(
                                 (t) =>
-                                    t !== table &&
-                                    t.name.toLowerCase() === normalizedName,
+                                    t.id !== table.id && // Compare IDs instead of references
+                                    t.name.toLowerCase() === normalizedName
                             );
 
                             if (exists) {
                                 showSnackbar(
-                                    "A table with this name already exists",
+                                    "A table with this name already exists"
                                 );
                                 input.focus();
                                 return;
