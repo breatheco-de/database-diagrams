@@ -198,12 +198,7 @@ export function initializeEventHandlers(canvas) {
                 }
 
                 // Check if clicking delete button (trash icon)
-                if (
-                    pos.x >= table.x + table.width - 30 &&
-                    pos.x <= table.x + table.width - 10 &&
-                    pos.y >= table.y + 10 &&
-                    pos.y <= table.y + 30
-                ) {
+                if (table.isDeleteButtonClicked(pos.x, pos.y)) {
                     // Create confirmation modal
                     const modal = document.createElement("div");
                     modal.className = "modal fade";
@@ -332,7 +327,7 @@ export function initializeEventHandlers(canvas) {
             ctx.stroke();
             ctx.setLineDash([]);
 
-            // Draw direction arrow
+            // Draw direction arrowis
             const angle = Math.atan2(
                 pos.y - relationshipStart.point.y,
                 pos.x - relationshipStart.point.x,

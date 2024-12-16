@@ -180,6 +180,17 @@ export class Table {
         return -1;
     }
 
+    isDeleteButtonClicked(x, y) {
+        const deleteBtn = {
+            x: this.x + this.width - 20,
+            y: this.y + 20,
+            width: 16,
+            height: 16
+        };
+        return x >= deleteBtn.x - 8 && x <= deleteBtn.x + 8 &&
+               y >= deleteBtn.y - 8 && y <= deleteBtn.y + 8;
+    }
+
     isAddButtonClicked(x, y) {
 
         const buttonY = this.y + this.height - 25;
