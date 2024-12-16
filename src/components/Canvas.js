@@ -171,8 +171,20 @@ export class Canvas {
                 const sourceTable = this.tables.get(relData.sourceId);
                 const targetTable = this.tables.get(relData.targetId);
                 if (sourceTable && targetTable) {
-                    const relationship = new Relationship(sourceTable, targetTable, relData.type);
-                    this.relationships.add(relationship);
+                    // Determine which table should have the foreign key based on relationship type
+                    const manyTable = relData.type === "oneToMany" ? targetTable : sourceTable;
+                    const oneTable = relData.type === "oneToMany" ? sourceTable : targetTable;
+                    
+                    // Check if the foreign key exists in the "many" side table
+                    const hasForeignKey = manyTable.attributes.some(attr => 
+                        attr.isForeignKey && attr.references === oneTable.name
+                    );
+
+                    // Only create relationship if foreign key exists
+                    if (hasForeignKey) {
+                        const relationship = new Relationship(sourceTable, targetTable, relData.type);
+                        this.relationships.add(relationship);
+                    }
                 }
             });
         }
