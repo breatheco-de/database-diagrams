@@ -111,6 +111,8 @@ export class Relationship {
     getNearestPoints(sourcePoints, targetPoints) {
         let minDistance = Infinity;
         let result = { start: null, end: null };
+        let fallbackResult = { start: null, end: null };
+        let fallbackDistance = Infinity;
 
         // Get all existing relationships, or empty array if canvas not available
         const relationships = this.canvas ? Array.from(this.canvas.relationships) : [];
@@ -148,28 +150,37 @@ export class Relationship {
             }
         });
 
-        // Filter target points that are already used for this table
+        // Get used points for current target table
         const targetId = this.targetTable.id;
         const usedIncoming = usedIncomingPoints.get(targetId) || new Set();
-        const availableTargetPoints = targetPoints.filter(tp => 
-            !usedIncoming.has(`${tp.x},${tp.y}`)
-        );
 
-        // Source points don't need to be filtered for uniqueness since they're outgoing
-        const finalSourcePoints = sourcePoints;
-        const finalTargetPoints = availableTargetPoints.length > 0 ? availableTargetPoints : targetPoints;
-
-        finalSourcePoints.forEach((sp) => {
-            finalTargetPoints.forEach((tp) => {
+        // Try to find nearest unused target point first
+        sourcePoints.forEach((sp) => {
+            targetPoints.forEach((tp) => {
+                const pointKey = `${tp.x},${tp.y}`;
                 const distance = Math.hypot(tp.x - sp.x, tp.y - sp.y);
-                if (distance < minDistance) {
+
+                // If point is unused and closer than current best
+                if (!usedIncoming.has(pointKey) && distance < minDistance) {
                     minDistance = distance;
                     result = { start: sp, end: tp };
+                }
+
+                // Keep track of fallback (used points) in case we need them
+                if (distance < fallbackDistance) {
+                    fallbackDistance = distance;
+                    fallbackResult = { start: sp, end: tp };
                 }
             });
         });
 
-        return result;
+        // If we found an unused point, use it
+        if (result.start !== null && result.end !== null) {
+            return result;
+        }
+
+        // Otherwise use the fallback (closest point regardless of usage)
+        return fallbackResult;
     }
 
     containsPoint(x, y) {
