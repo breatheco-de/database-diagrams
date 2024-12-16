@@ -101,79 +101,82 @@ export class Relationship {
     }
 
     findPathAroundTables(start, end, tables) {
-        // Simple path finding: try going around obstacles using corner points
-        const path = [start];
-        
-        // Get bounding box of all tables
-        const bounds = tables.reduce((acc, table) => {
-            acc.left = Math.min(acc.left, table.x - 20);
-            acc.right = Math.max(acc.right, table.x + table.width + 20);
-            acc.top = Math.min(acc.top, table.y - 20);
-            acc.bottom = Math.max(acc.bottom, table.y + table.height + 20);
-            return acc;
-        }, {
-            left: Infinity,
-            right: -Infinity,
-            top: Infinity,
-            bottom: -Infinity
-        });
-
-        // Try different paths and choose the shortest valid one
+        // Always generate orthogonal paths
         const paths = [];
-
-        // Try going around horizontally first
-        const horizontalMid = start.y + (end.y - start.y) / 2;
-        const pathH1 = [
+        
+        // Try horizontal then vertical path (┌─┐ shape)
+        const pathH = [
             start,
-            {x: start.x, y: horizontalMid},
-            {x: end.x, y: horizontalMid},
+            { x: end.x, y: start.y },
             end
         ];
-        if (!this.pathIntersectsTables(start, pathH1[1], tables) &&
-            !this.pathIntersectsTables(pathH1[1], pathH1[2], tables) &&
-            !this.pathIntersectsTables(pathH1[2], end, tables)) {
-            paths.push(pathH1);
-        }
-
-        // Try going around vertically
-        const verticalMid = start.x + (end.x - start.x) / 2;
-        const pathV1 = [
+        
+        // Try vertical then horizontal path (├─┤ shape)
+        const pathV = [
             start,
-            {x: verticalMid, y: start.y},
-            {x: verticalMid, y: end.y},
+            { x: start.x, y: end.y },
             end
         ];
-        if (!this.pathIntersectsTables(start, pathV1[1], tables) &&
-            !this.pathIntersectsTables(pathV1[1], pathV1[2], tables) &&
-            !this.pathIntersectsTables(pathV1[2], end, tables)) {
-            paths.push(pathV1);
+        
+        // Check if paths intersect with any tables
+        const pathHValid = !this.pathIntersectsTables(pathH[0], pathH[1], tables) &&
+                          !this.pathIntersectsTables(pathH[1], pathH[2], tables);
+        
+        const pathVValid = !this.pathIntersectsTables(pathV[0], pathV[1], tables) &&
+                          !this.pathIntersectsTables(pathV[1], pathV[2], tables);
+        
+        if (pathHValid) paths.push(pathH);
+        if (pathVValid) paths.push(pathV);
+        
+        // If neither simple path works, try path with two turns
+        if (paths.length === 0) {
+            // Calculate midpoints
+            const midX = (start.x + end.x) / 2;
+            const midY = (start.y + end.y) / 2;
+            
+            // Try path with horizontal segment in middle (┌──┐ shape)
+            const pathMH = [
+                start,
+                { x: start.x, y: midY },
+                { x: end.x, y: midY },
+                end
+            ];
+            
+            // Try path with vertical segment in middle (├──┤ shape)
+            const pathMV = [
+                start,
+                { x: midX, y: start.y },
+                { x: midX, y: end.y },
+                end
+            ];
+            
+            const pathMHValid = !this.pathIntersectsTables(pathMH[0], pathMH[1], tables) &&
+                               !this.pathIntersectsTables(pathMH[1], pathMH[2], tables) &&
+                               !this.pathIntersectsTables(pathMH[2], pathMH[3], tables);
+            
+            const pathMVValid = !this.pathIntersectsTables(pathMV[0], pathMV[1], tables) &&
+                               !this.pathIntersectsTables(pathMV[1], pathMV[2], tables) &&
+                               !this.pathIntersectsTables(pathMV[2], pathMV[3], tables);
+            
+            if (pathMHValid) paths.push(pathMH);
+            if (pathMVValid) paths.push(pathMV);
         }
-
-        // Try going around the bounds
-        const pathAround = [
-            start,
-            {x: bounds.left - 20, y: start.y},
-            {x: bounds.left - 20, y: end.y},
-            end
-        ];
-        if (!this.pathIntersectsTables(start, pathAround[1], tables) &&
-            !this.pathIntersectsTables(pathAround[1], pathAround[2], tables) &&
-            !this.pathIntersectsTables(pathAround[2], end, tables)) {
-            paths.push(pathAround);
-        }
-
-        // Choose the shortest valid path or fall back to direct path
+        
+        // Choose the shortest valid path
         if (paths.length > 0) {
-            const shortestPath = paths.reduce((shortest, current) => {
+            return paths.reduce((shortest, current) => {
                 const currentLength = this.getPathLength(current);
                 const shortestLength = this.getPathLength(shortest);
                 return currentLength < shortestLength ? current : shortest;
             });
-            return shortestPath;
         }
-
-        // If no valid path found, return direct path
-        return [start, end];
+        
+        // If no valid paths found, use simple two-segment path
+        return [
+            start,
+            { x: start.x, y: end.y },
+            end
+        ];
     }
 
     getPathLength(path) {
