@@ -15,47 +15,58 @@ let isCreatingRelationship = false;
 
 function configureToolbar() {
     const params = new URLSearchParams(window.location.search);
-    
+
     // Configure zoom controls
-    const zoomToolbar = document.querySelector('.toolbar-zoom');
+    const zoomToolbar = document.querySelector(".toolbar-zoom");
     const zoomControls = [
-        document.getElementById('zoomOut'),
-        document.getElementById('zoomIn'),
-        document.getElementById('zoomLevel')
+        document.getElementById("zoomOut"),
+        document.getElementById("zoomIn"),
+        document.getElementById("zoomLevel"),
     ];
-    
-    const zoomParam = params.get('zoom');
-    if (zoomParam === 'false') {
-        zoomToolbar.style.display = 'none';
-    } else if (['top-left', 'top-right', 'bottom-left', 'bottom-right'].includes(zoomParam)) {
+
+    const zoomParam = params.get("zoom");
+    if (zoomParam === "false") {
+        zoomToolbar.style.display = "none";
+    } else if (
+        ["top-left", "top-right", "bottom-left", "bottom-right"].includes(
+            zoomParam,
+        )
+    ) {
         zoomToolbar.className = `toolbar toolbar-zoom ${zoomParam}`;
     } else {
-        zoomToolbar.className = 'toolbar toolbar-zoom bottom-right';
+        zoomToolbar.className = "toolbar toolbar-zoom bottom-right";
     }
-    
+
     // Configure Add Table button visibility
-    const addTableBtn = document.getElementById('addTable');
-    const allowAdd = params.get('allowAdd');
-    if (allowAdd === 'false') {
-        addTableBtn.style.display = 'none';
+    const addTableBtn = document.getElementById("addTable");
+    const allowAdd = params.get("allowAdd");
+    if (allowAdd === "false") {
+        addTableBtn.style.display = "none";
     }
-    
+
     // Configure Export options
-    const exportDropdown = document.querySelector('.dropdown');
-    const exportImage = document.getElementById('exportImage');
-    const exportJson = document.getElementById('exportJson');
-    const allowExport = params.get('allowExport');
-    
-    if (allowExport === 'false') {
-        exportDropdown.style.display = 'none';
+    const exportDropdown = document.querySelector(".dropdown");
+    const exportImage = document.getElementById("exportImage");
+    const exportJson = document.getElementById("exportJson");
+    const allowExport = params.get("allowExport");
+
+    if (allowExport === "false") {
+        // Hide entire export dropdown when explicitly disabled
+        exportDropdown.style.display = "none";
     } else if (allowExport) {
-        const allowedFormats = allowExport.toLowerCase().split(',');
-        if (!allowedFormats.includes('png')) {
-            exportImage.style.display = 'none';
+        // Show only specified formats
+        const allowedFormats = allowExport.toLowerCase().split(",");
+        exportImage.style.display = allowedFormats.includes("png") ? "" : "none";
+        exportJson.style.display = allowedFormats.includes("json") ? "" : "none";
+        
+        // Hide dropdown if no formats are allowed
+        if (!allowedFormats.includes("png") && !allowedFormats.includes("json")) {
+            exportDropdown.style.display = "none";
         }
-        if (!allowedFormats.includes('json')) {
-            exportJson.style.display = 'none';
-        }
+    } else {
+        // When allowExport is not specified, show all formats
+        exportImage.style.display = "";
+        exportJson.style.display = "";
     }
 }
 
@@ -180,6 +191,7 @@ export function initializeEventHandlers(canvas) {
         const pos = getCanvasPosition(e, canvas);
         let isIconClicked = false;
         let isAddButtonClicked = false;
+        let isDeleteButtonClicked = false;
 
         // Check if clicking on a table
         canvas.tables.forEach((table) => {
@@ -187,6 +199,9 @@ export function initializeEventHandlers(canvas) {
             isIconClicked = isIconClicked || attributeIndex !== -1;
             isAddButtonClicked =
                 isAddButtonClicked || table.isAddButtonClicked(pos.x, pos.y);
+            isDeleteButtonClicked =
+                isDeleteButtonClicked ||
+                table.isDeleteButtonClicked(pos.x, pos.y);
 
             if (table.containsPoint(pos.x, pos.y)) {
                 // First check connection points
@@ -198,7 +213,12 @@ export function initializeEventHandlers(canvas) {
                 }
 
                 // Check if clicking delete button (trash icon)
-                if (table.isDeleteButtonClicked(pos.x, pos.y)) {
+                if (
+                    pos.x >= table.x + table.width - 30 &&
+                    pos.x <= table.x + table.width - 10 &&
+                    pos.y >= table.y + 10 &&
+                    pos.y <= table.y + 30
+                ) {
                     // Create confirmation modal
                     const modal = document.createElement("div");
                     modal.className = "modal fade";
@@ -271,7 +291,11 @@ export function initializeEventHandlers(canvas) {
                     return;
                 }
 
-                if (!isIconClicked && !isAddButtonClicked) {
+                if (
+                    !isIconClicked &&
+                    !isAddButtonClicked &&
+                    !isDeleteButtonClicked
+                ) {
                     console.log("starting drag...");
                     selectedTable = table;
                     isDragging = true;
@@ -285,7 +309,8 @@ export function initializeEventHandlers(canvas) {
             !selectedTable &&
             !isCreatingRelationship &&
             !isIconClicked &&
-            !isAddButtonClicked
+            !isAddButtonClicked &&
+            !isDeleteButtonClicked
         ) {
             console.log("starting drag 2...");
             isDragging = true;
@@ -604,16 +629,16 @@ export function initializeEventHandlers(canvas) {
                             // Check for duplicate names (case-insensitive)
                             const normalizedName = newName.toLowerCase();
                             const exists = Array.from(
-                                canvas.tables.values()
+                                canvas.tables.values(),
                             ).some(
                                 (t) =>
                                     t.id !== table.id && // Compare IDs instead of references
-                                    t.name.toLowerCase() === normalizedName
+                                    t.name.toLowerCase() === normalizedName,
                             );
 
                             if (exists) {
                                 showSnackbar(
-                                    "A table with this name already exists"
+                                    "A table with this name already exists",
                                 );
                                 input.focus();
                                 isProcessingEdit = false;
@@ -623,7 +648,7 @@ export function initializeEventHandlers(canvas) {
                             table.name = newName;
                             saveToStorage(canvas.toJSON());
                         }
-                        
+
                         table.isEditingName = false;
                         if (document.body.contains(input)) {
                             document.body.removeChild(input);
@@ -635,7 +660,7 @@ export function initializeEventHandlers(canvas) {
                     const cancelEditing = () => {
                         if (isProcessingEdit) return;
                         isProcessingEdit = true;
-                        
+
                         table.isEditingName = false;
                         if (document.body.contains(input)) {
                             document.body.removeChild(input);
