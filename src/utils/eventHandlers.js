@@ -14,7 +14,7 @@ let relationshipStart = null;
 let isCreatingRelationship = false;
 let isReadOnly = false;
 
-function configureToolbar() {
+function configureToolbar(canvas) {
     const params = new URLSearchParams(window.location.search);
     isReadOnly = params.get("readOnly") === "true";
     // Make readOnly state globally available for components
@@ -107,7 +107,7 @@ export function initializeEventHandlers(canvas) {
     const attributeForm = new AttributeForm();
     const relationshipTypeModal = new RelationshipTypeModal();
 
-    configureToolbar();
+    configureToolbar(canvas);
 
     const addTableBtn = document.getElementById("addTable");
     const resetViewBtn = document.getElementById("resetView");
