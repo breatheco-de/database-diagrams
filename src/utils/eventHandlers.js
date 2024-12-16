@@ -296,11 +296,33 @@ export function initializeEventHandlers(canvas) {
         // Check if clicking on a relationship
         for (const relationship of canvas.relationships) {
             if (relationship.containsPoint(pos.x, pos.y)) {
-                relationshipTypeModal.show((newType) => {
-                    relationship.type = newType;
-                    canvas.render();
-                    saveToStorage(canvas.toJSON());
-                }, relationship.type);
+                // Find the foreign key attribute in the "many" side table
+                const manyTable = relationship.type === "oneToMany" ? relationship.targetTable : relationship.sourceTable;
+                const oneTable = relationship.type === "oneToMany" ? relationship.sourceTable : relationship.targetTable;
+                
+                const foreignKey = manyTable.attributes.find(attr => 
+                    attr.isForeignKey && attr.references === oneTable.name
+                );
+
+                if (foreignKey) {
+                    attributeForm.show((updatedAttribute) => {
+                        if (updatedAttribute.deleteRelationship) {
+                            // Remove the relationship
+                            canvas.relationships.delete(relationship);
+                            // Remove the foreign key attribute
+                            const attrIndex = manyTable.attributes.indexOf(foreignKey);
+                            manyTable.attributes.splice(attrIndex, 1);
+                        } else {
+                            // Update the attribute
+                            foreignKey.name = updatedAttribute.name;
+                            foreignKey.type = updatedAttribute.type;
+                            foreignKey.isPrimary = updatedAttribute.isPrimary;
+                        }
+                        manyTable.updateHeight();
+                        canvas.render();
+                        saveToStorage(canvas.toJSON());
+                    }, foreignKey);
+                }
                 return;
             }
         }
