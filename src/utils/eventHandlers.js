@@ -128,7 +128,15 @@ export function initializeEventHandlers(canvas) {
         // Check if clicking on a table
         canvas.tables.forEach(table => {
             if (table.containsPoint(pos.x, pos.y)) {
-                // Check if clicking delete button
+                // First check connection points
+                const connectionPoint = findNearestConnectionPoint(table, pos);
+                if (connectionPoint) {
+                    isCreatingRelationship = true;
+                    relationshipStart = { table, point: connectionPoint };
+                    return;
+                }
+                
+                // Check if clicking delete button (trash icon)
                 if (pos.x >= table.x + table.width - 30 && 
                     pos.x <= table.x + table.width - 10 &&
                     pos.y >= table.y + 10 &&
