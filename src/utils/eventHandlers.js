@@ -52,7 +52,7 @@ function configureToolbar() {
 
     if (allowExport === "false") {
         // Hide entire export dropdown when explicitly disabled
-        exportDropdown.style.display = "none";
+        exportDropdown.parentElement.removeChild(exportDropdown);
     } else if (allowExport) {
         // Show only specified formats
         const allowedFormats = allowExport.toLowerCase().split(",");
@@ -61,7 +61,7 @@ function configureToolbar() {
         
         // Hide dropdown if no formats are allowed
         if (!allowedFormats.includes("png") && !allowedFormats.includes("json")) {
-            exportDropdown.style.display = "none";
+            exportDropdown.parentElement.removeChild(exportDropdown);
         }
     } else {
         // When allowExport is not specified, show all formats
