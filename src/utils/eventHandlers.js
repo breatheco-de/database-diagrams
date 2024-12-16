@@ -8,6 +8,7 @@ import {
 } from "./history";
 import { ZOOM_LEVELS } from "./constants";
 import { showSnackbar } from "./ui";
+import { sampleDiagrams } from "./sampleDiagrams";
 
 // Module-level state
 let relationshipStart = null;
