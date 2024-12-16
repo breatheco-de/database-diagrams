@@ -184,6 +184,7 @@ export class Canvas {
                     // Only create relationship if foreign key exists
                     if (hasForeignKey) {
                         const relationship = new Relationship(sourceTable, targetTable, relData.type);
+                        relationship.canvas = this;  // Set the canvas reference
                         this.relationships.add(relationship);
                     }
                 }
