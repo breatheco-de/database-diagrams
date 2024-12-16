@@ -293,6 +293,18 @@ export function initializeEventHandlers(canvas) {
             return;
         }
 
+        // Check if clicking on a relationship
+        for (const relationship of canvas.relationships) {
+            if (relationship.containsPoint(pos.x, pos.y)) {
+                relationshipTypeModal.show((newType) => {
+                    relationship.type = newType;
+                    canvas.render();
+                    saveToStorage(canvas.toJSON());
+                }, relationship.type);
+                return;
+            }
+        }
+
         // Check if clicking on a table
         canvas.tables.forEach((table) => {
             const attributeIndex = table.isEditIconClicked(pos.x, pos.y);

@@ -124,6 +124,57 @@ export class Relationship {
         return result;
     }
 
+    containsPoint(x, y) {
+        // Get the actual connection points being used
+        const points = this.getNearestPoints(
+            this.sourceTable.getConnectionPoints(),
+            this.targetTable.getConnectionPoints()
+        );
+        
+        // Calculate distance from point to line segment
+        const distanceToSegment = this.pointToLineDistance(
+            x, y,
+            points.start.x, points.start.y,
+            points.end.x, points.end.y
+        );
+        
+        // Return true if point is within 5 pixels of the line
+        return distanceToSegment < 5;
+    }
+
+    pointToLineDistance(px, py, x1, y1, x2, y2) {
+        const A = px - x1;
+        const B = py - y1;
+        const C = x2 - x1;
+        const D = y2 - y1;
+
+        const dot = A * C + B * D;
+        const lenSq = C * C + D * D;
+        let param = -1;
+
+        if (lenSq !== 0) {
+            param = dot / lenSq;
+        }
+
+        let xx, yy;
+
+        if (param < 0) {
+            xx = x1;
+            yy = y1;
+        } else if (param > 1) {
+            xx = x2;
+            yy = y2;
+        } else {
+            xx = x1 + param * C;
+            yy = y1 + param * D;
+        }
+
+        const dx = px - xx;
+        const dy = py - yy;
+
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
     toJSON() {
         return {
             sourceId: this.sourceTable.id,
