@@ -15,6 +15,7 @@ let isCreatingRelationship = false;
 
 function configureToolbar() {
     const params = new URLSearchParams(window.location.search);
+    const isReadOnly = params.get("readOnly") === "true";
 
     // Configure zoom controls
     const zoomToolbar = document.querySelector(".toolbar-zoom");
@@ -40,7 +41,7 @@ function configureToolbar() {
     // Configure Add Table button visibility
     const addTableBtn = document.getElementById("addTable");
     const allowAdd = params.get("allowAdd");
-    if (allowAdd === "false") {
+    if (allowAdd === "false" || isReadOnly) {
         addTableBtn.style.display = "none";
     }
 
@@ -200,6 +201,16 @@ export function initializeEventHandlers(canvas) {
         let isIconClicked = false;
         let isAddButtonClicked = false;
         let isDeleteButtonClicked = false;
+
+        // If in readOnly mode, only allow canvas panning
+        if (isReadOnly) {
+            isDragging = true;
+            canvas.dragStart = {
+                x: e.clientX - canvas.offset.x,
+                y: e.clientY - canvas.offset.y,
+            };
+            return;
+        }
 
         // Check if clicking on a table
         canvas.tables.forEach((table) => {
@@ -600,6 +611,9 @@ export function initializeEventHandlers(canvas) {
 
     // Add double-click handler for table name editing
     canvas.canvas.addEventListener("dblclick", (e) => {
+        // Ignore double-click in readOnly mode
+        if (isReadOnly) return;
+        
         const pos = getCanvasPosition(e, canvas);
 
         canvas.tables.forEach((table) => {
