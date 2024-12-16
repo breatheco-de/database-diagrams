@@ -235,6 +235,47 @@ export function initializeEventHandlers(canvas) {
         });
     }
 
+    // Handle loading sample diagrams
+    document.querySelectorAll('.sample-diagram').forEach(item => {
+        item.addEventListener('click', () => {
+            const sampleName = item.dataset.sample;
+            const sampleData = sampleDiagrams[sampleName];
+            canvas.loadFromJSON(sampleData);
+            canvas.render();
+            saveToStorage(canvas.toJSON());
+        });
+    });
+
+    // Handle loading from JSON file
+    const loadJson = document.getElementById('loadJson');
+    if (loadJson) {
+        loadJson.addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            
+            input.onchange = e => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = readerEvent => {
+                    try {
+                        const content = JSON.parse(readerEvent.target.result);
+                        canvas.loadFromJSON(content);
+                        canvas.render();
+                        saveToStorage(canvas.toJSON());
+                    } catch (error) {
+                        showSnackbar('Error loading diagram: Invalid JSON file');
+                    }
+                }
+                
+                reader.readAsText(file);
+            };
+            
+            input.click();
+        });
+    }
+
     canvas.canvas.addEventListener("mousedown", (e) => {
         const pos = getCanvasPosition(e, canvas);
         let isIconClicked = false;
