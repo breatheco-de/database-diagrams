@@ -171,16 +171,41 @@ export class Canvas {
                 const sourceTable = this.tables.get(relData.sourceId);
                 const targetTable = this.tables.get(relData.targetId);
                 if (sourceTable && targetTable) {
-                    // Determine which table should have the foreign key based on relationship type
-                    const manyTable = relData.type === "oneToMany" ? targetTable : sourceTable;
-                    const oneTable = relData.type === "oneToMany" ? sourceTable : targetTable;
-                    
-                    // Check if the foreign key exists in the "many" side table
-                    const hasForeignKey = manyTable.attributes.some(attr => 
-                        attr.isForeignKey && attr.references === oneTable.name
-                    );
+                    // For self-referential relationships
+                    if (relData.sourceId === relData.targetId) {
+                        const hasSelfReference = sourceTable.attributes.some(attr =>
+                            attr.isForeignKey && attr.references === sourceTable.name
+                        );
+                        if (hasSelfReference) {
+                            const relationship = new Relationship(sourceTable, targetTable, relData.type, this);
+                            this.relationships.add(relationship);
+                        }
+                        return;
+                    }
 
-                    // Only create relationship if foreign key exists
+                    // For regular relationships
+                    let hasForeignKey = false;
+                    if (relData.type === "oneToMany") {
+                        // Check if target table has foreign key referencing source
+                        hasForeignKey = targetTable.attributes.some(attr =>
+                            attr.isForeignKey && attr.references === sourceTable.name
+                        );
+                    } else if (relData.type === "manyToMany") {
+                        // Both tables should have foreign keys referencing each other
+                        hasForeignKey = sourceTable.attributes.some(attr =>
+                            attr.isForeignKey && attr.references === targetTable.name
+                        ) && targetTable.attributes.some(attr =>
+                            attr.isForeignKey && attr.references === sourceTable.name
+                        );
+                    } else if (relData.type === "oneToOne") {
+                        // Either table can have the foreign key
+                        hasForeignKey = sourceTable.attributes.some(attr =>
+                            attr.isForeignKey && attr.references === targetTable.name
+                        ) || targetTable.attributes.some(attr =>
+                            attr.isForeignKey && attr.references === sourceTable.name
+                        );
+                    }
+
                     if (hasForeignKey) {
                         const relationship = new Relationship(sourceTable, targetTable, relData.type, this);
                         this.relationships.add(relationship);

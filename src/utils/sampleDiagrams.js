@@ -7,7 +7,7 @@ export const sampleDiagrams = {
                 x: 100,
                 y: 100,
                 attributes: [
-                    { name: "flight_id", type: "number", isPrimary: true },
+                    { name: "id", type: "number", isPrimary: true },
                     { name: "departure_time", type: "datetime" },
                     { name: "arrival_time", type: "datetime" },
                     { name: "aircraft_id", type: "number", isForeignKey: true, references: "Aircraft" },
@@ -21,7 +21,7 @@ export const sampleDiagrams = {
                 x: 400,
                 y: 100,
                 attributes: [
-                    { name: "aircraft_id", type: "number", isPrimary: true },
+                    { name: "id", type: "number", isPrimary: true },
                     { name: "model", type: "string" },
                     { name: "capacity", type: "number" },
                     { name: "airline_id", type: "number", isForeignKey: true, references: "Airline" }
@@ -33,7 +33,7 @@ export const sampleDiagrams = {
                 x: 100,
                 y: 300,
                 attributes: [
-                    { name: "passenger_id", type: "number", isPrimary: true },
+                    { name: "id", type: "number", isPrimary: true },
                     { name: "name", type: "string" },
                     { name: "email", type: "string" },
                     { name: "passport_number", type: "string" }
@@ -45,7 +45,7 @@ export const sampleDiagrams = {
                 x: 400,
                 y: 300,
                 attributes: [
-                    { name: "airport_id", type: "number", isPrimary: true },
+                    { name: "id", type: "number", isPrimary: true },
                     { name: "code", type: "string" },
                     { name: "name", type: "string" },
                     { name: "city", type: "string" },
@@ -58,7 +58,7 @@ export const sampleDiagrams = {
                 x: 700,
                 y: 100,
                 attributes: [
-                    { name: "airline_id", type: "number", isPrimary: true },
+                    { name: "id", type: "number", isPrimary: true },
                     { name: "name", type: "string" },
                     { name: "code", type: "string" }
                 ]
@@ -69,7 +69,7 @@ export const sampleDiagrams = {
                 x: 700,
                 y: 300,
                 attributes: [
-                    { name: "booking_id", type: "number", isPrimary: true },
+                    { name: "id", type: "number", isPrimary: true },
                     { name: "flight_id", type: "number", isForeignKey: true, references: "Flight" },
                     { name: "passenger_id", type: "number", isForeignKey: true, references: "Passenger" },
                     { name: "seat_number", type: "string" },
