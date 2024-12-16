@@ -170,22 +170,30 @@ export function initializeEventHandlers(canvas) {
         canvas.render();
     });
 
-    document.getElementById("exportImage").addEventListener("click", () => {
-        canvas.exportAsImage();
-    });
-
-    document.getElementById("exportJson").addEventListener("click", () => {
-        const data = canvas.toJSON();
-        const blob = new Blob([JSON.stringify(data, null, 2)], {
-            type: "application/json",
+    // Only add export event listeners if the functionality is enabled
+    const exportImage = document.getElementById("exportImage");
+    const exportJson = document.getElementById("exportJson");
+    
+    if (exportImage) {
+        exportImage.addEventListener("click", () => {
+            canvas.exportAsImage();
         });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = "erd-diagram.json";
-        link.click();
-        URL.revokeObjectURL(url);
-    });
+    }
+
+    if (exportJson) {
+        exportJson.addEventListener("click", () => {
+            const data = canvas.toJSON();
+            const blob = new Blob([JSON.stringify(data, null, 2)], {
+                type: "application/json",
+            });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = "erd-diagram.json";
+            link.click();
+            URL.revokeObjectURL(url);
+        });
+    }
 
     canvas.canvas.addEventListener("mousedown", (e) => {
         const pos = getCanvasPosition(e, canvas);
