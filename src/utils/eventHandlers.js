@@ -598,7 +598,12 @@ export function initializeEventHandlers(canvas) {
 
                     table.isEditingName = true;
 
+                    let isProcessingEdit = false;
+
                     const finishEditing = () => {
+                        if (isProcessingEdit) return;
+                        isProcessingEdit = true;
+
                         const newName = input.value.trim();
                         if (newName) {
                             // Check for duplicate names (case-insensitive)
@@ -616,15 +621,32 @@ export function initializeEventHandlers(canvas) {
                                     "A table with this name already exists"
                                 );
                                 input.focus();
+                                isProcessingEdit = false;
                                 return;
                             }
 
                             table.name = newName;
                             saveToStorage(canvas.toJSON());
                         }
+                        
                         table.isEditingName = false;
-                        document.body.removeChild(input);
+                        if (document.body.contains(input)) {
+                            document.body.removeChild(input);
+                        }
                         canvas.render();
+                        isProcessingEdit = false;
+                    };
+
+                    const cancelEditing = () => {
+                        if (isProcessingEdit) return;
+                        isProcessingEdit = true;
+                        
+                        table.isEditingName = false;
+                        if (document.body.contains(input)) {
+                            document.body.removeChild(input);
+                        }
+                        canvas.render();
+                        isProcessingEdit = false;
                     };
 
                     input.addEventListener("blur", finishEditing);
@@ -633,9 +655,7 @@ export function initializeEventHandlers(canvas) {
                             finishEditing();
                         }
                         if (e.key === "Escape") {
-                            table.isEditingName = false;
-                            document.body.removeChild(input);
-                            canvas.render();
+                            cancelEditing();
                         }
                     });
                 }
