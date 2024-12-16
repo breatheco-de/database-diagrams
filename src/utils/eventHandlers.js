@@ -1,9 +1,13 @@
-import { saveToStorage } from './storage';
-import { AttributeForm } from '../components/AttributeForm';
-import { RelationshipTypeModal } from '../components/RelationshipTypeModal';
-import { createMoveTableCommand, createAddAttributeCommand, createDeleteTableCommand } from './history';
-import { ZOOM_LEVELS } from './constants';
-import { showSnackbar } from './ui';
+import { saveToStorage } from "./storage";
+import { AttributeForm } from "../components/AttributeForm";
+import { RelationshipTypeModal } from "../components/RelationshipTypeModal";
+import {
+    createMoveTableCommand,
+    createAddAttributeCommand,
+    createDeleteTableCommand,
+} from "./history";
+import { ZOOM_LEVELS } from "./constants";
+import { showSnackbar } from "./ui";
 
 // Module-level state for relationship creation
 let relationshipStart = null;
@@ -13,14 +17,14 @@ export function initializeEventHandlers(canvas) {
     let isDragging = false;
     let selectedTable = null;
     let activeConnectionPoint = null;
-    
+
     const attributeForm = new AttributeForm();
     const relationshipTypeModal = new RelationshipTypeModal();
 
-    const addTableBtn = document.getElementById('addTable');
-    const resetViewBtn = document.getElementById('resetView');
-    const undoBtn = document.getElementById('undo');
-    const redoBtn = document.getElementById('redo');
+    const addTableBtn = document.getElementById("addTable");
+    const resetViewBtn = document.getElementById("resetView");
+    const undoBtn = document.getElementById("undo");
+    const redoBtn = document.getElementById("redo");
     // Export buttons are handled directly via their IDs
 
     function updateUndoRedoButtons() {
@@ -28,7 +32,7 @@ export function initializeEventHandlers(canvas) {
         redoBtn.disabled = !canvas.history.canRedo();
     }
 
-    undoBtn.addEventListener('click', () => {
+    undoBtn.addEventListener("click", () => {
         if (canvas.history.undo()) {
             saveToStorage(canvas.toJSON());
             canvas.render();
@@ -36,7 +40,7 @@ export function initializeEventHandlers(canvas) {
         }
     });
 
-    redoBtn.addEventListener('click', () => {
+    redoBtn.addEventListener("click", () => {
         if (canvas.history.redo()) {
             saveToStorage(canvas.toJSON());
             canvas.render();
@@ -44,10 +48,10 @@ export function initializeEventHandlers(canvas) {
         }
     });
 
-    addTableBtn.addEventListener('click', () => {
+    addTableBtn.addEventListener("click", () => {
         // Create and show modal for table name input
-        const modal = document.createElement('div');
-        modal.className = 'modal fade';
+        const modal = document.createElement("div");
+        modal.className = "modal fade";
         modal.innerHTML = `
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -68,83 +72,90 @@ export function initializeEventHandlers(canvas) {
                 </div>
             </div>
         `;
-        
+
         document.body.appendChild(modal);
         const bsModal = new bootstrap.Modal(modal);
-        
+
         // Handle table creation
         const createTable = () => {
-            const nameInput = modal.querySelector('#tableName');
+            const nameInput = modal.querySelector("#tableName");
             const name = nameInput.value.trim();
-            
+
             if (name) {
                 canvas.addTable(name);
                 saveToStorage(canvas.toJSON());
                 bsModal.hide();
             }
         };
-        
+
         // Add event listeners
-        modal.querySelector('#createTable').onclick = createTable;
-        modal.querySelector('#tableName').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
+        modal.querySelector("#createTable").onclick = createTable;
+        modal.querySelector("#tableName").addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
                 createTable();
             }
         });
-        
+
         // Clean up modal after hiding
-        modal.addEventListener('hidden.bs.modal', () => {
+        modal.addEventListener("hidden.bs.modal", () => {
             document.body.removeChild(modal);
         });
-        
+
         bsModal.show();
-        modal.querySelector('#tableName').focus();
+        modal.querySelector("#tableName").focus();
     });
 
-    resetViewBtn.addEventListener('click', () => {
+    resetViewBtn.addEventListener("click", () => {
         canvas.offset = { x: 0, y: 0 };
         canvas.scale = 1;
         canvas.render();
     });
 
-    document.getElementById('exportImage').addEventListener('click', () => {
+    document.getElementById("exportImage").addEventListener("click", () => {
         canvas.exportAsImage();
     });
 
-    document.getElementById('exportJson').addEventListener('click', () => {
+    document.getElementById("exportJson").addEventListener("click", () => {
         const data = canvas.toJSON();
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const blob = new Blob([JSON.stringify(data, null, 2)], {
+            type: "application/json",
+        });
         const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
+        const link = document.createElement("a");
         link.href = url;
-        link.download = 'erd-diagram.json';
+        link.download = "erd-diagram.json";
         link.click();
         URL.revokeObjectURL(url);
     });
 
-    canvas.canvas.addEventListener('mousedown', (e) => {
+    canvas.canvas.addEventListener("mousedown", (e) => {
         const pos = getCanvasPosition(e, canvas);
-        
+        let handled = false;
+
         // Check if clicking on a table
-        canvas.tables.forEach(table => {
-            if (table.containsPoint(pos.x, pos.y)) {
+        canvas.tables.forEach((table) => {
+            if (!handled && table.containsPoint(pos.x, pos.y)) {
                 // First check connection points
                 const connectionPoint = findNearestConnectionPoint(table, pos);
                 if (connectionPoint) {
                     isCreatingRelationship = true;
                     relationshipStart = { table, point: connectionPoint };
+                    isDragging = false;
+                    selectedTable = null;
+                    handled = true;
                     return;
                 }
-                
+
                 // Check if clicking delete button (trash icon)
-                if (pos.x >= table.x + table.width - 30 && 
+                if (
+                    pos.x >= table.x + table.width - 30 &&
                     pos.x <= table.x + table.width - 10 &&
                     pos.y >= table.y + 10 &&
-                    pos.y <= table.y + 30) {
-                    
+                    pos.y <= table.y + 30
+                ) {
                     // Create confirmation modal
-                    const modal = document.createElement('div');
-                    modal.className = 'modal fade';
+                    const modal = document.createElement("div");
+                    modal.className = "modal fade";
                     modal.innerHTML = `
                         <div class="modal-dialog">
                             <div class="modal-content">
@@ -162,27 +173,27 @@ export function initializeEventHandlers(canvas) {
                             </div>
                         </div>
                     `;
-                    
+
                     document.body.appendChild(modal);
                     const bsModal = new bootstrap.Modal(modal);
-                    
+
                     const deleteTable = () => {
                         const command = createDeleteTableCommand(canvas, table);
                         canvas.history.execute(command);
                         bsModal.hide();
-                        modal.addEventListener('hidden.bs.modal', () => {
+                        modal.addEventListener("hidden.bs.modal", () => {
                             document.body.removeChild(modal);
                         });
-                        
+
                         saveToStorage(canvas.toJSON());
                         updateUndoRedoButtons();
                     };
-                    
-                    modal.querySelector('#confirmDelete').onclick = deleteTable;
+
+                    modal.querySelector("#confirmDelete").onclick = deleteTable;
                     bsModal.show();
                     return;
                 }
-                
+
                 // Check if clicking edit icon
                 const attributeIndex = table.isEditIconClicked(pos.x, pos.y);
                 if (attributeIndex !== -1) {
@@ -205,21 +216,13 @@ export function initializeEventHandlers(canvas) {
                         const command = createAddAttributeCommand(table, {
                             name: attribute.name,
                             type: attribute.type,
-                            isPrimary: attribute.isPrimary
+                            isPrimary: attribute.isPrimary,
                         });
                         canvas.history.execute(command);
                         canvas.render();
                         saveToStorage(canvas.toJSON());
                         updateUndoRedoButtons();
                     });
-                    return;
-                }
-
-                // Check if clicking on connection points
-                const connectionPoint = findNearestConnectionPoint(table, pos);
-                if (connectionPoint) {
-                    isCreatingRelationship = true;
-                    relationshipStart = { table, point: connectionPoint };
                     return;
                 }
 
@@ -232,18 +235,21 @@ export function initializeEventHandlers(canvas) {
         // If not clicking on a table, start canvas drag
         if (!selectedTable && !isCreatingRelationship) {
             isDragging = true;
-            canvas.dragStart = { x: e.clientX - canvas.offset.x, y: e.clientY - canvas.offset.y };
+            canvas.dragStart = {
+                x: e.clientX - canvas.offset.x,
+                y: e.clientY - canvas.offset.y,
+            };
         }
     });
 
-    canvas.canvas.addEventListener('mousemove', (e) => {
+    canvas.canvas.addEventListener("mousemove", (e) => {
         const pos = getCanvasPosition(e, canvas);
-        
+
         // Reset all table hover states
-        canvas.tables.forEach(table => table.isHovered = false);
-        
+        canvas.tables.forEach((table) => (table.isHovered = false));
+
         // Set hover state for table under cursor
-        canvas.tables.forEach(table => {
+        canvas.tables.forEach((table) => {
             if (table.containsPoint(pos.x, pos.y)) {
                 table.isHovered = true;
             }
@@ -256,37 +262,40 @@ export function initializeEventHandlers(canvas) {
             ctx.save();
             ctx.translate(canvas.offset.x, canvas.offset.y);
             ctx.scale(canvas.scale, canvas.scale);
-            
+
             // Draw dashed line
             ctx.beginPath();
             ctx.setLineDash([5, 3]);
             ctx.moveTo(relationshipStart.point.x, relationshipStart.point.y);
             ctx.lineTo(pos.x, pos.y);
-            ctx.strokeStyle = 'var(--bs-primary)';
+            ctx.strokeStyle = "var(--bs-primary)";
             ctx.lineWidth = 2;
             ctx.stroke();
             ctx.setLineDash([]);
-            
+
             // Draw direction arrow
-            const angle = Math.atan2(pos.y - relationshipStart.point.y, pos.x - relationshipStart.point.x);
+            const angle = Math.atan2(
+                pos.y - relationshipStart.point.y,
+                pos.x - relationshipStart.point.x,
+            );
             const arrowLength = 15;
             const arrowWidth = Math.PI / 6; // 30 degrees
-            
+
             ctx.beginPath();
             ctx.moveTo(pos.x, pos.y);
             ctx.lineTo(
                 pos.x - arrowLength * Math.cos(angle - arrowWidth),
-                pos.y - arrowLength * Math.sin(angle - arrowWidth)
+                pos.y - arrowLength * Math.sin(angle - arrowWidth),
             );
             ctx.moveTo(pos.x, pos.y);
             ctx.lineTo(
                 pos.x - arrowLength * Math.cos(angle + arrowWidth),
-                pos.y - arrowLength * Math.sin(angle + arrowWidth)
+                pos.y - arrowLength * Math.sin(angle + arrowWidth),
             );
-            ctx.strokeStyle = 'var(--bs-primary)';
+            ctx.strokeStyle = "var(--bs-primary)";
             ctx.lineWidth = 2;
             ctx.stroke();
-            
+
             ctx.restore();
             return;
         }
@@ -302,31 +311,41 @@ export function initializeEventHandlers(canvas) {
         } else {
             canvas.offset = {
                 x: e.clientX - canvas.dragStart.x,
-                y: e.clientY - canvas.dragStart.y
+                y: e.clientY - canvas.dragStart.y,
             };
         }
-        
+
         canvas.render();
     });
 
-    canvas.canvas.addEventListener('mouseup', (e) => {
+    canvas.canvas.addEventListener("mouseup", (e) => {
         if (isCreatingRelationship && relationshipStart) {
             const pos = getCanvasPosition(e, canvas);
-            canvas.tables.forEach(table => {
-                if (table !== relationshipStart.table && table.containsPoint(pos.x, pos.y)) {
-                    const connectionPoint = findNearestConnectionPoint(table, pos);
+            canvas.tables.forEach((table) => {
+                if (
+                    table !== relationshipStart.table &&
+                    table.containsPoint(pos.x, pos.y)
+                ) {
+                    const connectionPoint = findNearestConnectionPoint(
+                        table,
+                        pos,
+                    );
                     if (connectionPoint) {
                         const sourceTable = relationshipStart.table;
                         const targetTable = table;
-                        
+
                         // Check if both tables have primary keys
-                        const sourcePrimaryKey = sourceTable.attributes.find(attr => attr.isPrimary);
-                        const targetPrimaryKey = targetTable.attributes.find(attr => attr.isPrimary);
-                        
+                        const sourcePrimaryKey = sourceTable.attributes.find(
+                            (attr) => attr.isPrimary,
+                        );
+                        const targetPrimaryKey = targetTable.attributes.find(
+                            (attr) => attr.isPrimary,
+                        );
+
                         if (!sourcePrimaryKey || !targetPrimaryKey) {
                             // Show error modal
-                            const errorModal = document.createElement('div');
-                            errorModal.className = 'modal fade';
+                            const errorModal = document.createElement("div");
+                            errorModal.className = "modal fade";
                             errorModal.innerHTML = `
                                 <div class="modal-dialog">
                                     <div class="modal-content">
@@ -346,17 +365,20 @@ export function initializeEventHandlers(canvas) {
                             document.body.appendChild(errorModal);
                             const bsModal = new bootstrap.Modal(errorModal);
                             bsModal.show();
-                            errorModal.addEventListener('hidden.bs.modal', () => {
-                                document.body.removeChild(errorModal);
-                            });
+                            errorModal.addEventListener(
+                                "hidden.bs.modal",
+                                () => {
+                                    document.body.removeChild(errorModal);
+                                },
+                            );
                             return;
                         }
-                        
+
                         relationshipTypeModal.show((type) => {
-                            if (type === 'manyToMany') {
+                            if (type === "manyToMany") {
                                 // Show existing many-to-many modal code
-                                const infoModal = document.createElement('div');
-                                infoModal.className = 'modal fade';
+                                const infoModal = document.createElement("div");
+                                infoModal.className = "modal fade";
                                 infoModal.innerHTML = `
                                     <div class="modal-dialog">
                                         <div class="modal-content">
@@ -382,40 +404,62 @@ export function initializeEventHandlers(canvas) {
                                 document.body.appendChild(infoModal);
                                 const bsModal = new bootstrap.Modal(infoModal);
                                 bsModal.show();
-                                infoModal.addEventListener('hidden.bs.modal', () => {
-                                    document.body.removeChild(infoModal);
-                                });
+                                infoModal.addEventListener(
+                                    "hidden.bs.modal",
+                                    () => {
+                                        document.body.removeChild(infoModal);
+                                    },
+                                );
                             } else {
                                 // Determine which table is the "many" side
-                                const manyTable = type === 'oneToMany' ? targetTable : sourceTable;
-                                const oneTable = type === 'oneToMany' ? sourceTable : targetTable;
-                                
+                                const manyTable =
+                                    type === "oneToMany"
+                                        ? targetTable
+                                        : sourceTable;
+                                const oneTable =
+                                    type === "oneToMany"
+                                        ? sourceTable
+                                        : targetTable;
+
                                 // Show attribute form for foreign key
-                                attributeForm.show((attribute) => {
-                                    // Create the foreign key attribute
-                                    const foreignKey = {
-                                        name: attribute.name || `${oneTable.name.toLowerCase()}_id`,
-                                        type: 'number',  // Default type for foreign keys
+                                attributeForm.show(
+                                    (attribute) => {
+                                        // Create the foreign key attribute
+                                        const foreignKey = {
+                                            name:
+                                                attribute.name ||
+                                                `${oneTable.name.toLowerCase()}_id`,
+                                            type: "number", // Default type for foreign keys
+                                            isPrimary: false,
+                                            isForeignKey: true,
+                                            references: oneTable.name,
+                                        };
+
+                                        // Add foreign key to the many side table
+                                        const command =
+                                            createAddAttributeCommand(
+                                                manyTable,
+                                                foreignKey,
+                                            );
+                                        canvas.history.execute(command);
+
+                                        // Create the actual relationship
+                                        canvas.addRelationship(
+                                            sourceTable,
+                                            targetTable,
+                                            type,
+                                        );
+                                        saveToStorage(canvas.toJSON());
+                                        updateUndoRedoButtons();
+                                    },
+                                    {
+                                        name: `${oneTable.name.toLowerCase()}_id`,
+                                        type: "number",
                                         isPrimary: false,
                                         isForeignKey: true,
-                                        references: oneTable.name
-                                    };
-                                    
-                                    // Add foreign key to the many side table
-                                    const command = createAddAttributeCommand(manyTable, foreignKey);
-                                    canvas.history.execute(command);
-                                    
-                                    // Create the actual relationship
-                                    canvas.addRelationship(sourceTable, targetTable, type);
-                                    saveToStorage(canvas.toJSON());
-                                    updateUndoRedoButtons();
-                                }, {
-                                    name: `${oneTable.name.toLowerCase()}_id`,
-                                    type: 'number',
-                                    isPrimary: false,
-                                    isForeignKey: true,
-                                    references: oneTable.name
-                                });
+                                        references: oneTable.name,
+                                    },
+                                );
                             }
                         });
                     }
@@ -439,7 +483,7 @@ export function initializeEventHandlers(canvas) {
 
     // Zoom handling
     function updateZoomDisplay() {
-        const zoomLevel = document.getElementById('zoomLevel');
+        const zoomLevel = document.getElementById("zoomLevel");
         zoomLevel.textContent = `${Math.round(canvas.scale * 100)}%`;
     }
 
@@ -450,15 +494,15 @@ export function initializeEventHandlers(canvas) {
         updateZoomDisplay();
     }
 
-    document.getElementById('zoomIn').addEventListener('click', () => {
+    document.getElementById("zoomIn").addEventListener("click", () => {
         setZoomLevel(canvas.zoomIndex + 1);
     });
 
-    document.getElementById('zoomOut').addEventListener('click', () => {
+    document.getElementById("zoomOut").addEventListener("click", () => {
         setZoomLevel(canvas.zoomIndex - 1);
     });
 
-    canvas.canvas.addEventListener('wheel', (e) => {
+    canvas.canvas.addEventListener("wheel", (e) => {
         e.preventDefault();
         const delta = e.deltaY > 0 ? -1 : 1;
         setZoomLevel(canvas.zoomIndex + delta);
@@ -468,48 +512,54 @@ export function initializeEventHandlers(canvas) {
     updateZoomDisplay();
 
     // Add double-click handler for table name editing
-    canvas.canvas.addEventListener('dblclick', (e) => {
+    canvas.canvas.addEventListener("dblclick", (e) => {
         const pos = getCanvasPosition(e, canvas);
-        
-        canvas.tables.forEach(table => {
+
+        canvas.tables.forEach((table) => {
             if (table.containsPoint(pos.x, pos.y)) {
                 // Check if click is in the header area
                 if (pos.y <= table.y + 40) {
-                    const input = document.createElement('input');
-                    input.type = 'text';
+                    const input = document.createElement("input");
+                    input.type = "text";
                     input.value = table.name;
-                    input.style.position = 'absolute';
-                    input.style.left = `${(table.x + table.width/2) * canvas.scale + canvas.offset.x - 75}px`;
+                    input.style.position = "absolute";
+                    input.style.left = `${(table.x + table.width / 2) * canvas.scale + canvas.offset.x - 75}px`;
                     input.style.top = `${(table.y + 10) * canvas.scale + canvas.offset.y}px`;
-                    input.style.width = '150px';
-                    input.style.textAlign = 'center';
-                    input.style.font = 'bold 16px Arial';
-                    input.style.border = '2px solid var(--bs-primary)';
-                    input.style.borderRadius = '4px';
-                    input.style.padding = '2px';
-                    input.style.zIndex = '1000';
-                    
+                    input.style.width = "150px";
+                    input.style.textAlign = "center";
+                    input.style.font = "bold 16px Arial";
+                    input.style.border = "2px solid var(--bs-primary)";
+                    input.style.borderRadius = "4px";
+                    input.style.padding = "2px";
+                    input.style.zIndex = "1000";
+
                     document.body.appendChild(input);
                     input.focus();
                     input.select();
-                    
+
                     table.isEditingName = true;
-                    
+
                     const finishEditing = () => {
                         const newName = input.value.trim();
                         if (newName) {
                             // Check for duplicate names (case-insensitive)
                             const normalizedName = newName.toLowerCase();
-                            const exists = Array.from(canvas.tables.values()).some(t => 
-                                t !== table && t.name.toLowerCase() === normalizedName
+                            const exists = Array.from(
+                                canvas.tables.values(),
+                            ).some(
+                                (t) =>
+                                    t !== table &&
+                                    t.name.toLowerCase() === normalizedName,
                             );
-                            
+
                             if (exists) {
-                                showSnackbar('A table with this name already exists');
+                                showSnackbar(
+                                    "A table with this name already exists",
+                                );
                                 input.focus();
                                 return;
                             }
-                            
+
                             table.name = newName;
                             saveToStorage(canvas.toJSON());
                         }
@@ -517,13 +567,13 @@ export function initializeEventHandlers(canvas) {
                         document.body.removeChild(input);
                         canvas.render();
                     };
-                    
-                    input.addEventListener('blur', finishEditing);
-                    input.addEventListener('keydown', (e) => {
-                        if (e.key === 'Enter') {
+
+                    input.addEventListener("blur", finishEditing);
+                    input.addEventListener("keydown", (e) => {
+                        if (e.key === "Enter") {
                             finishEditing();
                         }
-                        if (e.key === 'Escape') {
+                        if (e.key === "Escape") {
                             table.isEditingName = false;
                             document.body.removeChild(input);
                             canvas.render();
@@ -538,16 +588,25 @@ export function initializeEventHandlers(canvas) {
 function findNearestConnectionPoint(table, pos) {
     const points = table.getConnectionPoints();
     let nearest = null;
-    let minDistance = 25; // Increased detection radius for better usability
-    
+    let minDistance = 15; // Adjusted detection radius for better precision
+
     points.forEach(point => {
+        // Calculate distance accounting for canvas scale
         const distance = Math.hypot(pos.x - point.x, pos.y - point.y);
         if (distance < minDistance) {
-            minDistance = distance;
-            nearest = point;
+            // Additional check to ensure we're close to the edge
+            const isNearEdge = (
+                Math.abs(pos.x - point.x) < 10 || // Near vertical edges
+                Math.abs(pos.y - point.y) < 10    // Near horizontal edges
+            );
+
+            if (isNearEdge) {
+                minDistance = distance;
+                nearest = point;
+            }
         }
     });
-    
+
     return nearest;
 }
 
@@ -555,6 +614,6 @@ function getCanvasPosition(event, canvas) {
     const rect = canvas.canvas.getBoundingClientRect();
     return {
         x: (event.clientX - rect.left - canvas.offset.x) / canvas.scale,
-        y: (event.clientY - rect.top - canvas.offset.y) / canvas.scale
+        y: (event.clientY - rect.top - canvas.offset.y) / canvas.scale,
     };
 }
