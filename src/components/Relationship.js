@@ -115,41 +115,30 @@ export class Relationship {
         // Get all existing relationships, or empty array if canvas not available
         const relationships = this.canvas ? Array.from(this.canvas.relationships) : [];
         
-        // Filter out used connection points
-        const usedSourcePoints = relationships
-            .filter(rel => rel !== this && (rel.sourceTable === this.sourceTable || rel.targetTable === this.sourceTable))
-            .map(rel => {
-                const points = rel.getNearestPoints(
-                    rel.sourceTable.getConnectionPoints(),
-                    rel.targetTable.getConnectionPoints()
-                );
-                return rel.sourceTable === this.sourceTable ? points.start : points.end;
-            });
+        // Get all used points from existing relationships' current positions
+        const usedPoints = new Set();
+        relationships.forEach(rel => {
+            if (rel !== this) {
+                // Add points that are currently being used by other relationships
+                const startX = rel.sourceTable.x + (rel.sourceTable.width / 2);
+                const startY = rel.sourceTable.y + (rel.sourceTable.height / 2);
+                const endX = rel.targetTable.x + (rel.targetTable.width / 2);
+                const endY = rel.targetTable.y + (rel.targetTable.height / 2);
+                usedPoints.add(`${startX},${startY}`);
+                usedPoints.add(`${endX},${endY}`);
+            }
+        });
 
-        const usedTargetPoints = relationships
-            .filter(rel => rel !== this && (rel.sourceTable === this.targetTable || rel.targetTable === this.targetTable))
-            .map(rel => {
-                const points = rel.getNearestPoints(
-                    rel.sourceTable.getConnectionPoints(),
-                    rel.targetTable.getConnectionPoints()
-                );
-                return rel.sourceTable === this.targetTable ? points.start : points.end;
-            });
-
-        // Filter out used points
+        // Filter available points
         const availableSourcePoints = sourcePoints.filter(sp => 
-            !usedSourcePoints.some(up => 
-                Math.abs(up.x - sp.x) < 1 && Math.abs(up.y - sp.y) < 1
-            )
+            !usedPoints.has(`${sp.x},${sp.y}`)
         );
 
         const availableTargetPoints = targetPoints.filter(tp => 
-            !usedTargetPoints.some(up => 
-                Math.abs(up.x - tp.x) < 1 && Math.abs(up.y - tp.y) < 1
-            )
+            !usedPoints.has(`${tp.x},${tp.y}`)
         );
 
-        // If all points are used, fall back to original points
+        // If no points are available, use all points
         const finalSourcePoints = availableSourcePoints.length > 0 ? availableSourcePoints : sourcePoints;
         const finalTargetPoints = availableTargetPoints.length > 0 ? availableTargetPoints : targetPoints;
 
