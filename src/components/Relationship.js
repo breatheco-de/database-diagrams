@@ -383,68 +383,73 @@ export class Relationship {
             ? Array.from(this.canvas.relationships)
             : [];
 
-        // Track used incoming points for each table with their relationships
-        const usedIncomingPoints = new Map();
+        // Track used points for each table pair
+        const usedPoints = new Map();
 
         // First pass: collect all current connection points usage
         relationships.forEach((rel) => {
             if (rel !== this) {
-                const targetId = rel.targetTable.id;
-                if (!usedIncomingPoints.has(targetId)) {
-                    usedIncomingPoints.set(targetId, new Map());
+                const tablePairKey = `${rel.sourceTable.id}-${rel.targetTable.id}`;
+                const reversePairKey = `${rel.targetTable.id}-${rel.sourceTable.id}`;
+                
+                if (!usedPoints.has(tablePairKey)) {
+                    usedPoints.set(tablePairKey, new Set());
+                }
+                if (!usedPoints.has(reversePairKey)) {
+                    usedPoints.set(reversePairKey, new Set());
                 }
 
-                const tablePoints = rel.targetTable.getConnectionPoints();
+                // Add both source and target points to the used sets
+                const sourceKey = `${rel.sourceTable.id},${Math.round(rel.getNearestPoints(
+                    rel.sourceTable.getConnectionPoints(),
+                    rel.targetTable.getConnectionPoints()
+                ).start.x)},${Math.round(rel.getNearestPoints(
+                    rel.sourceTable.getConnectionPoints(),
+                    rel.targetTable.getConnectionPoints()
+                ).start.y)}`;
+                
+                const targetKey = `${rel.targetTable.id},${Math.round(rel.getNearestPoints(
+                    rel.sourceTable.getConnectionPoints(),
+                    rel.targetTable.getConnectionPoints()
+                ).end.x)},${Math.round(rel.getNearestPoints(
+                    rel.sourceTable.getConnectionPoints(),
+                    rel.targetTable.getConnectionPoints()
+                ).end.y)}`;
 
-                // Find the nearest point currently being used by this relationship
-                let nearestPoint = null;
-                let minDist = Infinity;
-
-                tablePoints.forEach((point) => {
-                    const dist = Math.hypot(
-                        point.x -
-                            (rel.sourceTable.x + rel.sourceTable.width / 2),
-                        point.y -
-                            (rel.sourceTable.y + rel.sourceTable.height / 2),
-                    );
-                    if (dist < minDist) {
-                        minDist = dist;
-                        nearestPoint = point;
-                    }
-                });
-
-                if (nearestPoint) {
-                    const pointKey = `${nearestPoint.x},${nearestPoint.y}`;
-                    const relationshipsAtPoint =
-                        usedIncomingPoints.get(targetId).get(pointKey) || [];
-                    relationshipsAtPoint.push(rel);
-                    usedIncomingPoints
-                        .get(targetId)
-                        .set(pointKey, relationshipsAtPoint);
-                }
+                usedPoints.get(tablePairKey).add(sourceKey);
+                usedPoints.get(tablePairKey).add(targetKey);
+                usedPoints.get(reversePairKey).add(sourceKey);
+                usedPoints.get(reversePairKey).add(targetKey);
             }
         });
 
-        // For the current relationship's target table
-        const targetId = this.targetTable.id;
-        const currentTablePoints =
-            usedIncomingPoints.get(targetId) || new Map();
+        // Get the current table pair key
+        const currentPairKey = `${this.sourceTable.id}-${this.targetTable.id}`;
+        const currentUsedPoints = usedPoints.get(currentPairKey) || new Set();
 
-        // Find the best connection point considering angle and usage
+        // Find the best connection points considering existing relationships
         sourcePoints.forEach((sp) => {
             targetPoints.forEach((tp) => {
-                const pointKey = `${tp.x},${tp.y}`;
-                const relationshipsAtPoint =
-                    currentTablePoints.get(pointKey) || [];
+                const sourceKey = `${this.sourceTable.id},${Math.round(sp.x)},${Math.round(sp.y)}`;
+                const targetKey = `${this.targetTable.id},${Math.round(tp.x)},${Math.round(tp.y)}`;
+                
                 const distance = Math.hypot(tp.x - sp.x, tp.y - sp.y);
-
+                
                 // Calculate angle score (prefer points that maintain better angles)
                 const angle = Math.atan2(tp.y - sp.y, tp.x - sp.x);
                 const angleScore = Math.abs(angle % (Math.PI / 2)); // Prefer horizontal/vertical connections
-
-                // Weighted score combining distance and angle
-                const usagePenalty = relationshipsAtPoint.length * 100; // Heavy penalty for used points
-                const totalScore = distance + angleScore * 50 + usagePenalty;
+                
+                // Heavy penalty for points already used in relationships between these tables
+                const usagePenalty = 
+                    (currentUsedPoints.has(sourceKey) ? 200 : 0) +
+                    (currentUsedPoints.has(targetKey) ? 200 : 0);
+                
+                // Additional penalty for non-optimal point positions
+                const positionPenalty = 
+                    (sp.position === 'top' || sp.position === 'bottom' ? 50 : 0) +
+                    (tp.position === 'top' || tp.position === 'bottom' ? 50 : 0);
+                
+                const totalScore = distance + angleScore * 50 + usagePenalty + positionPenalty;
 
                 if (totalScore < minDistance) {
                     minDistance = totalScore;
