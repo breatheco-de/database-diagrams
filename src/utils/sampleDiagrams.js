@@ -1,11 +1,7 @@
-import { airlineDiagram } from './samples/airline';
-import { schoolDiagram } from './samples/school';
-import { dealershipDiagram } from './samples/dealership';
-import { storeDiagram } from './samples/store';
-
+// Load sample diagrams from JSON files
 export const sampleDiagrams = {
-    airline: airlineDiagram,
-    school: schoolDiagram,
-    dealership: dealershipDiagram,
-    store: storeDiagram
+    airline: await fetch('/src/utils/samples/json/airline.json').then(r => r.json()),
+    school: await fetch('/src/utils/samples/json/school.json').then(r => r.json()),
+    dealership: await fetch('/src/utils/samples/json/dealership.json').then(r => r.json()),
+    store: await fetch('/src/utils/samples/json/store.json').then(r => r.json())
 };
