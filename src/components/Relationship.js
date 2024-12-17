@@ -42,13 +42,42 @@ export class Relationship {
             (table) => table !== this.sourceTable && table !== this.targetTable,
         );
 
+        // Get existing relationships between these tables
+        const parallelRelationships = Array.from(this.canvas.relationships).filter(rel =>
+            rel !== this &&
+            ((rel.sourceTable === this.sourceTable && rel.targetTable === this.targetTable) ||
+             (rel.sourceTable === this.targetTable && rel.targetTable === this.sourceTable))
+        );
+
+        // Calculate path offset based on the number of parallel relationships
+        const relationshipIndex = parallelRelationships.indexOf(this);
+        const offset = relationshipIndex >= 0 ? (relationshipIndex + 1) * 20 : 0;
+
+        // Adjust start and end points for parallel paths
+        const dx = end.x - start.x;
+        const dy = end.y - start.y;
+        const angle = Math.atan2(dy, dx);
+        const perpAngle = angle + Math.PI / 2;
+
+        const offsetStart = {
+            x: start.x + offset * Math.cos(perpAngle),
+            y: start.y + offset * Math.sin(perpAngle),
+            position: start.position
+        };
+
+        const offsetEnd = {
+            x: end.x + offset * Math.cos(perpAngle),
+            y: end.y + offset * Math.sin(perpAngle),
+            position: end.position
+        };
+
         // Check if direct path intersects any tables
-        if (!this.pathIntersectsTables(start, end, tables)) {
-            return [start, end];
+        if (!this.pathIntersectsTables(offsetStart, offsetEnd, tables)) {
+            return [offsetStart, offsetEnd];
         }
 
         // Find intermediate points to avoid tables
-        const path = this.findPathAroundTables(start, end, tables);
+        const path = this.findPathAroundTables(offsetStart, offsetEnd, tables);
         return path;
     }
 
