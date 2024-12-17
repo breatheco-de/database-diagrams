@@ -142,7 +142,6 @@ export class Canvas {
     toJSON() {
         return {
             tables: Array.from(this.tables.values()).map(t => t.toJSON()),
-            relationships: Array.from(this.relationships).map(r => r.toJSON()),
             viewState: {
                 offset: this.offset,
                 scale: this.scale,
@@ -163,8 +162,9 @@ export class Canvas {
             this.zoomIndex = data.viewState.zoomIndex || DEFAULT_ZOOM_INDEX;
         }
         
-        // First load all tables
+        // Load tables and create relationships from foreign key references
         if (data.tables) {
+            // First pass: Create all tables
             data.tables.forEach(tableData => {
                 const table = new Table(
                     tableData.name,
@@ -177,30 +177,27 @@ export class Canvas {
                 table.updateHeight();
             });
             
-            // Create relationships based on attribute references
-            data.tables.forEach(tableData => {
-                const sourceTable = this.tables.get(tableData.id);
-                if (sourceTable && tableData.attributes) {
-                    tableData.attributes.forEach(attr => {
-                        if (attr.references && attr.references.includes('.')) {
-                            const [targetTableName, targetKeyName] = attr.references.split('.');
-                            // Find target table by name
-                            const targetTable = Array.from(this.tables.values())
-                                .find(t => t.name === targetTableName);
+            // Second pass: Create relationships from foreign key references
+            this.tables.forEach(table => {
+                table.attributes.forEach(attr => {
+                    if (attr.references && attr.references.includes('.')) {
+                        const [targetTableName, targetKeyName] = attr.references.split('.');
+                        // Find referenced table by name
+                        const referencedTable = Array.from(this.tables.values())
+                            .find(t => t.name === targetTableName);
                             
-                            if (targetTable) {
-                                // Create relationship based on reference
-                                const relationship = new Relationship(
-                                    targetTable,  // source is the referenced table
-                                    sourceTable,  // target is the table with the foreign key
-                                    "oneToMany", // default to one-to-many
-                                    this
-                                );
-                                this.relationships.add(relationship);
-                            }
+                        if (referencedTable) {
+                            // Create one-to-many relationship
+                            const relationship = new Relationship(
+                                referencedTable, // source (referenced table)
+                                table,          // target (table with foreign key)
+                                "oneToMany",    // type
+                                this
+                            );
+                            this.relationships.add(relationship);
                         }
-                    });
-                }
+                    }
+                });
             });
         }
         
