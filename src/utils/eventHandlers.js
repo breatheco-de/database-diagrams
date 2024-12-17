@@ -241,6 +241,7 @@ export function initializeEventHandlers(canvas) {
         modal.querySelector("#createTable").onclick = createTable;
         modal.querySelector("#tableName").addEventListener("keydown", (e) => {
             if (e.key === "Enter") {
+                e.preventDefault(); // Prevent form submission
                 createTable();
             }
         });
