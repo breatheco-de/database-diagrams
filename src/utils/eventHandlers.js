@@ -70,28 +70,36 @@ function configureToolbar(canvas) {
 
     // Configure Add Table button visibility and New menu items
     const addTableBtn = document.getElementById("addTable");
-    const newDropdown = document.querySelector('.dropdown');
+    const dropdowns = document.querySelectorAll('.dropdown');
+    const newDropdown = Array.from(dropdowns).find(el => 
+        el.querySelector('#newEmptyDiagram') || el.querySelector('.sample-diagram')
+    );
     const allowNew = params.get("allowNew");
     
     if (isReadOnly) {
         addTableBtn.style.display = "none";
-        newDropdown.style.display = "none";
+        if (newDropdown) newDropdown.style.display = "none";
     } else if (allowNew) {
         const allowedOptions = allowNew.toLowerCase().split(',');
         // Handle "New" button visibility
         if (!allowedOptions.includes('new')) {
             addTableBtn.style.display = "none";
         }
-        // Handle samples visibility
-        const sampleItems = document.querySelectorAll('.sample-diagram');
-        if (!allowedOptions.includes('samples')) {
-            sampleItems.forEach(item => item.style.display = 'none');
-            document.querySelector('.dropdown-divider').style.display = 'none';
-            document.querySelector('.dropdown-header').style.display = 'none';
-        }
-        // Handle load from JSON visibility
-        if (!allowedOptions.includes('load')) {
-            document.getElementById('loadJson').style.display = 'none';
+        // Handle samples visibility if the dropdown exists
+        if (newDropdown) {
+            const sampleItems = newDropdown.querySelectorAll('.sample-diagram');
+            if (!allowedOptions.includes('samples')) {
+                sampleItems.forEach(item => item.style.display = 'none');
+                const divider = newDropdown.querySelector('.dropdown-divider');
+                const header = newDropdown.querySelector('.dropdown-header');
+                if (divider) divider.style.display = 'none';
+                if (header) header.style.display = 'none';
+            }
+            // Handle load from JSON visibility
+            const loadJson = newDropdown.querySelector('#loadJson');
+            if (loadJson && !allowedOptions.includes('load')) {
+                loadJson.style.display = 'none';
+            }
         }
     }
 
@@ -106,28 +114,38 @@ function configureToolbar(canvas) {
     }
 
     // Configure Export options
-    const exportDropdown = document.querySelector(".dropdown");
-    const exportImage = document.getElementById("exportImage");
-    const exportJson = document.getElementById("exportJson");
+    const exportDropdowns = document.querySelectorAll(".dropdown");
+    const exportDropdown = Array.from(exportDropdowns).find(el => 
+        el.querySelector('#exportImage') || el.querySelector('#exportJson')
+    );
     const allowExport = params.get("allowExport");
 
-    if (allowExport === "false") {
-        // Hide entire export dropdown when explicitly disabled
-        exportDropdown.parentElement.removeChild(exportDropdown);
-    } else if (allowExport) {
-        // Show only specified formats
-        const allowedFormats = allowExport.toLowerCase().split(",");
-        exportImage.style.display = allowedFormats.includes("png") ? "" : "none";
-        exportJson.style.display = allowedFormats.includes("json") ? "" : "none";
-        
-        // Hide dropdown if no formats are allowed
-        if (!allowedFormats.includes("png") && !allowedFormats.includes("json")) {
+    if (exportDropdown) {
+        const exportImage = document.getElementById("exportImage");
+        const exportJson = document.getElementById("exportJson");
+
+        if (allowExport === "false") {
+            // Hide entire export dropdown when explicitly disabled
             exportDropdown.parentElement.removeChild(exportDropdown);
+        } else if (allowExport) {
+            // Show only specified formats
+            const allowedFormats = allowExport.toLowerCase().split(",");
+            if (exportImage) {
+                exportImage.style.display = allowedFormats.includes("png") ? "" : "none";
+            }
+            if (exportJson) {
+                exportJson.style.display = allowedFormats.includes("json") ? "" : "none";
+            }
+            
+            // Hide dropdown if no formats are allowed
+            if (!allowedFormats.includes("png") && !allowedFormats.includes("json")) {
+                exportDropdown.parentElement.removeChild(exportDropdown);
+            }
+        } else {
+            // When allowExport is not specified, show all formats
+            if (exportImage) exportImage.style.display = "";
+            if (exportJson) exportJson.style.display = "";
         }
-    } else {
-        // When allowExport is not specified, show all formats
-        exportImage.style.display = "";
-        exportJson.style.display = "";
     }
 }
 
@@ -232,30 +250,79 @@ export function initializeEventHandlers(canvas) {
     });
 
     // Handle export functionality if enabled
-    const exportDropdown = document.querySelector(".dropdown");
+    const exportDropdowns = document.querySelectorAll(".dropdown");
+    const exportDropdown = Array.from(exportDropdowns).find(el => 
+        el.querySelector('#exportImage') || el.querySelector('#exportJson')
+    );
+    const params = new URLSearchParams(window.location.search);
+    const allowExport = params.get("allowExport");
+    
+    // Only set up export handlers if export dropdown exists and is enabled
     if (exportDropdown && exportDropdown.parentElement) {
-        const exportImage = document.getElementById("exportImage");
-        const exportJson = document.getElementById("exportJson");
-        
-        if (exportImage) {
-            exportImage.addEventListener("click", () => {
-                canvas.exportAsImage();
-            });
-        }
-
-        if (exportJson) {
-            exportJson.addEventListener("click", () => {
-                const data = canvas.toJSON();
-                const blob = new Blob([JSON.stringify(data, null, 2)], {
-                    type: "application/json",
-                });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement("a");
-                link.href = url;
-                link.download = "erd-diagram.json";
-                link.click();
-                URL.revokeObjectURL(url);
-            });
+        // Check if export is explicitly disabled
+        if (allowExport === "false") {
+            exportDropdown.parentElement.removeChild(exportDropdown);
+        } else {
+            const exportImage = exportDropdown.querySelector('#exportImage');
+            const exportJson = exportDropdown.querySelector('#exportJson');
+            
+            // Handle specific format restrictions if specified
+            if (allowExport) {
+                const allowedFormats = allowExport.toLowerCase().split(",");
+                if (exportImage) {
+                    if (allowedFormats.includes("png")) {
+                        exportImage.addEventListener("click", () => {
+                            canvas.exportAsImage();
+                        });
+                    } else {
+                        exportImage.style.display = "none";
+                    }
+                }
+                if (exportJson) {
+                    if (allowedFormats.includes("json")) {
+                        exportJson.addEventListener("click", () => {
+                            const data = canvas.toJSON();
+                            const blob = new Blob([JSON.stringify(data, null, 2)], {
+                                type: "application/json",
+                            });
+                            const url = URL.createObjectURL(blob);
+                            const link = document.createElement("a");
+                            link.href = url;
+                            link.download = "erd-diagram.json";
+                            link.click();
+                            URL.revokeObjectURL(url);
+                        });
+                    } else {
+                        exportJson.style.display = "none";
+                    }
+                }
+                
+                // Remove dropdown if no formats are allowed
+                if (!allowedFormats.includes("png") && !allowedFormats.includes("json")) {
+                    exportDropdown.parentElement.removeChild(exportDropdown);
+                }
+            } else {
+                // When no restrictions, enable all formats
+                if (exportImage) {
+                    exportImage.addEventListener("click", () => {
+                        canvas.exportAsImage();
+                    });
+                }
+                if (exportJson) {
+                    exportJson.addEventListener("click", () => {
+                        const data = canvas.toJSON();
+                        const blob = new Blob([JSON.stringify(data, null, 2)], {
+                            type: "application/json",
+                        });
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement("a");
+                        link.href = url;
+                        link.download = "erd-diagram.json";
+                        link.click();
+                        URL.revokeObjectURL(url);
+                    });
+                }
+            }
         }
     }
 
