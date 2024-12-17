@@ -205,13 +205,3 @@ window.addEventListener('message', (event) => {
   }
 }
 ```
-
-## Development
-
-1. Clone the repository
-2. Install dependencies: `npm install`
-3. Start development server: `npm run dev`
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
