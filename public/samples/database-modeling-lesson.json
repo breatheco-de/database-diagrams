@@ -1,0 +1,105 @@
+{
+  "tables": [
+    {
+      "id": "u24cpzjp7",
+      "name": "Customer",
+      "x": 535,
+      "y": 222,
+      "attributes": [
+        {
+          "name": "id",
+          "type": "number",
+          "isPrimary": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "isPrimary": false
+        }
+      ]
+    },
+    {
+      "id": "pu8pahv82",
+      "name": "Product",
+      "x": 874,
+      "y": 214,
+      "attributes": [
+        {
+          "name": "id",
+          "type": "number",
+          "isPrimary": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "isPrimary": false
+        }
+      ]
+    },
+    {
+      "id": "x5x0387x1",
+      "name": "Order",
+      "x": 530,
+      "y": 425,
+      "attributes": [
+        {
+          "name": "id",
+          "type": "number",
+          "isPrimary": true
+        },
+        {
+          "name": "date",
+          "type": "date",
+          "isPrimary": false
+        },
+        {
+          "name": "customer_id",
+          "type": "number",
+          "isPrimary": false,
+          "isForeignKey": true,
+          "references": "Customer.id"
+        }
+      ]
+    },
+    {
+      "id": "r3yyiz90p",
+      "name": "OrderDetail",
+      "x": 872,
+      "y": 415,
+      "attributes": [
+        {
+          "name": "id",
+          "type": "number",
+          "isPrimary": true
+        },
+        {
+          "name": "order_id",
+          "type": "number",
+          "isPrimary": false,
+          "isForeignKey": true,
+          "references": "Order.id"
+        },
+        {
+          "name": "product_id",
+          "type": "number",
+          "isPrimary": false,
+          "isForeignKey": true,
+          "references": "Product.id"
+        },
+        {
+          "name": "amount",
+          "type": "string",
+          "isPrimary": false
+        }
+      ]
+    }
+  ],
+  "viewState": {
+    "offset": {
+      "x": 66,
+      "y": 6
+    },
+    "scale": 1,
+    "zoomIndex": 2
+  }
+}

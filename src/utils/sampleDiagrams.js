@@ -1,25 +1,20 @@
+const SAMPLE_DIAGRAMS = ['airline', 'school', 'dealership', 'store'];
+
 // Load sample diagrams from JSON files in public directory
 export async function loadSampleDiagrams() {
     try {
-        const [airline, school, dealership, store] = await Promise.all([
-            fetch('/samples/airline.json').then(r => r.json()),
-            fetch('/samples/school.json').then(r => r.json()),
-            fetch('/samples/dealership.json').then(r => r.json()),
-            fetch('/samples/store.json').then(r => r.json())
-        ]);
+        const diagramPromises = SAMPLE_DIAGRAMS.map(name => 
+            fetch(`/samples/${name}.json`)
+                .then(r => r.json())
+                .then(data => {
+                    // Set hiddenOnMenu to true by default if not explicitly set
+                    data.hiddenOnMenu = data.hiddenOnMenu ?? true;
+                    return [name, data];
+                })
+        );
 
-        // Process diagrams and add metadata
-        airline.hiddenOnMenu = false;
-        school.hiddenOnMenu = false;
-        dealership.hiddenOnMenu = false;
-        store.hiddenOnMenu = false;
-        
-        return {
-            airline,
-            school,
-            dealership,
-            store
-        };
+        const loadedDiagrams = await Promise.all(diagramPromises);
+        return Object.fromEntries(loadedDiagrams);
     } catch (error) {
         console.error('Error loading sample diagrams:', error);
         throw error;
