@@ -79,9 +79,14 @@ function configureToolbar(canvas) {
     const newEmptyDiagramBtn = document.getElementById("newEmptyDiagram");
 
     // Configure New menu items
+    const addTableBtn = document.getElementById("addTable");
+    const newDropdown = document.querySelector('.dropdown:has(#newEmptyDiagram, .sample-diagram)');
     const allowNew = params.get("allowNew");
-    if (isReadOnly && addTableBtn) {
-        addTableBtn.style.display = "none";
+
+    // Handle readOnly mode and allowNew parameter
+    if (isReadOnly || allowNew === "false") {
+        if (addTableBtn) addTableBtn.style.display = "none";
+        if (newDropdown) newDropdown.style.display = "none";
     }
 
     // Configure sample diagram buttons
@@ -169,13 +174,13 @@ function configureToolbar(canvas) {
     // Configure Export functionality
     const exportImageBtn = document.getElementById('exportImage');
     const exportJsonBtn = document.getElementById('exportJson');
-    const exportDropdown = document.querySelector('.dropdown:has(#exportImage, #exportJson)');
+    const exportContainer = document.querySelector('.dropdown:has(#exportImage, #exportJson)');
     const allowExport = params.get("allowExport");
 
-    if (exportDropdown) {
+    if (exportContainer) {
         if (allowExport === "false") {
             // Hide entire export dropdown when explicitly disabled
-            exportDropdown.style.display = 'none';
+            exportContainer.style.display = 'none';
         } else if (allowExport) {
             // Show only specified formats
             const allowedFormats = allowExport.toLowerCase().split(",");
