@@ -244,9 +244,7 @@ export function initializeEventHandlers(canvas) {
     if (exportJson) {
         exportJson.addEventListener("click", () => {
             const data = canvas.toJSON();
-            // Remove relationships key as it's not needed
-            const { relationships, ...exportData } = data;
-            const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+            const blob = new Blob([JSON.stringify(data, null, 2)], {
                 type: "application/json",
             });
             const url = URL.createObjectURL(blob);

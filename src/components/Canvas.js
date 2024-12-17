@@ -142,7 +142,12 @@ export class Canvas {
     toJSON() {
         return {
             tables: Array.from(this.tables.values()).map(t => t.toJSON()),
-            relationships: Array.from(this.relationships).map(r => r.toJSON())
+            relationships: Array.from(this.relationships).map(r => r.toJSON()),
+            viewState: {
+                offset: this.offset,
+                scale: this.scale,
+                zoomIndex: this.zoomIndex
+            }
         };
     }
 
@@ -150,6 +155,13 @@ export class Canvas {
         this.tables.clear();
         this.relationships.clear();
         this.history.clear();  // Clear history when loading new diagram
+        
+        // Load view state if present
+        if (data.viewState) {
+            this.offset = data.viewState.offset || { x: 0, y: 0 };
+            this.scale = data.viewState.scale || 1;
+            this.zoomIndex = data.viewState.zoomIndex || DEFAULT_ZOOM_INDEX;
+        }
         
         // First load all tables
         if (data.tables) {
