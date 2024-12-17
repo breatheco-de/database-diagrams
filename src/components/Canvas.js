@@ -160,46 +160,38 @@ export class Canvas {
                     tableData.y,
                     tableData.attributes || []
                 );
-                table.id = tableData.id || table.id;  // Use provided ID or keep generated one
+                table.id = tableData.id || table.id;
                 this.tables.set(table.id, table);
-                table.updateHeight(); // Ensure table height is correct based on attributes
+                table.updateHeight();
             });
-        }
-        
-        // Then reconstruct relationships
-        if (data.relationships) {
-            data.relationships.forEach(relData => {
-                const sourceTable = this.tables.get(relData.sourceId);
-                const targetTable = this.tables.get(relData.targetId);
-                
-                if (sourceTable && targetTable) {
-                    // Create the relationship regardless of foreign keys for visualization
-                    const relationship = new Relationship(sourceTable, targetTable, relData.type, this);
-                    this.relationships.add(relationship);
-                    
-                    // Ensure proper foreign key exists or create it
-                    if (relData.type === "oneToMany") {
-                        // Add foreign key to target table if it doesn't exist
-                        const hasFK = targetTable.attributes.some(attr =>
-                            attr.isForeignKey && attr.references === sourceTable.name
-                        );
-                        
-                        if (!hasFK) {
-                            targetTable.attributes.push({
-                                name: `${sourceTable.name.toLowerCase()}_id`,
-                                type: "number",
-                                isPrimary: false,
-                                isForeignKey: true,
-                                references: sourceTable.name
-                            });
-                            targetTable.updateHeight();
+            
+            // Create relationships based on attribute references
+            data.tables.forEach(tableData => {
+                const sourceTable = this.tables.get(tableData.id);
+                if (sourceTable && tableData.attributes) {
+                    tableData.attributes.forEach(attr => {
+                        if (attr.references && attr.references.includes('.')) {
+                            const [targetTableName, targetKeyName] = attr.references.split('.');
+                            // Find target table by name
+                            const targetTable = Array.from(this.tables.values())
+                                .find(t => t.name === targetTableName);
+                            
+                            if (targetTable) {
+                                // Create relationship based on reference
+                                const relationship = new Relationship(
+                                    targetTable,  // source is the referenced table
+                                    sourceTable,  // target is the table with the foreign key
+                                    "oneToMany", // default to one-to-many
+                                    this
+                                );
+                                this.relationships.add(relationship);
+                            }
                         }
-                    }
+                    });
                 }
             });
         }
         
-        // Final render after all relationships are reconstructed
         this.render();
     }
 

@@ -656,15 +656,19 @@ export function initializeEventHandlers(canvas) {
                                 // Show attribute form for foreign key
                                 attributeForm.show(
                                     (attribute) => {
-                                        // Create the foreign key attribute
+                                        // Find primary key of the referenced table
+                                        const referencedKey = oneTable.attributes.find(attr => attr.isPrimary);
+                                        const referencedKeyName = referencedKey ? referencedKey.name : 'id';
+                                        
+                                        // Create the foreign key attribute with dot notation reference
                                         const foreignKey = {
                                             name:
                                                 attribute.name ||
-                                                `${oneTable.name.toLowerCase()}_id`,
+                                                `${oneTable.name.toLowerCase()}_${referencedKeyName}`,
                                             type: "number", // Default type for foreign keys
                                             isPrimary: false,
                                             isForeignKey: true,
-                                            references: oneTable.name,
+                                            references: `${oneTable.name}.${referencedKeyName}`,
                                         };
 
                                         // Add foreign key to the many side table
