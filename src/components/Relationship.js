@@ -51,7 +51,11 @@ export class Relationship {
 
         // Calculate path offset based on the number of parallel relationships
         const relationshipIndex = parallelRelationships.indexOf(this);
-        const offset = relationshipIndex >= 0 ? (relationshipIndex + 1) * 20 : 0;
+        // Increase base offset and alternate sides for better separation
+        const baseOffset = 40; // Increased from 20
+        const offset = relationshipIndex >= 0 
+            ? (Math.floor(relationshipIndex / 2) + 1) * baseOffset * (relationshipIndex % 2 === 0 ? 1 : -1)
+            : 0;
 
         // Adjust start and end points for parallel paths
         const dx = end.x - start.x;
@@ -59,17 +63,31 @@ export class Relationship {
         const angle = Math.atan2(dy, dx);
         const perpAngle = angle + Math.PI / 2;
 
-        const offsetStart = {
+        // Apply offset with position-based adjustments
+        let offsetStart = {
             x: start.x + offset * Math.cos(perpAngle),
             y: start.y + offset * Math.sin(perpAngle),
             position: start.position
         };
 
-        const offsetEnd = {
+        let offsetEnd = {
             x: end.x + offset * Math.cos(perpAngle),
             y: end.y + offset * Math.sin(perpAngle),
             position: end.position
         };
+
+        // Adjust offset based on connection point positions
+        if (start.position === 'left' || start.position === 'right') {
+            offsetStart.y = start.y;
+        } else if (start.position === 'top' || start.position === 'bottom') {
+            offsetStart.x = start.x;
+        }
+
+        if (end.position === 'left' || end.position === 'right') {
+            offsetEnd.y = end.y;
+        } else if (end.position === 'top' || end.position === 'bottom') {
+            offsetEnd.x = end.x;
+        }
 
         // Check if direct path intersects any tables
         if (!this.pathIntersectsTables(offsetStart, offsetEnd, tables)) {
@@ -141,20 +159,14 @@ export class Relationship {
 
     findPathAroundTables(start, end, tables) {
         // Add padding to avoid tight corners
-        const padding = 30;
+        const padding = 40; // Increased padding for better separation
 
         // Determine the direction of connection points
         const startPosition = start.position || "right";
         const endPosition = end.position || "left";
 
-        // Calculate initial direction based on connection points
-        let firstDirection, secondDirection;
-
         // Helper function to determine if we should go horizontal first
         const shouldGoHorizontalFirst = () => {
-            // If start and end points are aligned vertically, prefer vertical path
-            if (Math.abs(start.x - end.x) < padding) return false;
-
             // If points are on opposite sides horizontally, prefer horizontal path
             if (
                 (startPosition === "right" && endPosition === "left") ||
@@ -163,7 +175,12 @@ export class Relationship {
                 return true;
             }
 
-            // Default to the longer distance
+            // If start and end points are aligned vertically (with some tolerance)
+            if (Math.abs(start.x - end.x) < padding * 2) {
+                return false;
+            }
+
+            // For diagonal relationships, use the longer distance
             return Math.abs(end.x - start.x) > Math.abs(end.y - start.y);
         };
 
