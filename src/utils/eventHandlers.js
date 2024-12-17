@@ -169,24 +169,72 @@ function configureToolbar(canvas) {
     // Configure Export functionality
     const exportImageBtn = document.getElementById('exportImage');
     const exportJsonBtn = document.getElementById('exportJson');
+    const exportDropdown = document.querySelector('.dropdown:has(#exportImage, #exportJson)');
+    const allowExport = params.get("allowExport");
 
-    if (exportImageBtn) {
-        exportImageBtn.addEventListener('click', () => canvas.exportAsImage());
-    }
-
-    if (exportJsonBtn) {
-        exportJsonBtn.addEventListener('click', () => {
-            const data = canvas.toJSON();
-            const blob = new Blob([JSON.stringify(data, null, 2)], {
-                type: 'application/json'
-            });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = 'erd-diagram.json';
-            link.click();
-            URL.revokeObjectURL(url);
-        });
+    if (exportDropdown) {
+        if (allowExport === "false") {
+            // Hide entire export dropdown when explicitly disabled
+            exportDropdown.style.display = 'none';
+        } else if (allowExport) {
+            // Show only specified formats
+            const allowedFormats = allowExport.toLowerCase().split(",");
+            
+            if (exportImageBtn) {
+                if (allowedFormats.includes("png")) {
+                    exportImageBtn.style.display = "";
+                    exportImageBtn.addEventListener('click', () => canvas.exportAsImage());
+                } else {
+                    exportImageBtn.style.display = "none";
+                }
+            }
+            
+            if (exportJsonBtn) {
+                if (allowedFormats.includes("json")) {
+                    exportJsonBtn.style.display = "";
+                    exportJsonBtn.addEventListener('click', () => {
+                        const data = canvas.toJSON();
+                        const blob = new Blob([JSON.stringify(data, null, 2)], {
+                            type: 'application/json'
+                        });
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = 'erd-diagram.json';
+                        link.click();
+                        URL.revokeObjectURL(url);
+                    });
+                } else {
+                    exportJsonBtn.style.display = "none";
+                }
+            }
+            
+            // Hide dropdown if no formats are allowed
+            if (!allowedFormats.includes("png") && !allowedFormats.includes("json")) {
+                exportDropdown.style.display = "none";
+            }
+        } else {
+            // When allowExport is not specified, show and enable all formats
+            if (exportImageBtn) {
+                exportImageBtn.style.display = "";
+                exportImageBtn.addEventListener('click', () => canvas.exportAsImage());
+            }
+            if (exportJsonBtn) {
+                exportJsonBtn.style.display = "";
+                exportJsonBtn.addEventListener('click', () => {
+                    const data = canvas.toJSON();
+                    const blob = new Blob([JSON.stringify(data, null, 2)], {
+                        type: 'application/json'
+                    });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = 'erd-diagram.json';
+                    link.click();
+                    URL.revokeObjectURL(url);
+                });
+            }
+        }
     }
 }
 
