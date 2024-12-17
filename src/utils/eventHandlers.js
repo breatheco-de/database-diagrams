@@ -362,14 +362,15 @@ export function initializeEventHandlers(canvas) {
         item.addEventListener('click', () => {
             try {
                 const sampleName = item.dataset.sample;
-                const sampleData = sampleDiagrams[sampleName];
                 
-                if (!sampleData) {
-                    console.error('Sample diagram not found:', sampleName);
-                    showSnackbar('Error: Sample diagram not found');
-                    return;
-                }
-
+                // Show loading state
+                item.classList.add('disabled');
+                const originalText = item.innerHTML;
+                item.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Loading...`;
+                
+                // Load the diagram
+                const sampleData = await loadSampleDiagram(sampleName);
+                
                 console.log('Loading sample diagram:', sampleName, sampleData);
                 canvas.loadFromJSON(sampleData);
                 canvas.render();
@@ -382,6 +383,10 @@ export function initializeEventHandlers(canvas) {
             } catch (error) {
                 console.error('Error loading sample diagram:', error);
                 showSnackbar('Error loading sample diagram');
+            } finally {
+                // Reset loading state
+                item.classList.remove('disabled');
+                item.innerHTML = originalText;
             }
         });
     });

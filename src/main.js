@@ -7,10 +7,21 @@ async function initializeApplication() {
     const canvas = new Canvas('erdCanvas');
     
     try {
-        // Load sample diagrams first
-        const loadedDiagrams = await loadSampleDiagrams();
-        Object.assign(sampleDiagrams, loadedDiagrams);
-        console.log('Sample diagrams loaded:', sampleDiagrams);
+        // Check for diagram parameter in URL
+        const params = new URLSearchParams(window.location.search);
+        const diagramParam = params.get('diagram');
+        
+        // Only load the diagram specified in URL parameter if present
+        if (diagramParam && SAMPLE_DIAGRAMS.includes(diagramParam)) {
+            try {
+                console.log('Loading diagram from URL parameter:', diagramParam);
+                const diagram = await loadSampleDiagram(diagramParam);
+                canvas.loadDiagram(diagram);
+                saveToStorage(canvas.toJSON());
+            } catch (error) {
+                console.error('Failed to load diagram from URL:', error);
+            }
+        }
 
         // Check for diagram parameter in URL
         const params = new URLSearchParams(window.location.search);
