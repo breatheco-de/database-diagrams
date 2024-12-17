@@ -320,33 +320,41 @@ export class Relationship {
     }
 
     drawOneToMany(ctx, point, angle) {
-        const length = 20; // Base line length
-        const footLength = length * 0.7; // Length of each foot
-        const spread = Math.PI / 4; // 45 degrees spread for natural V shape
+        const length = 70; // Increased length
 
         // Draw the base line
-        ctx.strokeStyle = "var(--bs-warning)";  // Set to orange
+        ctx.strokeStyle = "var(--bs-warning)"; // Set to orange
         ctx.moveTo(point.x, point.y);
-        const baseEndX = point.x - length * Math.cos(angle);
-        const baseEndY = point.y - length * Math.sin(angle);
-        ctx.lineTo(baseEndX, baseEndY);
-
-        // Calculate angles for the V shape
-        const leftAngle = angle - spread;
-        const rightAngle = angle + spread;
-
-        // Draw left foot of the crow
-        ctx.moveTo(baseEndX, baseEndY);
         ctx.lineTo(
-            baseEndX - footLength * Math.cos(leftAngle),
-            baseEndY - footLength * Math.sin(leftAngle)
+            point.x - length * Math.cos(angle),
+            point.y - length * Math.sin(angle),
         );
 
-        // Draw right foot of the crow
+        // Draw the crow's foot lines - start from the base line end point
+        const baseEndX = point.x - length * Math.cos(angle);
+        const baseEndY = point.y - length * Math.sin(angle);
+
+        // Calculate perpendicular direction for spread
+        const perpAngle = angle + Math.PI / 2;
+        const footLength = length * 1; // Length of the foot lines
+        const spreadDist = length * 0.2; // How far to spread the feet
+
+        // Left foot
         ctx.moveTo(baseEndX, baseEndY);
         ctx.lineTo(
-            baseEndX - footLength * Math.cos(rightAngle),
-            baseEndY - footLength * Math.sin(rightAngle)
+            baseEndX + footLength,
+            baseEndY -
+                footLength * Math.sin(angle) +
+                spreadDist * Math.sin(perpAngle),
+        );
+
+        // Right foot
+        ctx.moveTo(baseEndX, baseEndY);
+        ctx.lineTo(
+            baseEndX + footLength,
+            baseEndY -
+                footLength * Math.sin(angle) -
+                spreadDist * Math.sin(perpAngle),
         );
     }
 
