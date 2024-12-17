@@ -151,18 +151,29 @@ export class Canvas {
     }
 
     loadDiagram(data) {
+        if (!data || typeof data !== 'object') {
+            console.error('Invalid diagram data:', data);
+            return;
+        }
+
         this.tables.clear();
         this.relationships.clear();
         this.history.clear();  // Clear history when loading new diagram
         
-        // Load view state if present
-        const viewState = data.viewState || {};
-        this.offset = viewState.offset || { x: 0, y: 0 };
-        this.scale = viewState.scale || ZOOM_LEVELS[DEFAULT_ZOOM_INDEX];
-        this.zoomIndex = viewState.zoomIndex || DEFAULT_ZOOM_INDEX;
+        // Reset view state to defaults first
+        this.offset = { x: 0, y: 0 };
+        this.scale = ZOOM_LEVELS[DEFAULT_ZOOM_INDEX];
+        this.zoomIndex = DEFAULT_ZOOM_INDEX;
+
+        // Then load view state if present
+        if (data.viewState) {
+            this.offset = data.viewState.offset || this.offset;
+            this.scale = data.viewState.scale || this.scale;
+            this.zoomIndex = data.viewState.zoomIndex || this.zoomIndex;
+        }
         
         // Load tables and create relationships from foreign key references
-        if (data.tables) {
+        if (Array.isArray(data.tables)) {
             // First pass: Create all tables
             data.tables.forEach(tableData => {
                 const table = new Table(
