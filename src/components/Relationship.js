@@ -525,16 +525,23 @@ export class Relationship {
 
     isPointNearConnection(point, relationship) {
         const tolerance = 5; // pixels
-        // Get actual connection points for the relationship
-        const points = relationship.getNearestPoints(
-            relationship.sourceTable.getConnectionPoints(),
-            relationship.targetTable.getConnectionPoints()
-        );
-
-        return (
-            Math.hypot(point.x - points.start.x, point.y - points.start.y) < tolerance ||
-            Math.hypot(point.x - points.end.x, point.y - points.end.y) < tolerance
-        );
+        // Check if point is near any of the potential connection points
+        const sourcePoints = relationship.sourceTable.getConnectionPoints();
+        const targetPoints = relationship.targetTable.getConnectionPoints();
+        
+        for (const sp of sourcePoints) {
+            if (Math.hypot(point.x - sp.x, point.y - sp.y) < tolerance) {
+                return true;
+            }
+        }
+        
+        for (const tp of targetPoints) {
+            if (Math.hypot(point.x - tp.x, point.y - tp.y) < tolerance) {
+                return true;
+            }
+        }
+        
+        return false;
     }
 
     containsPoint(x, y) {
