@@ -79,7 +79,6 @@ function configureToolbar(canvas) {
     const newEmptyDiagramBtn = document.getElementById("newEmptyDiagram");
 
     // Configure New menu items
-    const addTableBtn = document.getElementById("addTable");
     const newDropdown = document.querySelector('.dropdown:has(#newEmptyDiagram, .sample-diagram)');
     const allowNew = params.get("allowNew");
 
