@@ -104,76 +104,74 @@ export class Relationship {
         // Calculate direction vectors
         const dx = end.x - start.x;
         const dy = end.y - start.y;
-        const absDx = Math.abs(dx);
-        const absDy = Math.abs(dy);
         
         // Initialize path arrays for different routing options
         const paths = [];
         
-        // Try both horizontal-first and vertical-first paths
+        // Try both horizontal-first and vertical-first paths with additional space
+        const padding = 20; // Add some padding to avoid tight corners
+        
         const horizontalFirst = [
             start,
-            { x: start.x + dx, y: start.y },
+            { x: end.x, y: start.y }, // Go all the way to target x
             end
         ];
         
         const verticalFirst = [
             start,
-            { x: start.x, y: start.y + dy },
+            { x: start.x, y: end.y }, // Go all the way to target y
             end
         ];
         
-        // Check which path is better based on intersection and length
-        const horizontalValid = !this.pathIntersectsTables(horizontalFirst[0], horizontalFirst[1], tables) &&
-                              !this.pathIntersectsTables(horizontalFirst[1], horizontalFirst[2], tables);
+        // Add paths that avoid intersections
+        if (!this.pathIntersectsTables(horizontalFirst[0], horizontalFirst[1], tables) &&
+            !this.pathIntersectsTables(horizontalFirst[1], horizontalFirst[2], tables)) {
+            paths.push(horizontalFirst);
+        }
         
-        const verticalValid = !this.pathIntersectsTables(verticalFirst[0], verticalFirst[1], tables) &&
-                            !this.pathIntersectsTables(verticalFirst[1], verticalFirst[2], tables);
+        if (!this.pathIntersectsTables(verticalFirst[0], verticalFirst[1], tables) &&
+            !this.pathIntersectsTables(verticalFirst[1], verticalFirst[2], tables)) {
+            paths.push(verticalFirst);
+        }
         
-        // Add valid paths to options
-        if (horizontalValid) paths.push(horizontalFirst);
-        if (verticalValid) paths.push(verticalFirst);
-        
-        // If no simple path works, try middle point routing
+        // If no direct paths work, try middle point routing
         if (paths.length === 0) {
             const midX = start.x + dx / 2;
             const midY = start.y + dy / 2;
             
-            // Try routing through middle point
-            const middleRoute = [
+            const midPointPath = [
                 start,
                 { x: midX, y: start.y },
-                { x: midX, y: midY },
                 { x: midX, y: end.y },
-                { x: end.x, y: end.y }
+                end
             ];
             
-            // Simplify path by removing unnecessary points
-            const simplified = this.simplifyPath(middleRoute);
-            
-            // Check if simplified path is valid
+            // Check if mid-point path is valid
             let isValid = true;
-            for (let i = 0; i < simplified.length - 1; i++) {
-                if (this.pathIntersectsTables(simplified[i], simplified[i + 1], tables)) {
+            for (let i = 0; i < midPointPath.length - 1; i++) {
+                if (this.pathIntersectsTables(midPointPath[i], midPointPath[i + 1], tables)) {
                     isValid = false;
                     break;
                 }
             }
             
-            if (isValid) return simplified;
+            if (isValid) {
+                paths.push(midPointPath);
+            }
         }
         
-        // Return the shortest valid path or default path
+        // If we have valid paths, return the shortest one
         if (paths.length > 0) {
-            // Sort paths by total length
-            paths.sort((a, b) => this.getPathLength(a) - this.getPathLength(b));
-            return paths[0];
+            return paths.reduce((shortest, current) => 
+                this.getPathLength(current) < this.getPathLength(shortest) ? current : shortest
+            );
         }
         
-        // Default to simple two-segment path if no valid path found
+        // If no valid paths found, return a default path with extra segments to avoid tables
         return [
             start,
-            { x: start.x, y: end.y },
+            { x: start.x, y: start.y + dy/3 },
+            { x: end.x, y: start.y + dy*2/3 },
             end
         ];
     }

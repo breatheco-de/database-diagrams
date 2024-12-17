@@ -158,10 +158,11 @@ export class Canvas {
                     tableData.name,
                     tableData.x,
                     tableData.y,
-                    tableData.attributes
+                    tableData.attributes || []
                 );
-                table.id = tableData.id;  // Ensure we preserve the original ID
+                table.id = tableData.id || table.id;  // Use provided ID or keep generated one
                 this.tables.set(table.id, table);
+                table.updateHeight(); // Ensure table height is correct based on attributes
             });
         }
         
@@ -170,47 +171,35 @@ export class Canvas {
             data.relationships.forEach(relData => {
                 const sourceTable = this.tables.get(relData.sourceId);
                 const targetTable = this.tables.get(relData.targetId);
+                
                 if (sourceTable && targetTable) {
-                    // For self-referential relationships
-                    if (relData.sourceId === relData.targetId) {
-                        const hasSelfReference = sourceTable.attributes.some(attr =>
-                            attr.isForeignKey && attr.references === sourceTable.name
-                        );
-                        if (hasSelfReference) {
-                            const relationship = new Relationship(sourceTable, targetTable, relData.type, this);
-                            this.relationships.add(relationship);
-                        }
-                        return;
-                    }
-
-                    // For regular relationships
-                    let hasForeignKey = false;
+                    // Create the relationship regardless of foreign keys for visualization
+                    const relationship = new Relationship(sourceTable, targetTable, relData.type, this);
+                    this.relationships.add(relationship);
+                    
+                    // Ensure proper foreign key exists or create it
                     if (relData.type === "oneToMany") {
-                        // Check if target table has foreign key referencing source
-                        hasForeignKey = targetTable.attributes.some(attr =>
+                        // Add foreign key to target table if it doesn't exist
+                        const hasFK = targetTable.attributes.some(attr =>
                             attr.isForeignKey && attr.references === sourceTable.name
                         );
-                    } else if (relData.type === "manyToMany") {
-                        // Both tables should have foreign keys referencing each other
-                        hasForeignKey = true; // We'll allow many-to-many without explicit foreign keys
-                    } else if (relData.type === "oneToOne") {
-                        // Either table can have the foreign key
-                        hasForeignKey = sourceTable.attributes.some(attr =>
-                            attr.isForeignKey && attr.references === targetTable.name
-                        ) || targetTable.attributes.some(attr =>
-                            attr.isForeignKey && attr.references === sourceTable.name
-                        );
-                    }
-
-                    // Create relationship if validation passes
-                    if (hasForeignKey) {
-                        const relationship = new Relationship(sourceTable, targetTable, relData.type, this);
-                        this.relationships.add(relationship);
+                        
+                        if (!hasFK) {
+                            targetTable.attributes.push({
+                                name: `${sourceTable.name.toLowerCase()}_id`,
+                                type: "number",
+                                isPrimary: false,
+                                isForeignKey: true,
+                                references: sourceTable.name
+                            });
+                            targetTable.updateHeight();
+                        }
                     }
                 }
             });
         }
         
+        // Final render after all relationships are reconstructed
         this.render();
     }
 
