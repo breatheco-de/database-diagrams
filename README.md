@@ -1,5 +1,7 @@
 # ERD Designer
 
+> Open the demo here: https://diagram.4geeks.com/
+
 A powerful Entity Relationship Diagram (ERD) designer that can be embedded in your web applications. Built with modern web technologies, it provides an intuitive interface for creating and managing database schemas with real-time updates.
 
 ## Features
