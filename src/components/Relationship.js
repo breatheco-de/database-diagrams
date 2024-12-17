@@ -295,7 +295,7 @@ export class Relationship {
 
     drawOneToMany(ctx, point, angle) {
         const length = 15;
-        const spread = Math.PI / 6; // 30 degrees spread
+        const spread = Math.PI / 4; // 45 degrees spread
 
         // Ensure angle is aligned to nearest 90 degrees for orthogonal lines
         const normalizedAngle = Math.round(angle / (Math.PI / 2)) * (Math.PI / 2);
@@ -329,7 +329,7 @@ export class Relationship {
 
         // Add second crow's foot
         const length = 15;
-        const spread = Math.PI / 6;
+        const spread = Math.PI / 4;
         const offset = 10;
         const x = point.x - offset * Math.cos(angle);
         const y = point.y - offset * Math.sin(angle);
