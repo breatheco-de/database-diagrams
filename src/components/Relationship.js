@@ -101,79 +101,116 @@ export class Relationship {
     }
 
     findPathAroundTables(start, end, tables) {
-        // Calculate direction vectors
-        const dx = end.x - start.x;
-        const dy = end.y - start.y;
+        // Add padding to avoid tight corners
+        const padding = 30;
         
-        // Initialize path arrays for different routing options
-        const paths = [];
+        // Determine the direction of connection points
+        const startPosition = start.position || 'right';
+        const endPosition = end.position || 'left';
         
-        // Try both horizontal-first and vertical-first paths with additional space
-        const padding = 20; // Add some padding to avoid tight corners
+        // Calculate initial direction based on connection points
+        let firstDirection, secondDirection;
         
-        const horizontalFirst = [
-            start,
-            { x: end.x, y: start.y }, // Go all the way to target x
-            end
-        ];
-        
-        const verticalFirst = [
-            start,
-            { x: start.x, y: end.y }, // Go all the way to target y
-            end
-        ];
-        
-        // Add paths that avoid intersections
-        if (!this.pathIntersectsTables(horizontalFirst[0], horizontalFirst[1], tables) &&
-            !this.pathIntersectsTables(horizontalFirst[1], horizontalFirst[2], tables)) {
-            paths.push(horizontalFirst);
-        }
-        
-        if (!this.pathIntersectsTables(verticalFirst[0], verticalFirst[1], tables) &&
-            !this.pathIntersectsTables(verticalFirst[1], verticalFirst[2], tables)) {
-            paths.push(verticalFirst);
-        }
-        
-        // If no direct paths work, try middle point routing
-        if (paths.length === 0) {
-            const midX = start.x + dx / 2;
-            const midY = start.y + dy / 2;
+        // Helper function to determine if we should go horizontal first
+        const shouldGoHorizontalFirst = () => {
+            // If start and end points are aligned vertically, prefer vertical path
+            if (Math.abs(start.x - end.x) < padding) return false;
             
-            const midPointPath = [
+            // If points are on opposite sides horizontally, prefer horizontal path
+            if ((startPosition === 'right' && endPosition === 'left') ||
+                (startPosition === 'left' && endPosition === 'right')) {
+                return true;
+            }
+            
+            // Default to the longer distance
+            return Math.abs(end.x - start.x) > Math.abs(end.y - start.y);
+        };
+        
+        const goHorizontal = shouldGoHorizontalFirst();
+        
+        // Generate path points based on the determined direction
+        let pathPoints = [];
+        if (goHorizontal) {
+            // Horizontal first
+            const midX = start.x + (end.x - start.x) / 2;
+            pathPoints = [
                 start,
                 { x: midX, y: start.y },
                 { x: midX, y: end.y },
                 end
             ];
-            
-            // Check if mid-point path is valid
-            let isValid = true;
-            for (let i = 0; i < midPointPath.length - 1; i++) {
-                if (this.pathIntersectsTables(midPointPath[i], midPointPath[i + 1], tables)) {
-                    isValid = false;
-                    break;
-                }
-            }
-            
-            if (isValid) {
-                paths.push(midPointPath);
+        } else {
+            // Vertical first
+            const midY = start.y + (end.y - start.y) / 2;
+            pathPoints = [
+                start,
+                { x: start.x, y: midY },
+                { x: end.x, y: midY },
+                end
+            ];
+        }
+        
+        // Check if path intersects with any tables
+        let hasIntersection = false;
+        for (let i = 0; i < pathPoints.length - 1; i++) {
+            if (this.pathIntersectsTables(pathPoints[i], pathPoints[i + 1], tables)) {
+                hasIntersection = true;
+                break;
             }
         }
         
-        // If we have valid paths, return the shortest one
-        if (paths.length > 0) {
-            return paths.reduce((shortest, current) => 
-                this.getPathLength(current) < this.getPathLength(shortest) ? current : shortest
-            );
+        // If there's an intersection, try alternative path
+        if (hasIntersection) {
+            if (goHorizontal) {
+                // Try vertical first instead
+                const midY = start.y + (end.y - start.y) / 2;
+                pathPoints = [
+                    start,
+                    { x: start.x, y: midY },
+                    { x: end.x, y: midY },
+                    end
+                ];
+            } else {
+                // Try horizontal first instead
+                const midX = start.x + (end.x - start.x) / 2;
+                pathPoints = [
+                    start,
+                    { x: midX, y: start.y },
+                    { x: midX, y: end.y },
+                    end
+                ];
+            }
         }
         
-        // If no valid paths found, return a default path with extra segments to avoid tables
-        return [
-            start,
-            { x: start.x, y: start.y + dy/3 },
-            { x: end.x, y: start.y + dy*2/3 },
-            end
-        ];
+        // If still intersecting, add more intermediate points
+        hasIntersection = false;
+        for (let i = 0; i < pathPoints.length - 1; i++) {
+            if (this.pathIntersectsTables(pathPoints[i], pathPoints[i + 1], tables)) {
+                hasIntersection = true;
+                break;
+            }
+        }
+        
+        if (hasIntersection) {
+            // Create a path that goes around using more points
+            const dx = end.x - start.x;
+            const dy = end.y - start.y;
+            const midX1 = start.x + dx / 3;
+            const midX2 = start.x + (dx * 2) / 3;
+            const midY1 = start.y + dy / 3;
+            const midY2 = start.y + (dy * 2) / 3;
+            
+            pathPoints = [
+                start,
+                { x: midX1, y: start.y },
+                { x: midX1, y: midY1 },
+                { x: midX2, y: midY2 },
+                { x: midX2, y: end.y },
+                end
+            ];
+        }
+        
+        return this.simplifyPath(pathPoints);
     }
     
     simplifyPath(path) {
@@ -260,20 +297,31 @@ export class Relationship {
         const length = 15;
         const spread = Math.PI / 6; // 30 degrees spread
 
+        // Ensure angle is aligned to nearest 90 degrees for orthogonal lines
+        const normalizedAngle = Math.round(angle / (Math.PI / 2)) * (Math.PI / 2);
+        
         // Draw the base line
         ctx.moveTo(point.x, point.y);
         ctx.lineTo(
-            point.x - length * Math.cos(angle),
-            point.y - length * Math.sin(angle),
+            point.x - length * Math.cos(normalizedAngle),
+            point.y - length * Math.sin(normalizedAngle),
         );
 
-        // Draw the upper line of the crow's foot
-        ctx.moveTo(point.x - length * Math.cos(angle - spread), point.y);
-        ctx.lineTo(point.x, point.y - length * Math.sin(angle - spread));
-
-        // Draw the lower line of the crow's foot
-        ctx.moveTo(point.x - length * Math.cos(angle + spread), point.y);
-        ctx.lineTo(point.x, point.y - length * Math.sin(angle + spread));
+        // Draw the crow's foot lines
+        const footX = point.x - (length * 0.7) * Math.cos(normalizedAngle);
+        const footY = point.y - (length * 0.7) * Math.sin(normalizedAngle);
+        
+        ctx.moveTo(footX, footY);
+        ctx.lineTo(
+            point.x + length * 0.3 * Math.cos(normalizedAngle - spread),
+            point.y + length * 0.3 * Math.sin(normalizedAngle - spread)
+        );
+        
+        ctx.moveTo(footX, footY);
+        ctx.lineTo(
+            point.x + length * 0.3 * Math.cos(normalizedAngle + spread),
+            point.y + length * 0.3 * Math.sin(normalizedAngle + spread)
+        );
     }
 
     drawManyToMany(ctx, point, angle) {
