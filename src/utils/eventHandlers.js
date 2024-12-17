@@ -329,8 +329,12 @@ export function initializeEventHandlers(canvas) {
                 const manyTable = relationship.type === "oneToMany" ? relationship.targetTable : relationship.sourceTable;
                 const oneTable = relationship.type === "oneToMany" ? relationship.sourceTable : relationship.targetTable;
                 
+                // Find primary key of the referenced table
+                const referencedKey = oneTable.attributes.find(attr => attr.isPrimary);
+                const referencedKeyName = referencedKey ? referencedKey.name : 'id';
+                
                 const foreignKey = manyTable.attributes.find(attr => 
-                    attr.isForeignKey && attr.references === oneTable.name
+                    attr.isForeignKey && attr.references === `${oneTable.name}.${referencedKeyName}`
                 );
 
                 if (foreignKey) {
@@ -340,17 +344,28 @@ export function initializeEventHandlers(canvas) {
                             canvas.relationships.delete(relationship);
                             // Remove the foreign key attribute
                             const attrIndex = manyTable.attributes.indexOf(foreignKey);
-                            manyTable.attributes.splice(attrIndex, 1);
+                            if (attrIndex !== -1) {
+                                manyTable.attributes.splice(attrIndex, 1);
+                                manyTable.updateHeight();
+                            }
                         } else {
                             // Update the attribute
                             foreignKey.name = updatedAttribute.name;
                             foreignKey.type = updatedAttribute.type;
                             foreignKey.isPrimary = updatedAttribute.isPrimary;
+                            // Keep the reference format consistent
+                            foreignKey.references = `${oneTable.name}.${referencedKeyName}`;
                         }
-                        manyTable.updateHeight();
                         canvas.render();
                         saveToStorage(canvas.toJSON());
-                    }, foreignKey);
+                    }, {
+                        name: foreignKey.name,
+                        type: foreignKey.type,
+                        isPrimary: foreignKey.isPrimary,
+                        isForeignKey: true,
+                        references: oneTable.name,
+                        showDeleteOption: true
+                    });
                 }
                 return;
             }
