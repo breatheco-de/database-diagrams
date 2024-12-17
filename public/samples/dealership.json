@@ -1,0 +1,76 @@
+{
+  "tables": [
+    {
+      "id": "car",
+      "name": "Car",
+      "x": 100,
+      "y": 100,
+      "attributes": [
+        {
+          "name": "vin",
+          "type": "string",
+          "isPrimary": true
+        },
+        {
+          "name": "make",
+          "type": "string"
+        },
+        {
+          "name": "model",
+          "type": "string"
+        },
+        {
+          "name": "year",
+          "type": "number"
+        },
+        {
+          "name": "price",
+          "type": "number"
+        },
+        {
+          "name": "status",
+          "type": "string"
+        },
+        {
+          "name": "dealership_id",
+          "type": "number",
+          "isForeignKey": true,
+          "references": "Dealership.dealership_id"
+        }
+      ]
+    },
+    {
+      "id": "dealership",
+      "name": "Dealership",
+      "x": 649,
+      "y": 89,
+      "attributes": [
+        {
+          "name": "dealership_id",
+          "type": "number",
+          "isPrimary": true
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "location",
+          "type": "string"
+        },
+        {
+          "name": "phone",
+          "type": "string"
+        }
+      ]
+    }
+  ],
+  "viewState": {
+    "offset": {
+      "x": 193,
+      "y": 86
+    },
+    "scale": 0.75,
+    "zoomIndex": 1
+  }
+}

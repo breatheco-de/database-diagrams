@@ -1,0 +1,97 @@
+{
+  "tables": [
+    {
+      "id": "student",
+      "name": "Student",
+      "x": 752,
+      "y": 495.66666666666663,
+      "attributes": [
+        {
+          "name": "student_id",
+          "type": "number",
+          "isPrimary": true
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "grade_level",
+          "type": "number"
+        },
+        {
+          "name": "email",
+          "type": "string"
+        },
+        {
+          "name": "department_id",
+          "type": "number",
+          "isForeignKey": true,
+          "references": "Department.department_id"
+        }
+      ]
+    },
+    {
+      "id": "course",
+      "name": "Course",
+      "x": 161.33333333333331,
+      "y": 156,
+      "attributes": [
+        {
+          "name": "course_id",
+          "type": "number",
+          "isPrimary": true
+        },
+        {
+          "name": "title",
+          "type": "string"
+        },
+        {
+          "name": "credits",
+          "type": "number"
+        },
+        {
+          "name": "department_id",
+          "type": "number",
+          "isForeignKey": true,
+          "references": "Department.department_id"
+        }
+      ]
+    },
+    {
+      "id": "teacher",
+      "name": "Teacher",
+      "x": 814.6666666666666,
+      "y": 28,
+      "attributes": [
+        {
+          "name": "teacher_id",
+          "type": "number",
+          "isPrimary": true
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "email",
+          "type": "string"
+        },
+        {
+          "name": "department_id",
+          "type": "number",
+          "isForeignKey": true,
+          "references": "Department.department_id"
+        }
+      ]
+    }
+  ],
+  "viewState": {
+    "offset": {
+      "x": -26,
+      "y": 118
+    },
+    "scale": 1,
+    "zoomIndex": 2
+  }
+}

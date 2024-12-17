@@ -1,0 +1,68 @@
+{
+  "tables": [
+    {
+      "id": "product",
+      "name": "Product",
+      "x": 454.66666666666663,
+      "y": 19,
+      "attributes": [
+        {
+          "name": "product_id",
+          "type": "number",
+          "isPrimary": true
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "name": "price",
+          "type": "number"
+        },
+        {
+          "name": "stock",
+          "type": "number"
+        },
+        {
+          "name": "category_id",
+          "type": "number",
+          "isForeignKey": true,
+          "references": "Category.category_id"
+        }
+      ]
+    },
+    {
+      "id": "category",
+      "name": "Category",
+      "x": 84,
+      "y": -44,
+      "attributes": [
+        {
+          "name": "category_id",
+          "type": "number",
+          "isPrimary": true
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "description",
+          "type": "string"
+        }
+      ]
+    }
+  ],
+  "viewState": {
+    "offset": {
+      "x": 181,
+      "y": 322
+    },
+    "scale": 0.75,
+    "zoomIndex": 1
+  }
+}

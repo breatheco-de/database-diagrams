@@ -1,0 +1,43 @@
+{
+    "tables": [
+        {
+            "id": "flight",
+            "name": "Flight",
+            "x": 255,
+            "y": 111,
+            "attributes": [
+                {
+                    "name": "id",
+                    "type": "number",
+                    "isPrimary": true
+                },
+                {
+                    "name": "departure_time",
+                    "type": "datetime"
+                },
+                {
+                    "name": "arrival_time",
+                    "type": "datetime"
+                },
+                {
+                    "name": "aircraft_id",
+                    "type": "number",
+                    "isForeignKey": true,
+                    "references": "Aircraft.id"
+                },
+                {
+                    "name": "departure_airport_id",
+                    "type": "number",
+                    "isForeignKey": true,
+                    "references": "Airport.id"
+                },
+                {
+                    "name": "arrival_airport_id",
+                    "type": "number",
+                    "isForeignKey": true,
+                    "references": "Airport.id"
+                }
+            ]
+        }
+    ]
+}

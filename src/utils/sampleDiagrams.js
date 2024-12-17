@@ -1,11 +1,11 @@
-// Load sample diagrams from JSON files
+// Load sample diagrams from JSON files in public directory
 export async function loadSampleDiagrams() {
     try {
         const [airline, school, dealership, store] = await Promise.all([
-            fetch('/src/utils/samples/json/airline.json').then(r => r.json()),
-            fetch('/src/utils/samples/json/school.json').then(r => r.json()),
-            fetch('/src/utils/samples/json/dealership.json').then(r => r.json()),
-            fetch('/src/utils/samples/json/store.json').then(r => r.json())
+            fetch('/samples/airline.json').then(r => r.json()),
+            fetch('/samples/school.json').then(r => r.json()),
+            fetch('/samples/dealership.json').then(r => r.json()),
+            fetch('/samples/store.json').then(r => r.json())
         ]);
 
         return {

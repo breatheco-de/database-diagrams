@@ -22,7 +22,7 @@ Add the ERD designer to your web application using an iframe:
 ```html
 <!-- Basic usage -->
 <iframe 
-  src="https://erd.4geeks.com?theme=dark" 
+  src="https://diagram.4geeks.com?allowExport=png,json" 
   width="100%" 
   height="600px"
   frameborder="0">
@@ -30,7 +30,7 @@ Add the ERD designer to your web application using an iframe:
 
 <!-- Read-only mode -->
 <iframe 
-  src="https://erd.4geeks.com?readOnly=true&theme=dark" 
+  src="https://diagram.4geeks.com?readOnly=true&theme=dark" 
   width="100%" 
   height="600px"
   frameborder="0">
@@ -38,7 +38,7 @@ Add the ERD designer to your web application using an iframe:
 
 <!-- With initial diagram -->
 <iframe id="erdDesigner"
-  src="https://erd.4geeks.com?theme=dark" 
+  src="https://diagram.4geeks.com?theme=dark" 
   width="100%" 
   height="600px"
   frameborder="0">
