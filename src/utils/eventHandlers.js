@@ -31,8 +31,8 @@ function setZoomLevel(canvas, index) {
 
     // Update URL with new zoom level
     const url = new URL(window.location.href);
-    url.searchParams.set('zoomLevel', canvas.scale.toString());
-    window.history.replaceState({}, '', url.toString());
+    url.searchParams.set("zoomLevel", canvas.scale.toString());
+    window.history.replaceState({}, "", url.toString());
 }
 
 function configureToolbar(canvas) {
@@ -64,9 +64,14 @@ function configureToolbar(canvas) {
         const zoomValue = parseFloat(zoomLevel);
         if (!isNaN(zoomValue) && zoomValue > 0) {
             // Find the closest zoom level index
-            const index = ZOOM_LEVELS.reduce((prev, curr, idx) => 
-                Math.abs(curr - zoomValue) < Math.abs(ZOOM_LEVELS[prev] - zoomValue) ? idx : prev
-            , 0);
+            const index = ZOOM_LEVELS.reduce(
+                (prev, curr, idx) =>
+                    Math.abs(curr - zoomValue) <
+                    Math.abs(ZOOM_LEVELS[prev] - zoomValue)
+                        ? idx
+                        : prev,
+                0,
+            );
             setZoomLevel(canvas, index);
         }
     }
@@ -79,7 +84,9 @@ function configureToolbar(canvas) {
     const newEmptyDiagramBtn = document.getElementById("newEmptyDiagram");
 
     // Configure New menu items
-    const newDropdown = document.querySelector('.dropdown:has(#newEmptyDiagram, .sample-diagram)');
+    const newDropdown = document.querySelector(
+        ".dropdown:has(#newEmptyDiagram, .sample-diagram)",
+    );
     const allowNew = params.get("allowNew");
 
     // Handle readOnly mode and allowNew parameter
@@ -89,35 +96,35 @@ function configureToolbar(canvas) {
     }
 
     // Configure sample diagram buttons
-    const sampleBtns = document.querySelectorAll('.sample-diagram');
+    const sampleBtns = document.querySelectorAll(".sample-diagram");
     if (sampleBtns.length > 0) {
-        sampleBtns.forEach(btn => {
-            btn.addEventListener('click', async (e) => {
+        sampleBtns.forEach((btn) => {
+            btn.addEventListener("click", async (e) => {
                 e.preventDefault();
                 const sampleName = btn.dataset.sample;
                 if (!sampleName) return;
 
                 // Show loading state
-                btn.classList.add('disabled');
+                btn.classList.add("disabled");
                 const originalText = btn.innerHTML;
                 btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Loading...`;
-                
+
                 try {
                     const diagram = await loadDiagram(sampleName);
                     if (diagram) {
                         canvas.loadDiagram(diagram);
                         saveToStorage(canvas.toJSON());
-                        
+
                         // Update URL
                         const url = new URL(window.location.href);
-                        url.searchParams.set('diagram', sampleName);
-                        window.history.replaceState({}, '', url.toString());
+                        url.searchParams.set("diagram", sampleName);
+                        window.history.replaceState({}, "", url.toString());
                     }
                 } catch (error) {
-                    console.error('Error loading sample diagram:', error);
-                    showSnackbar('Error loading sample diagram');
+                    console.error("Error loading sample diagram:", error);
+                    showSnackbar("Error loading sample diagram");
                 } finally {
-                    btn.classList.remove('disabled');
+                    btn.classList.remove("disabled");
                     btn.innerHTML = originalText;
                 }
             });
@@ -126,85 +133,90 @@ function configureToolbar(canvas) {
 
     // Configure New Empty Diagram button
     if (newEmptyDiagramBtn) {
-        newEmptyDiagramBtn.addEventListener('click', (e) => {
+        newEmptyDiagramBtn.addEventListener("click", (e) => {
             e.preventDefault();
             canvas.loadDiagram({ tables: [], relationships: [] });
             canvas.render();
             saveToStorage(canvas.toJSON());
-            
+
             // Update URL
             const url = new URL(window.location.href);
-            url.searchParams.delete('diagram');
-            window.history.replaceState({}, '', url.toString());
+            url.searchParams.delete("diagram");
+            window.history.replaceState({}, "", url.toString());
         });
     }
 
     // Configure JSON import
-    const loadJsonBtn = document.getElementById('loadJson');
+    const loadJsonBtn = document.getElementById("loadJson");
     if (loadJsonBtn) {
-        loadJsonBtn.addEventListener('click', (e) => {
+        loadJsonBtn.addEventListener("click", (e) => {
             e.preventDefault();
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.json';
-            
-            input.onchange = e => {
+            const input = document.createElement("input");
+            input.type = "file";
+            input.accept = ".json";
+
+            input.onchange = (e) => {
                 const file = e.target.files[0];
                 const reader = new FileReader();
-                
-                reader.onload = readerEvent => {
+
+                reader.onload = (readerEvent) => {
                     try {
                         const content = JSON.parse(readerEvent.target.result);
                         canvas.loadDiagram(content);
                         canvas.render();
                         saveToStorage(canvas.toJSON());
                     } catch (error) {
-                        showSnackbar('Error loading diagram: Invalid JSON file');
+                        showSnackbar(
+                            "Error loading diagram: Invalid JSON file",
+                        );
                     }
                 };
-                
+
                 reader.readAsText(file);
             };
-            
+
             input.click();
         });
     }
 
     // Configure Export functionality
-    const exportImageBtn = document.getElementById('exportImage');
-    const exportJsonBtn = document.getElementById('exportJson');
-    const exportContainer = document.querySelector('.dropdown:has(#exportImage, #exportJson)');
+    const exportImageBtn = document.getElementById("exportImage");
+    const exportJsonBtn = document.getElementById("exportJson");
+    const exportContainer = document.querySelector("#exportContainer");
     const allowExport = params.get("allowExport");
 
     if (exportContainer) {
         if (allowExport === "false") {
             // Hide entire export dropdown when explicitly disabled
-            exportContainer.style.display = 'none';
+            console.log("exportContainer", exportContainer);
+            exportContainer.style.display = "none";
         } else if (allowExport) {
             // Show only specified formats
             const allowedFormats = allowExport.toLowerCase().split(",");
-            
+
             if (exportImageBtn) {
                 if (allowedFormats.includes("png")) {
                     exportImageBtn.style.display = "";
-                    exportImageBtn.addEventListener('click', () => canvas.exportAsImage());
+                    exportImageBtn.addEventListener("click", () =>
+                        canvas.exportAsImage(),
+                    );
                 } else {
                     exportImageBtn.style.display = "none";
                 }
             }
-            
+
             if (exportJsonBtn) {
                 if (allowedFormats.includes("json")) {
                     exportJsonBtn.style.display = "";
-                    exportJsonBtn.addEventListener('click', () => {
+                    exportJsonBtn.addEventListener("click", () => {
                         const data = canvas.toJSON();
                         const blob = new Blob([JSON.stringify(data, null, 2)], {
-                            type: 'application/json'
+                            type: "application/json",
                         });
                         const url = URL.createObjectURL(blob);
-                        const link = document.createElement('a');
+                        const link = document.createElement("a");
                         link.href = url;
-                        link.download = 'erd-diagram.json';
+                        link.download = "erd-diagram.json";
                         link.click();
                         URL.revokeObjectURL(url);
                     });
@@ -212,28 +224,33 @@ function configureToolbar(canvas) {
                     exportJsonBtn.style.display = "none";
                 }
             }
-            
+
             // Hide dropdown if no formats are allowed
-            if (!allowedFormats.includes("png") && !allowedFormats.includes("json")) {
+            if (
+                !allowedFormats.includes("png") &&
+                !allowedFormats.includes("json")
+            ) {
                 exportDropdown.style.display = "none";
             }
         } else {
             // When allowExport is not specified, show and enable all formats
             if (exportImageBtn) {
                 exportImageBtn.style.display = "";
-                exportImageBtn.addEventListener('click', () => canvas.exportAsImage());
+                exportImageBtn.addEventListener("click", () =>
+                    canvas.exportAsImage(),
+                );
             }
             if (exportJsonBtn) {
                 exportJsonBtn.style.display = "";
-                exportJsonBtn.addEventListener('click', () => {
+                exportJsonBtn.addEventListener("click", () => {
                     const data = canvas.toJSON();
                     const blob = new Blob([JSON.stringify(data, null, 2)], {
-                        type: 'application/json'
+                        type: "application/json",
                     });
                     const url = URL.createObjectURL(blob);
-                    const link = document.createElement('a');
+                    const link = document.createElement("a");
                     link.href = url;
-                    link.download = 'erd-diagram.json';
+                    link.download = "erd-diagram.json";
                     link.click();
                     URL.revokeObjectURL(url);
                 });
@@ -299,11 +316,11 @@ export function initializeEventHandlers(canvas) {
                 // Add event listeners
                 const createTableBtn = modal.querySelector("#createTable");
                 const tableNameInput = modal.querySelector("#tableName");
-                
+
                 if (createTableBtn) {
                     createTableBtn.onclick = createTable;
                 }
-                
+
                 if (tableNameInput) {
                     tableNameInput.addEventListener("keydown", (e) => {
                         if (e.key === "Enter") {
@@ -345,46 +362,71 @@ export function initializeEventHandlers(canvas) {
                 for (const relationship of canvas.relationships) {
                     if (relationship.containsPoint(pos.x, pos.y)) {
                         // Find the foreign key attribute in the "many" side table
-                        const manyTable = relationship.type === "oneToMany" ? relationship.targetTable : relationship.sourceTable;
-                        const oneTable = relationship.type === "oneToMany" ? relationship.sourceTable : relationship.targetTable;
-                        
+                        const manyTable =
+                            relationship.type === "oneToMany"
+                                ? relationship.targetTable
+                                : relationship.sourceTable;
+                        const oneTable =
+                            relationship.type === "oneToMany"
+                                ? relationship.sourceTable
+                                : relationship.targetTable;
+
                         // Find primary key of the referenced table
-                        const referencedKey = oneTable.attributes.find(attr => attr.isPrimary);
-                        const referencedKeyName = referencedKey ? referencedKey.name : 'id';
-                        
-                        const foreignKey = manyTable.attributes.find(attr => 
-                            attr.isForeignKey && attr.references === `${oneTable.name}.${referencedKeyName}`
+                        const referencedKey = oneTable.attributes.find(
+                            (attr) => attr.isPrimary,
+                        );
+                        const referencedKeyName = referencedKey
+                            ? referencedKey.name
+                            : "id";
+
+                        const foreignKey = manyTable.attributes.find(
+                            (attr) =>
+                                attr.isForeignKey &&
+                                attr.references ===
+                                    `${oneTable.name}.${referencedKeyName}`,
                         );
 
                         if (foreignKey) {
-                            attributeForm.show((updatedAttribute) => {
-                                if (updatedAttribute.deleteRelationship) {
-                                    // Remove the relationship
-                                    canvas.relationships.delete(relationship);
-                                    // Remove the foreign key attribute
-                                    const attrIndex = manyTable.attributes.indexOf(foreignKey);
-                                    if (attrIndex !== -1) {
-                                        manyTable.attributes.splice(attrIndex, 1);
-                                        manyTable.updateHeight();
+                            attributeForm.show(
+                                (updatedAttribute) => {
+                                    if (updatedAttribute.deleteRelationship) {
+                                        // Remove the relationship
+                                        canvas.relationships.delete(
+                                            relationship,
+                                        );
+                                        // Remove the foreign key attribute
+                                        const attrIndex =
+                                            manyTable.attributes.indexOf(
+                                                foreignKey,
+                                            );
+                                        if (attrIndex !== -1) {
+                                            manyTable.attributes.splice(
+                                                attrIndex,
+                                                1,
+                                            );
+                                            manyTable.updateHeight();
+                                        }
+                                    } else {
+                                        // Update the attribute
+                                        foreignKey.name = updatedAttribute.name;
+                                        foreignKey.type = updatedAttribute.type;
+                                        foreignKey.isPrimary =
+                                            updatedAttribute.isPrimary;
+                                        // Keep the reference format consistent
+                                        foreignKey.references = `${oneTable.name}.${referencedKeyName}`;
                                     }
-                                } else {
-                                    // Update the attribute
-                                    foreignKey.name = updatedAttribute.name;
-                                    foreignKey.type = updatedAttribute.type;
-                                    foreignKey.isPrimary = updatedAttribute.isPrimary;
-                                    // Keep the reference format consistent
-                                    foreignKey.references = `${oneTable.name}.${referencedKeyName}`;
-                                }
-                                canvas.render();
-                                saveToStorage(canvas.toJSON());
-                            }, {
-                                name: foreignKey.name,
-                                type: foreignKey.type,
-                                isPrimary: foreignKey.isPrimary,
-                                isForeignKey: true,
-                                references: oneTable.name,
-                                showDeleteOption: true
-                            });
+                                    canvas.render();
+                                    saveToStorage(canvas.toJSON());
+                                },
+                                {
+                                    name: foreignKey.name,
+                                    type: foreignKey.type,
+                                    isPrimary: foreignKey.isPrimary,
+                                    isForeignKey: true,
+                                    references: oneTable.name,
+                                    showDeleteOption: true,
+                                },
+                            );
                         }
                         return;
                     }
@@ -392,20 +434,30 @@ export function initializeEventHandlers(canvas) {
 
                 // Check if clicking on a table
                 canvas.tables.forEach((table) => {
-                    const attributeIndex = table.isEditIconClicked(pos.x, pos.y);
+                    const attributeIndex = table.isEditIconClicked(
+                        pos.x,
+                        pos.y,
+                    );
                     isIconClicked = isIconClicked || attributeIndex !== -1;
                     isAddButtonClicked =
-                        isAddButtonClicked || table.isAddButtonClicked(pos.x, pos.y);
+                        isAddButtonClicked ||
+                        table.isAddButtonClicked(pos.x, pos.y);
                     isDeleteButtonClicked =
                         isDeleteButtonClicked ||
                         table.isDeleteButtonClicked(pos.x, pos.y);
 
                     if (table.containsPoint(pos.x, pos.y)) {
                         // First check connection points
-                        const connectionPoint = findNearestConnectionPoint(table, pos);
+                        const connectionPoint = findNearestConnectionPoint(
+                            table,
+                            pos,
+                        );
                         if (connectionPoint) {
                             isCreatingRelationship = true;
-                            relationshipStart = { table, point: connectionPoint };
+                            relationshipStart = {
+                                table,
+                                point: connectionPoint,
+                            };
                             return;
                         }
 
@@ -441,18 +493,25 @@ export function initializeEventHandlers(canvas) {
                             const bsModal = new bootstrap.Modal(modal);
 
                             const deleteTable = () => {
-                                const command = createDeleteTableCommand(canvas, table);
+                                const command = createDeleteTableCommand(
+                                    canvas,
+                                    table,
+                                );
                                 canvas.history.execute(command);
                                 bsModal.hide();
-                                modal.addEventListener("hidden.bs.modal", () => {
-                                    document.body.removeChild(modal);
-                                });
+                                modal.addEventListener(
+                                    "hidden.bs.modal",
+                                    () => {
+                                        document.body.removeChild(modal);
+                                    },
+                                );
 
                                 saveToStorage(canvas.toJSON());
                                 updateUndoRedoButtons();
                             };
 
-                            modal.querySelector("#confirmDelete").onclick = deleteTable;
+                            modal.querySelector("#confirmDelete").onclick =
+                                deleteTable;
                             bsModal.show();
                             return;
                         }
@@ -463,9 +522,15 @@ export function initializeEventHandlers(canvas) {
                             attributeForm.show((updatedAttribute) => {
                                 if (updatedAttribute.deleteRelationship) {
                                     // Remove the relationship connected to this foreign key
-                                    canvas.relationships.forEach(rel => {
-                                        if ((rel.sourceTable === table && rel.targetTable.name === attribute.references) ||
-                                            (rel.targetTable === table && rel.sourceTable.name === attribute.references)) {
+                                    canvas.relationships.forEach((rel) => {
+                                        if (
+                                            (rel.sourceTable === table &&
+                                                rel.targetTable.name ===
+                                                    attribute.references) ||
+                                            (rel.targetTable === table &&
+                                                rel.sourceTable.name ===
+                                                    attribute.references)
+                                        ) {
                                             canvas.relationships.delete(rel);
                                         }
                                     });
@@ -475,7 +540,8 @@ export function initializeEventHandlers(canvas) {
                                     // Update the attribute
                                     attribute.name = updatedAttribute.name;
                                     attribute.type = updatedAttribute.type;
-                                    attribute.isPrimary = updatedAttribute.isPrimary;
+                                    attribute.isPrimary =
+                                        updatedAttribute.isPrimary;
                                 }
                                 table.updateHeight();
                                 canvas.render();
@@ -487,11 +553,14 @@ export function initializeEventHandlers(canvas) {
                         // Check if clicking add attribute button
                         if (isAddButtonClicked) {
                             attributeForm.show((attribute) => {
-                                const command = createAddAttributeCommand(table, {
-                                    name: attribute.name,
-                                    type: attribute.type,
-                                    isPrimary: attribute.isPrimary,
-                                });
+                                const command = createAddAttributeCommand(
+                                    table,
+                                    {
+                                        name: attribute.name,
+                                        type: attribute.type,
+                                        isPrimary: attribute.isPrimary,
+                                    },
+                                );
                                 canvas.history.execute(command);
                                 canvas.render();
                                 saveToStorage(canvas.toJSON());
@@ -554,7 +623,10 @@ export function initializeEventHandlers(canvas) {
                     // Draw dashed line
                     ctx.beginPath();
                     ctx.setLineDash([5, 3]);
-                    ctx.moveTo(relationshipStart.point.x, relationshipStart.point.y);
+                    ctx.moveTo(
+                        relationshipStart.point.x,
+                        relationshipStart.point.y,
+                    );
                     ctx.lineTo(pos.x, pos.y);
                     ctx.strokeStyle = "var(--bs-primary)";
                     ctx.lineWidth = 2;
@@ -623,16 +695,19 @@ export function initializeEventHandlers(canvas) {
                                 const targetTable = table;
 
                                 // Check if both tables have primary keys
-                                const sourcePrimaryKey = sourceTable.attributes.find(
-                                    (attr) => attr.isPrimary,
-                                );
-                                const targetPrimaryKey = targetTable.attributes.find(
-                                    (attr) => attr.isPrimary,
-                                );
+                                const sourcePrimaryKey =
+                                    sourceTable.attributes.find(
+                                        (attr) => attr.isPrimary,
+                                    );
+                                const targetPrimaryKey =
+                                    targetTable.attributes.find(
+                                        (attr) => attr.isPrimary,
+                                    );
 
                                 if (!sourcePrimaryKey || !targetPrimaryKey) {
                                     // Show error modal
-                                    const errorModal = document.createElement("div");
+                                    const errorModal =
+                                        document.createElement("div");
                                     errorModal.className = "modal fade";
                                     errorModal.innerHTML = `
                                         <div class="modal-dialog">
@@ -651,12 +726,16 @@ export function initializeEventHandlers(canvas) {
                                         </div>
                                     `;
                                     document.body.appendChild(errorModal);
-                                    const bsModal = new bootstrap.Modal(errorModal);
+                                    const bsModal = new bootstrap.Modal(
+                                        errorModal,
+                                    );
                                     bsModal.show();
                                     errorModal.addEventListener(
                                         "hidden.bs.modal",
                                         () => {
-                                            document.body.removeChild(errorModal);
+                                            document.body.removeChild(
+                                                errorModal,
+                                            );
                                         },
                                     );
                                     return;
@@ -665,7 +744,8 @@ export function initializeEventHandlers(canvas) {
                                 relationshipTypeModal.show((type) => {
                                     if (type === "manyToMany") {
                                         // Show existing many-to-many modal code
-                                        const infoModal = document.createElement("div");
+                                        const infoModal =
+                                            document.createElement("div");
                                         infoModal.className = "modal fade";
                                         infoModal.innerHTML = `
                                             <div class="modal-dialog">
@@ -690,12 +770,16 @@ export function initializeEventHandlers(canvas) {
                                             </div>
                                         `;
                                         document.body.appendChild(infoModal);
-                                        const bsModal = new bootstrap.Modal(infoModal);
+                                        const bsModal = new bootstrap.Modal(
+                                            infoModal,
+                                        );
                                         bsModal.show();
                                         infoModal.addEventListener(
                                             "hidden.bs.modal",
                                             () => {
-                                                document.body.removeChild(infoModal);
+                                                document.body.removeChild(
+                                                    infoModal,
+                                                );
                                             },
                                         );
                                     } else {
@@ -713,9 +797,16 @@ export function initializeEventHandlers(canvas) {
                                         attributeForm.show(
                                             (attribute) => {
                                                 // Find primary key of the referenced table
-                                                const referencedKey = oneTable.attributes.find(attr => attr.isPrimary);
-                                                const referencedKeyName = referencedKey ? referencedKey.name : 'id';
-                                                
+                                                const referencedKey =
+                                                    oneTable.attributes.find(
+                                                        (attr) =>
+                                                            attr.isPrimary,
+                                                    );
+                                                const referencedKeyName =
+                                                    referencedKey
+                                                        ? referencedKey.name
+                                                        : "id";
+
                                                 // Create the foreign key attribute with dot notation reference
                                                 const foreignKey = {
                                                     name:
@@ -775,10 +866,9 @@ export function initializeEventHandlers(canvas) {
         }
 
         // Initialize window resize handler
-        window.addEventListener('resize', () => {
+        window.addEventListener("resize", () => {
             canvas.resize();
         });
-
 
         // Zoom button handlers
         const zoomInButton = document.getElementById("zoomIn");
@@ -812,7 +902,7 @@ export function initializeEventHandlers(canvas) {
             canvas.canvas.addEventListener("dblclick", (e) => {
                 // Ignore double-click in readOnly mode
                 if (isReadOnly) return;
-                
+
                 const pos = getCanvasPosition(e, canvas);
 
                 canvas.tables.forEach((table) => {
@@ -848,13 +938,15 @@ export function initializeEventHandlers(canvas) {
                                 const newName = input.value.trim();
                                 if (newName) {
                                     // Check for duplicate names (case-insensitive)
-                                    const normalizedName = newName.toLowerCase();
+                                    const normalizedName =
+                                        newName.toLowerCase();
                                     const exists = Array.from(
                                         canvas.tables.values(),
                                     ).some(
                                         (t) =>
                                             t.id !== table.id && // Compare IDs instead of references
-                                            t.name.toLowerCase() === normalizedName,
+                                            t.name.toLowerCase() ===
+                                                normalizedName,
                                     );
 
                                     if (exists) {
@@ -905,8 +997,8 @@ export function initializeEventHandlers(canvas) {
             });
         }
     } catch (error) {
-        console.error('Error initializing event handlers:', error);
-        showSnackbar('Error initializing application');
+        console.error("Error initializing event handlers:", error);
+        showSnackbar("Error initializing application");
     }
 }
 

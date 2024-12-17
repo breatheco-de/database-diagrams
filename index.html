@@ -1,72 +1,163 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ERD Creator</title>
-    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="preload" href="/node_modules/@fortawesome/fontawesome-free/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="stylesheet" href="node_modules/@fortawesome/fontawesome-free/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-</head>
-<body>
-    <div class="erd-container">
-        <div class="toolbar-container">
-            <div class="toolbar toolbar-add">
-                <button id="addTable" class="btn btn-secondary btn-sm">
-                    <i class="fas fa-plus"></i> Add Table
-                </button>
-            </div>
-            <div class="toolbar toolbar-zoom">
-                <button id="zoomOut" class="btn btn-secondary btn-sm">
-                    <i class="fas fa-search-minus"></i>
-                </button>
-                <span id="zoomLevel" class="badge bg-secondary mx-2">100%</span>
-                <button id="zoomIn" class="btn btn-secondary btn-sm">
-                    <i class="fas fa-search-plus"></i>
-                </button>
-                <button id="resetView" class="btn btn-secondary btn-sm ms-2">
-                    <i class="fas fa-compress-arrows-alt"></i>
-                </button>
-            </div>
-            <div class="toolbar toolbar-actions">
-                <button id="undo" class="btn btn-secondary btn-sm" disabled>
-                    <i class="fas fa-undo"></i> Undo
-                </button>
-                <button id="redo" class="btn btn-secondary btn-sm" disabled>
-                    <i class="fas fa-redo"></i> Redo
-                </button>
-                <div class="dropdown d-inline-block me-2">
-                    <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                        <i class="fas fa-file"></i> New
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>ERD Creator</title>
+        <link
+            href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css"
+            rel="stylesheet"
+        />
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+        />
+        <link
+            rel="preload"
+            href="/node_modules/@fortawesome/fontawesome-free/webfonts/fa-solid-900.woff2"
+            as="font"
+            type="font/woff2"
+            crossorigin
+        />
+        <link
+            rel="stylesheet"
+            href="node_modules/@fortawesome/fontawesome-free/css/all.min.css"
+        />
+        <link rel="stylesheet" href="style.css" />
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    </head>
+    <body>
+        <div class="erd-container">
+            <div class="toolbar-container">
+                <div class="toolbar toolbar-add">
+                    <button id="addTable" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-plus"></i> Add Table
                     </button>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" id="newEmptyDiagram" href="#"><i class="fas fa-file"></i> Empty Diagram</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><h6 class="dropdown-header">Sample Diagrams</h6></li>
-                        <li><a class="dropdown-item sample-diagram" href="#" data-sample="airline"><i class="fas fa-plane"></i> Airline System</a></li>
-                        <li><a class="dropdown-item sample-diagram" href="#" data-sample="school"><i class="fas fa-school"></i> School Database</a></li>
-                        <li><a class="dropdown-item sample-diagram" href="#" data-sample="dealership"><i class="fas fa-car"></i> Car Dealership</a></li>
-                        <li><a class="dropdown-item sample-diagram" href="#" data-sample="store"><i class="fas fa-store"></i> Online Store</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" id="loadJson" href="#"><i class="fas fa-file-upload"></i> Load from JSON</a></li>
-                    </ul>
                 </div>
-                <div class="dropdown d-inline-block">
-                    <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                        <i class="fas fa-download"></i> Export
+                <div class="toolbar toolbar-zoom">
+                    <button id="zoomOut" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-search-minus"></i>
                     </button>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" id="exportImage" href="#"><i class="fas fa-file-image"></i> Export as PNG</a></li>
-                        <li><a class="dropdown-item" id="exportJson" href="#"><i class="fas fa-file-code"></i> Export as JSON</a></li>
-                    </ul>
+                    <span id="zoomLevel" class="badge bg-secondary mx-2"
+                        >100%</span
+                    >
+                    <button id="zoomIn" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-search-plus"></i>
+                    </button>
+                    <button
+                        id="resetView"
+                        class="btn btn-secondary btn-sm ms-2"
+                    >
+                        <i class="fas fa-compress-arrows-alt"></i>
+                    </button>
+                </div>
+                <div class="toolbar toolbar-actions">
+                    <button id="undo" class="btn btn-secondary btn-sm" disabled>
+                        <i class="fas fa-undo"></i> Undo
+                    </button>
+                    <button id="redo" class="btn btn-secondary btn-sm" disabled>
+                        <i class="fas fa-redo"></i> Redo
+                    </button>
+                    <div class="dropdown me-2">
+                        <button
+                            class="btn btn-secondary btn-sm dropdown-toggle"
+                            type="button"
+                            data-bs-toggle="dropdown"
+                        >
+                            <i class="fas fa-file"></i> New
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a
+                                    class="dropdown-item"
+                                    id="newEmptyDiagram"
+                                    href="#"
+                                    ><i class="fas fa-file"></i> Empty
+                                    Diagram</a
+                                >
+                            </li>
+                            <li><hr class="dropdown-divider" /></li>
+                            <li>
+                                <h6 class="dropdown-header">Sample Diagrams</h6>
+                            </li>
+                            <li>
+                                <a
+                                    class="dropdown-item sample-diagram"
+                                    href="#"
+                                    data-sample="airline"
+                                    ><i class="fas fa-plane"></i> Airline
+                                    System</a
+                                >
+                            </li>
+                            <li>
+                                <a
+                                    class="dropdown-item sample-diagram"
+                                    href="#"
+                                    data-sample="school"
+                                    ><i class="fas fa-school"></i> School
+                                    Database</a
+                                >
+                            </li>
+                            <li>
+                                <a
+                                    class="dropdown-item sample-diagram"
+                                    href="#"
+                                    data-sample="dealership"
+                                    ><i class="fas fa-car"></i> Car
+                                    Dealership</a
+                                >
+                            </li>
+                            <li>
+                                <a
+                                    class="dropdown-item sample-diagram"
+                                    href="#"
+                                    data-sample="store"
+                                    ><i class="fas fa-store"></i> Online
+                                    Store</a
+                                >
+                            </li>
+                            <li><hr class="dropdown-divider" /></li>
+                            <li>
+                                <a class="dropdown-item" id="loadJson" href="#"
+                                    ><i class="fas fa-file-upload"></i> Load
+                                    from JSON</a
+                                >
+                            </li>
+                        </ul>
+                    </div>
+                    <div id="exportContainer" class="dropdown">
+                        <button
+                            class="btn btn-secondary btn-sm dropdown-toggle"
+                            type="button"
+                            data-bs-toggle="dropdown"
+                        >
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a
+                                    class="dropdown-item"
+                                    id="exportImage"
+                                    href="#"
+                                    ><i class="fas fa-file-image"></i> Export as
+                                    PNG</a
+                                >
+                            </li>
+                            <li>
+                                <a
+                                    class="dropdown-item"
+                                    id="exportJson"
+                                    href="#"
+                                    ><i class="fas fa-file-code"></i> Export as
+                                    JSON</a
+                                >
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
+            <canvas id="erdCanvas"></canvas>
         </div>
-        <canvas id="erdCanvas"></canvas>
-    </div>
-    <script type="module" src="/src/main.js"></script>
-</body>
+        <script type="module" src="/src/main.js"></script>
+    </body>
 </html>
