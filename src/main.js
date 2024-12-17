@@ -1,6 +1,6 @@
 import { Canvas } from './components/Canvas';
 import { initializeEventHandlers } from './utils/eventHandlers';
-import { loadFromStorage, setupMessageHandlers } from './utils/storage';
+import { loadFromStorage, setupMessageHandlers, saveToStorage } from './utils/storage';
 import { loadSampleDiagrams, sampleDiagrams } from './utils/sampleDiagrams';
 
 async function initializeApplication() {
@@ -12,10 +12,16 @@ async function initializeApplication() {
         Object.assign(sampleDiagrams, loadedDiagrams);
         console.log('Sample diagrams loaded:', sampleDiagrams);
 
-        // Initialize the canvas with stored or provided data
+        // Initialize the canvas with stored data or default school diagram
         const initialData = loadFromStorage();
         if (initialData) {
             canvas.loadDiagram(initialData);
+        } else if (sampleDiagrams.school) {
+            // Load school diagram as default if no stored data
+            console.log('Loading default school diagram');
+            canvas.loadDiagram(sampleDiagrams.school);
+            // Save to storage so it persists
+            saveToStorage(canvas.toJSON());
         }
 
         // Setup message handlers for iframe communication
