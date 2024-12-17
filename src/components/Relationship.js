@@ -36,89 +36,152 @@ export class Relationship {
     }
 
     getPathAvoidingTables(start, end) {
-        // Use cached path if connection points haven't changed
-        if (this.cachedPath && 
-            this.sourcePoint && 
-            this.targetPoint &&
-            this.sourcePoint.x === start.x &&
-            this.sourcePoint.y === start.y &&
-            this.targetPoint.x === end.x &&
-            this.targetPoint.y === end.y) {
-            return this.cachedPath;
-        }
-
-        // Store connection points
-        this.sourcePoint = { ...start };
-        this.targetPoint = { ...end };
-
         // If no canvas or no other tables, return direct path
         if (!this.canvas || this.canvas.tables.size <= 2) {
-            this.cachedPath = [start, end];
-            return this.cachedPath;
+            return [start, end];
         }
 
         const tables = Array.from(this.canvas.tables.values()).filter(
             (table) => table !== this.sourceTable && table !== this.targetTable,
         );
 
-        // Get existing relationships between these tables
-        const parallelRelationships = Array.from(
-            this.canvas.relationships,
-        ).filter(
-            (rel) =>
-                rel !== this &&
-                ((rel.sourceTable === this.sourceTable &&
-                    rel.targetTable === this.targetTable) ||
-                    (rel.sourceTable === this.targetTable &&
-                        rel.targetTable === this.sourceTable)),
-        );
-
-        // Calculate path offset based on the number of parallel relationships
-        const relationshipIndex = parallelRelationships.indexOf(this);
-        // Use larger base offset and smart positioning
-        const baseOffset = 60; // Increased for better separation
-        let offset = 0;
-
-        if (relationshipIndex >= 0) {
-            // Alternate between sides with increasing distance
-            const side = relationshipIndex % 2 === 0 ? 1 : -1;
-            const distance = Math.floor(relationshipIndex / 2) + 1;
-            offset = baseOffset * distance * side;
-        }
-
-        // Adjust start and end points for parallel paths
+        // Determine the main direction of the path
         const dx = end.x - start.x;
         const dy = end.y - start.y;
-        const angle = Math.atan2(dy, dx);
-        const perpAngle = angle + Math.PI / 2;
+        const isHorizontal = Math.abs(dx) > Math.abs(dy);
 
-        // Create offset points with position-aware adjustments
-        let offsetStart = { ...start };
-        let offsetEnd = { ...end };
+        // Create control points for the path
+        let controlPoints = [];
+        const spacing = 40; // Minimum spacing from tables
 
-        // Apply offset based on connection point positions
-        if (start.position === "left" || start.position === "right") {
-            offsetStart.y += offset;
-        } else if (start.position === "top" || start.position === "bottom") {
-            offsetStart.x += offset;
+        if (isHorizontal) {
+            // For horizontal paths
+            const midX = start.x + dx / 2;
+            
+            // Check if direct path intersects any tables
+            if (this.pathIntersectsTables(start, end, tables)) {
+                // Create a path that goes around obstacles
+                if (start.position === "right" && end.position === "left") {
+                    // Standard case: right to left
+                    controlPoints = [
+                        start,
+                        { x: midX, y: start.y },
+                        { x: midX, y: end.y },
+                        end
+                    ];
+                } else if (start.position === "left" && end.position === "right") {
+                    // Reverse case: left to right
+                    const offset = spacing * 2;
+                    controlPoints = [
+                        start,
+                        { x: start.x - offset, y: start.y },
+                        { x: start.x - offset, y: end.y },
+                        end
+                    ];
+                } else {
+                    // Other cases: create appropriate bends
+                    controlPoints = [
+                        start,
+                        { x: start.x + dx/3, y: start.y },
+                        { x: start.x + 2*dx/3, y: end.y },
+                        end
+                    ];
+                }
+            } else {
+                controlPoints = [start, end];
+            }
+        } else {
+            // For vertical paths
+            const midY = start.y + dy / 2;
+            
+            // Check if direct path intersects any tables
+            if (this.pathIntersectsTables(start, end, tables)) {
+                // Create a path that goes around obstacles
+                if (start.position === "bottom" && end.position === "top") {
+                    // Standard case: bottom to top
+                    controlPoints = [
+                        start,
+                        { x: start.x, y: midY },
+                        { x: end.x, y: midY },
+                        end
+                    ];
+                } else if (start.position === "top" && end.position === "bottom") {
+                    // Reverse case: top to bottom
+                    const offset = spacing * 2;
+                    controlPoints = [
+                        start,
+                        { x: start.x, y: start.y - offset },
+                        { x: end.x, y: start.y - offset },
+                        end
+                    ];
+                } else {
+                    // Other cases: create appropriate bends
+                    controlPoints = [
+                        start,
+                        { x: start.x, y: start.y + dy/3 },
+                        { x: end.x, y: start.y + 2*dy/3 },
+                        end
+                    ];
+                }
+            } else {
+                controlPoints = [start, end];
+            }
         }
 
-        if (end.position === "left" || end.position === "right") {
-            offsetEnd.y += offset;
-        } else if (end.position === "top" || end.position === "bottom") {
-            offsetEnd.x += offset;
+        // Ensure the path doesn't intersect any tables
+        if (this.hasPathIntersections(controlPoints, tables)) {
+            // If path still intersects, try alternative route
+            const alternativePath = this.findAlternativePath(start, end, tables);
+            return alternativePath;
         }
 
-        // Check if direct path intersects any tables
-        if (!this.pathIntersectsTables(offsetStart, offsetEnd, tables)) {
-            this.cachedPath = [offsetStart, offsetEnd];
-            return this.cachedPath;
+        return controlPoints;
+    }
+
+    hasPathIntersections(points, tables) {
+        for (let i = 0; i < points.length - 1; i++) {
+            if (this.pathIntersectsTables(points[i], points[i + 1], tables)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    findAlternativePath(start, end, tables) {
+        const dx = end.x - start.x;
+        const dy = end.y - start.y;
+        const spacing = 60;
+
+        // Try different offsets to find a clear path
+        const offsets = [spacing, -spacing, spacing * 2, -spacing * 2];
+        
+        for (const offset of offsets) {
+            let controlPoints;
+            if (Math.abs(dx) > Math.abs(dy)) {
+                // Horizontal alternative
+                controlPoints = [
+                    start,
+                    { x: start.x + dx/3, y: start.y + offset },
+                    { x: start.x + 2*dx/3, y: end.y + offset },
+                    end
+                ];
+            } else {
+                // Vertical alternative
+                controlPoints = [
+                    start,
+                    { x: start.x + offset, y: start.y + dy/3 },
+                    { x: end.x + offset, y: start.y + 2*dy/3 },
+                    end
+                ];
+            }
+
+            if (!this.hasPathIntersections(controlPoints, tables)) {
+                return controlPoints;
+            }
         }
 
-        // Find intermediate points to avoid tables
-        const path = this.findPathAroundTables(offsetStart, offsetEnd, tables);
-        this.cachedPath = path;
-        return path;
+        // If no clear path found, return direct path as fallback
+        return [start, end];
     }
 
     pathIntersectsTables(start, end, tables) {
@@ -443,82 +506,123 @@ export class Relationship {
     }
 
     getNearestPoints(sourcePoints, targetPoints) {
-        // Cache for existing relationship points
+        // If no canvas context available, use simple point calculation
         if (!this.canvas) {
             return this.getSimpleNearestPoints(sourcePoints, targetPoints);
         }
-        // Get existing relationships between these tables
-        const existingRelationships = Array.from(
-            this.canvas.relationships,
-        ).filter(
+
+        // Get parallel relationships (relationships between the same tables)
+        const parallelRelationships = Array.from(this.canvas.relationships).filter(
             (rel) =>
                 rel !== this &&
-                ((rel.sourceTable.id === this.sourceTable.id &&
-                    rel.targetTable.id === this.targetTable.id) ||
-                    (rel.sourceTable.id === this.targetTable.id &&
-                        rel.targetTable.id === this.sourceTable.id)),
+                ((rel.sourceTable === this.sourceTable &&
+                    rel.targetTable === this.targetTable) ||
+                    (rel.sourceTable === this.targetTable &&
+                        rel.targetTable === this.sourceTable))
         );
 
-        // Track used connection points
-        const usedConnectionPoints = new Set();
-        existingRelationships.forEach((rel) => {
-            sourcePoints.forEach((sp) => {
-                const key = `${Math.round(sp.x)},${Math.round(sp.y)}`;
-                if (this.isPointNearConnection(sp, rel)) {
-                    console.log("there is a near x connection", key);
-                    usedConnectionPoints.add(key);
+        const relationshipIndex = parallelRelationships.indexOf(this);
+        
+        // Group connection points by side
+        const sourceGroups = {
+            left: sourcePoints.filter(p => p.position === "left"),
+            right: sourcePoints.filter(p => p.position === "right"),
+            top: sourcePoints.filter(p => p.position === "top"),
+            bottom: sourcePoints.filter(p => p.position === "bottom")
+        };
+
+        const targetGroups = {
+            left: targetPoints.filter(p => p.position === "left"),
+            right: targetPoints.filter(p => p.position === "right"),
+            top: targetPoints.filter(p => p.position === "top"),
+            bottom: targetPoints.filter(p => p.position === "bottom")
+        };
+
+        // Preferred connection patterns based on relative table positions
+        const dx = this.targetTable.x - this.sourceTable.x;
+        const dy = this.targetTable.y - this.sourceTable.y;
+        
+        let preferredPairs = [];
+        
+        // Determine preferred connection sides based on relative positions
+        if (Math.abs(dx) > Math.abs(dy)) {
+            // Tables are more horizontal than vertical
+            if (dx > 0) {
+                // Target is to the right
+                preferredPairs.push(["right", "left"]);
+                preferredPairs.push(["top", "top"]);
+                preferredPairs.push(["bottom", "bottom"]);
+            } else {
+                // Target is to the left
+                preferredPairs.push(["left", "right"]);
+                preferredPairs.push(["top", "top"]);
+                preferredPairs.push(["bottom", "bottom"]);
+            }
+        } else {
+            // Tables are more vertical than horizontal
+            if (dy > 0) {
+                // Target is below
+                preferredPairs.push(["bottom", "top"]);
+                preferredPairs.push(["left", "left"]);
+                preferredPairs.push(["right", "right"]);
+            } else {
+                // Target is above
+                preferredPairs.push(["top", "bottom"]);
+                preferredPairs.push(["left", "left"]);
+                preferredPairs.push(["right", "right"]);
+            }
+        }
+
+        // Find the best connection points based on preferred pairs
+        let bestPoints = null;
+        let bestScore = Infinity;
+
+        for (const [sourceSide, targetSide] of preferredPairs) {
+            const sourceOptions = sourceGroups[sourceSide];
+            const targetOptions = targetGroups[targetSide];
+
+            if (!sourceOptions.length || !targetOptions.length) continue;
+
+            // Calculate index-based offsets
+            const baseSpacing = 30; // Base spacing between parallel relationships
+            const offset = relationshipIndex * baseSpacing;
+
+            // Apply offset based on side
+            for (const sp of sourceOptions) {
+                for (const tp of targetOptions) {
+                    let adjustedSource = { ...sp };
+                    let adjustedTarget = { ...tp };
+
+                    // Apply offsets based on connection sides
+                    if (sourceSide === "left" || sourceSide === "right") {
+                        adjustedSource.y += offset;
+                    } else {
+                        adjustedSource.x += offset;
+                    }
+
+                    if (targetSide === "left" || targetSide === "right") {
+                        adjustedTarget.y += offset;
+                    } else {
+                        adjustedTarget.x += offset;
+                    }
+
+                    const score = Math.hypot(
+                        adjustedTarget.x - adjustedSource.x,
+                        adjustedTarget.y - adjustedSource.y
+                    );
+
+                    if (score < bestScore) {
+                        bestScore = score;
+                        bestPoints = { start: adjustedSource, end: adjustedTarget };
+                    }
                 }
-            });
-            targetPoints.forEach((tp) => {
-                const key = `${Math.round(tp.x)},${Math.round(tp.y)}`;
-                if (this.isPointNearConnection(tp, rel)) {
-                    console.log("there is a near y connection", key);
-                    usedConnectionPoints.add(key);
-                }
-            });
-        });
+            }
 
-        let bestPoints = { start: null, end: null };
-        let minScore = Infinity;
+            // If we found points using the current preferred pair, use them
+            if (bestPoints) break;
+        }
 
-        // Find best unused connection points
-        sourcePoints.forEach((sp) => {
-            const sourceKey = `${Math.round(sp.x)},${Math.round(sp.y)}`;
-            const sourceUsed = usedConnectionPoints.has(sourceKey);
-
-            targetPoints.forEach((tp) => {
-                const targetKey = `${Math.round(tp.x)},${Math.round(tp.y)}`;
-                const targetUsed = usedConnectionPoints.has(targetKey);
-
-                const distance = Math.hypot(tp.x - sp.x, tp.y - sp.y);
-                const angle = Math.atan2(tp.y - sp.y, tp.x - sp.x);
-
-                // Scoring system
-                let score = distance;
-
-                // Prefer horizontal/vertical connections
-                score += Math.abs(angle % (Math.PI / 2)) * 50;
-
-                // Heavy penalty for used points
-                if (sourceUsed) score += 500;
-                if (targetUsed) score += 500;
-
-                // Penalty for top/bottom connections
-                if (sp.position === "top" || sp.position === "bottom")
-                    score += 100;
-                if (tp.position === "top" || tp.position === "bottom")
-                    score += 100;
-
-                if (score < minScore) {
-                    minScore = score;
-                    bestPoints = { start: sp, end: tp };
-                }
-            });
-        });
-
-        return bestPoints.start && bestPoints.end
-            ? bestPoints
-            : this.getSimpleNearestPoints(sourcePoints, targetPoints);
+        return bestPoints || this.getSimpleNearestPoints(sourcePoints, targetPoints);
     }
 
     getSimpleNearestPoints(sourcePoints, targetPoints) {
