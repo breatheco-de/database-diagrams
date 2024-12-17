@@ -21,7 +21,7 @@ export class Relationship {
         for (let i = 1; i < pathPoints.length; i++) {
             ctx.lineTo(pathPoints[i].x, pathPoints[i].y);
         }
-        ctx.strokeStyle = "var(--bs-primary)";
+        ctx.strokeStyle = "var(--bs-warning)";  // Use Bootstrap's warning color (orange)
         ctx.lineWidth = 2;
         ctx.stroke();
 

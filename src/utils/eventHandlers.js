@@ -68,11 +68,31 @@ function configureToolbar(canvas) {
         }
     }
 
-    // Configure Add Table button visibility
+    // Configure Add Table button visibility and New menu items
     const addTableBtn = document.getElementById("addTable");
-    const allowAdd = params.get("allowAdd");
-    if (allowAdd === "false" || isReadOnly) {
+    const newDropdown = document.querySelector('.dropdown');
+    const allowNew = params.get("allowNew");
+    
+    if (isReadOnly) {
         addTableBtn.style.display = "none";
+        newDropdown.style.display = "none";
+    } else if (allowNew) {
+        const allowedOptions = allowNew.toLowerCase().split(',');
+        // Handle "New" button visibility
+        if (!allowedOptions.includes('new')) {
+            addTableBtn.style.display = "none";
+        }
+        // Handle samples visibility
+        const sampleItems = document.querySelectorAll('.sample-diagram');
+        if (!allowedOptions.includes('samples')) {
+            sampleItems.forEach(item => item.style.display = 'none');
+            document.querySelector('.dropdown-divider').style.display = 'none';
+            document.querySelector('.dropdown-header').style.display = 'none';
+        }
+        // Handle load from JSON visibility
+        if (!allowedOptions.includes('load')) {
+            document.getElementById('loadJson').style.display = 'none';
+        }
     }
 
     // Configure Edit-related buttons visibility in readOnly mode
@@ -224,7 +244,9 @@ export function initializeEventHandlers(canvas) {
     if (exportJson) {
         exportJson.addEventListener("click", () => {
             const data = canvas.toJSON();
-            const blob = new Blob([JSON.stringify(data, null, 2)], {
+            // Remove relationships key as it's not needed
+            const { relationships, ...exportData } = data;
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], {
                 type: "application/json",
             });
             const url = URL.createObjectURL(blob);
