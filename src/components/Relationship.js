@@ -320,12 +320,12 @@ export class Relationship {
     }
 
     drawOneToMany(ctx, point, angle) {
-        const length = 20; // Base line length
+        const length = 40; // Base line length
         const footLength = length * 0.6; // Shorter feet for better proportion
         const spread = Math.PI / 6; // 30 degrees spread for more natural V shape
 
         // Draw the base line
-        ctx.strokeStyle = "var(--bs-warning)";  // Set to orange
+        ctx.strokeStyle = "var(--bs-warning)"; // Set to orange
         ctx.moveTo(point.x, point.y);
         const baseEndX = point.x - length * Math.cos(angle);
         const baseEndY = point.y - length * Math.sin(angle);
@@ -340,23 +340,17 @@ export class Relationship {
         const perpY = dirX;
 
         // Calculate points for the V shape
-        const footSpread = length * 0.3; // How wide the V spreads
-        const vBaseX = baseEndX + footLength * 0.2 * dirX; // Move V base slightly forward
-        const vBaseY = baseEndY + footLength * 0.2 * dirY;
+        const footSpread = length * 0.5; // How wide the V spreads
+        const vBaseX = baseEndX + footLength * dirX; // Move V base slightly forward
+        const vBaseY = baseEndY + footLength * dirY;
 
         // Draw left foot
         ctx.moveTo(baseEndX, baseEndY);
-        ctx.lineTo(
-            vBaseX + footSpread * perpX,
-            vBaseY + footSpread * perpY
-        );
+        ctx.lineTo(vBaseX + footSpread * perpX, vBaseY + footSpread * perpY);
 
         // Draw right foot
         ctx.moveTo(baseEndX, baseEndY);
-        ctx.lineTo(
-            vBaseX - footSpread * perpX,
-            vBaseY - footSpread * perpY
-        );
+        ctx.lineTo(vBaseX - footSpread * perpX, vBaseY - footSpread * perpY);
     }
 
     drawManyToMany(ctx, point, angle) {
