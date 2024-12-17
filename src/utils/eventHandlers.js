@@ -26,6 +26,11 @@ function setZoomLevel(canvas, index) {
     canvas.scale = ZOOM_LEVELS[canvas.zoomIndex];
     canvas.render();
     updateZoomDisplay(canvas);
+
+    // Update URL with new zoom level
+    const url = new URL(window.location.href);
+    url.searchParams.set('zoomLevel', canvas.scale.toString());
+    window.history.replaceState({}, '', url.toString());
 }
 
 function configureToolbar(canvas) {
