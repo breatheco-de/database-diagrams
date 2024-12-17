@@ -399,22 +399,14 @@ export class Relationship {
                     usedPoints.set(reversePairKey, new Set());
                 }
 
-                // Add both source and target points to the used sets
-                const sourceKey = `${rel.sourceTable.id},${Math.round(rel.getNearestPoints(
-                    rel.sourceTable.getConnectionPoints(),
-                    rel.targetTable.getConnectionPoints()
-                ).start.x)},${Math.round(rel.getNearestPoints(
-                    rel.sourceTable.getConnectionPoints(),
-                    rel.targetTable.getConnectionPoints()
-                ).start.y)}`;
-                
-                const targetKey = `${rel.targetTable.id},${Math.round(rel.getNearestPoints(
-                    rel.sourceTable.getConnectionPoints(),
-                    rel.targetTable.getConnectionPoints()
-                ).end.x)},${Math.round(rel.getNearestPoints(
-                    rel.sourceTable.getConnectionPoints(),
-                    rel.targetTable.getConnectionPoints()
-                ).end.y)}`;
+                // Create point keys based on coordinates only
+                const sourceX = rel.sourceTable.x + rel.sourceTable.width / 2;
+                const sourceY = rel.sourceTable.y + rel.sourceTable.height / 2;
+                const targetX = rel.targetTable.x + rel.targetTable.width / 2;
+                const targetY = rel.targetTable.y + rel.targetTable.height / 2;
+
+                const sourceKey = `${rel.sourceTable.id},${Math.round(sourceX)},${Math.round(sourceY)}`;
+                const targetKey = `${rel.targetTable.id},${Math.round(targetX)},${Math.round(targetY)}`;
 
                 usedPoints.get(tablePairKey).add(sourceKey);
                 usedPoints.get(tablePairKey).add(targetKey);
