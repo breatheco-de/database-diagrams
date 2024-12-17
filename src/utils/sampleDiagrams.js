@@ -154,15 +154,6 @@ export const sampleDiagrams = {
                     { name: "total_points", type: "number" }
                 ]
             }
-        ],
-        relationships: [
-            { sourceId: "enrollment", targetId: "student", type: "oneToMany" },
-            { sourceId: "enrollment", targetId: "course", type: "oneToMany" },
-            { sourceId: "department", targetId: "student", type: "oneToMany" },
-            { sourceId: "department", targetId: "course", type: "oneToMany" },
-            { sourceId: "department", targetId: "teacher", type: "oneToMany" },
-            { sourceId: "course", targetId: "assignment", type: "oneToMany" },
-            { sourceId: "teacher", targetId: "course", type: "oneToMany" }
         ]
     },
     dealership: {
@@ -247,14 +238,6 @@ export const sampleDiagrams = {
                     { name: "cost", type: "number" }
                 ]
             }
-        ],
-        relationships: [
-            { sourceId: "dealership", targetId: "car", type: "oneToMany" },
-            { sourceId: "dealership", targetId: "salesperson", type: "oneToMany" },
-            { sourceId: "car", targetId: "sale", type: "oneToOne" },
-            { sourceId: "customer", targetId: "sale", type: "oneToMany" },
-            { sourceId: "salesperson", targetId: "sale", type: "oneToMany" },
-            { sourceId: "car", targetId: "service", type: "oneToMany" }
         ]
     },
     store: {
@@ -351,16 +334,6 @@ export const sampleDiagrams = {
                     { name: "date", type: "date" }
                 ]
             }
-        ],
-        relationships: [
-            { sourceId: "category", targetId: "product", type: "oneToMany" },
-            { sourceId: "supplier", targetId: "product", type: "oneToMany" },
-            { sourceId: "category", targetId: "category", type: "oneToMany" },
-            { sourceId: "customer", targetId: "order", type: "oneToMany" },
-            { sourceId: "order", targetId: "order_item", type: "oneToMany" },
-            { sourceId: "product", targetId: "order_item", type: "oneToMany" },
-            { sourceId: "product", targetId: "review", type: "oneToMany" },
-            { sourceId: "customer", targetId: "review", type: "oneToMany" }
         ]
     }
 };
