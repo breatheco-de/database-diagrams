@@ -28,8 +28,8 @@ export class Relationship {
         ctx.lineWidth = 2;
         ctx.stroke();
 
-        // Draw crow's foot at the end point
-        this.drawCrowFoot(ctx, {
+        // Draw arrows at the end point
+        this.drawArrows(ctx, {
             start: pathPoints[pathPoints.length - 2] || source.start,
             end: pathPoints[pathPoints.length - 1],
         });
@@ -405,104 +405,117 @@ export class Relationship {
         return length;
     }
 
-    drawCrowFoot(ctx, points) {
+    drawArrows(ctx, points) {
         const angle = Math.atan2(
             points.end.y - points.start.y,
             points.end.x - points.start.x,
         );
 
         ctx.beginPath();
+        ctx.strokeStyle = "var(--bs-warning)";
+        ctx.lineWidth = 2;
 
         switch (this.type) {
             case "oneToMany":
-                this.drawOneToMany(ctx, points.end, angle);
+                this.drawOneToManyArrow(ctx, points.end, angle);
                 break;
             case "oneToOne":
-                this.drawOneToOne(ctx, points.end, angle);
+                this.drawOneToOneArrow(ctx, points.end, angle);
                 break;
             case "manyToMany":
-                this.drawManyToMany(ctx, points.end, angle);
+                this.drawManyToManyArrow(ctx, points.end, angle);
                 break;
         }
 
         ctx.stroke();
     }
 
-    drawOneToOne(ctx, point, angle) {
-        const length = 15;
-        ctx.moveTo(
-            point.x - length * Math.cos(angle),
-            point.y - length * Math.sin(angle),
-        );
-        ctx.lineTo(point.x, point.y);
+    drawOneToOneArrow(ctx, point, angle) {
+        const arrowLength = 15;
+        const arrowWidth = Math.PI / 6; // 30 degrees
 
-        // Draw the vertical line
-        const verticalOffset = 8;
-        const x = point.x - (length - 5) * Math.cos(angle);
-        const y = point.y - (length - 5) * Math.sin(angle);
+        // Draw the main arrow
+        this.drawArrowHead(ctx, point, angle, arrowLength, arrowWidth);
+
+        // Draw a small vertical line near the arrow to indicate "one"
+        const verticalLength = 10;
+        const verticalOffset = 20;
+        const x = point.x - verticalOffset * Math.cos(angle);
+        const y = point.y - verticalOffset * Math.sin(angle);
+        
         ctx.moveTo(
-            x + verticalOffset * Math.sin(angle),
-            y - verticalOffset * Math.cos(angle),
+            x + verticalLength/2 * Math.sin(angle),
+            y - verticalLength/2 * Math.cos(angle)
         );
         ctx.lineTo(
-            x - verticalOffset * Math.sin(angle),
-            y + verticalOffset * Math.cos(angle),
+            x - verticalLength/2 * Math.sin(angle),
+            y + verticalLength/2 * Math.cos(angle)
         );
     }
 
-    drawOneToMany(ctx, point, angle) {
-        const length = 40; // Base line length
-        const footLength = length * 0.6; // Shorter feet for better proportion
-        const spread = Math.PI / 6; // 30 degrees spread for more natural V shape
+    drawOneToManyArrow(ctx, point, angle) {
+        const arrowLength = 20;
+        const arrowWidth = Math.PI / 4; // 45 degrees
 
-        // Draw the base line
-        ctx.strokeStyle = "var(--bs-warning)"; // Set to orange
+        // Draw double arrowhead for "many"
+        this.drawDoubleArrowHead(ctx, point, angle, arrowLength, arrowWidth);
+
+        // Draw a small vertical line to indicate "one" at the other end
+        const verticalLength = 10;
+        const verticalOffset = 25;
+        const x = point.x - verticalOffset * Math.cos(angle);
+        const y = point.y - verticalOffset * Math.sin(angle);
+        
+        ctx.moveTo(
+            x + verticalLength/2 * Math.sin(angle),
+            y - verticalLength/2 * Math.cos(angle)
+        );
+        ctx.lineTo(
+            x - verticalLength/2 * Math.sin(angle),
+            y + verticalLength/2 * Math.cos(angle)
+        );
+    }
+
+    drawManyToManyArrow(ctx, point, angle) {
+        const arrowLength = 20;
+        const arrowWidth = Math.PI / 4; // 45 degrees
+        
+        // Draw double arrowhead
+        this.drawDoubleArrowHead(ctx, point, angle, arrowLength, arrowWidth);
+
+        // Draw second double arrowhead slightly offset
+        const offset = 15;
+        const secondPoint = {
+            x: point.x - offset * Math.cos(angle),
+            y: point.y - offset * Math.sin(angle)
+        };
+        this.drawDoubleArrowHead(ctx, secondPoint, angle, arrowLength, arrowWidth);
+    }
+
+    drawArrowHead(ctx, point, angle, length, width) {
         ctx.moveTo(point.x, point.y);
-        const baseEndX = point.x - length * Math.cos(angle);
-        const baseEndY = point.y - length * Math.sin(angle);
-        ctx.lineTo(baseEndX, baseEndY);
-
-        // Calculate the direction vector of the base line
-        const dirX = Math.cos(angle);
-        const dirY = Math.sin(angle);
-
-        // Calculate perpendicular vector for creating the V shape
-        const perpX = -dirY;
-        const perpY = dirX;
-
-        // Calculate points for the V shape
-        const footSpread = length * 0.5; // How wide the V spreads
-        const vBaseX = baseEndX + footLength * dirX; // Move V base slightly forward
-        const vBaseY = baseEndY + footLength * dirY;
-
-        // Draw left foot
-        ctx.moveTo(baseEndX, baseEndY);
-        ctx.lineTo(vBaseX + footSpread * perpX, vBaseY + footSpread * perpY);
-
-        // Draw right foot
-        ctx.moveTo(baseEndX, baseEndY);
-        ctx.lineTo(vBaseX - footSpread * perpX, vBaseY - footSpread * perpY);
+        ctx.lineTo(
+            point.x - length * Math.cos(angle - width),
+            point.y - length * Math.sin(angle - width)
+        );
+        ctx.moveTo(point.x, point.y);
+        ctx.lineTo(
+            point.x - length * Math.cos(angle + width),
+            point.y - length * Math.sin(angle + width)
+        );
     }
 
-    drawManyToMany(ctx, point, angle) {
-        this.drawOneToMany(ctx, point, angle);
-
-        // Add second crow's foot
-        const length = 15;
-        const spread = Math.PI / 4;
-        const offset = 10;
-        const x = point.x - offset * Math.cos(angle);
-        const y = point.y - offset * Math.sin(angle);
-
-        ctx.moveTo(
-            x - length * Math.cos(angle - spread),
-            y - length * Math.sin(angle - spread),
-        );
-        ctx.lineTo(x, y);
-        ctx.lineTo(
-            x - length * Math.cos(angle + spread),
-            y - length * Math.sin(angle + spread),
-        );
+    drawDoubleArrowHead(ctx, point, angle, length, width) {
+        // Draw first arrowhead
+        this.drawArrowHead(ctx, point, angle, length, width);
+        
+        // Draw second arrowhead slightly behind
+        const offset = length * 0.5;
+        const secondPoint = {
+            x: point.x - offset * Math.cos(angle),
+            y: point.y - offset * Math.sin(angle)
+        };
+        this.drawArrowHead(ctx, secondPoint, angle, length, width);
     }
 
     getNearestPoints(sourcePoints, targetPoints) {
