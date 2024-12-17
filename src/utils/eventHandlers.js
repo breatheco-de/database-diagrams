@@ -359,14 +359,14 @@ export function initializeEventHandlers(canvas) {
 
     // Handle loading sample diagrams
     document.querySelectorAll('.sample-diagram').forEach(item => {
-        item.addEventListener('click', () => {
+        item.addEventListener('click', async () => {
+            // Show loading state
+            item.classList.add('disabled');
+            const originalText = item.innerHTML;
+            item.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Loading...`;
+            
             try {
                 const sampleName = item.dataset.sample;
-                
-                // Show loading state
-                item.classList.add('disabled');
-                const originalText = item.innerHTML;
-                item.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Loading...`;
                 
                 // Load the diagram
                 const sampleData = await loadSampleDiagram(sampleName);
