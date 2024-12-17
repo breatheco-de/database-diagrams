@@ -266,11 +266,24 @@ export function initializeEventHandlers(canvas) {
     // Handle loading sample diagrams
     document.querySelectorAll('.sample-diagram').forEach(item => {
         item.addEventListener('click', () => {
-            const sampleName = item.dataset.sample;
-            const sampleData = sampleDiagrams[sampleName];
-            canvas.loadFromJSON(sampleData);
-            canvas.render();
-            saveToStorage(canvas.toJSON());
+            try {
+                const sampleName = item.dataset.sample;
+                const sampleData = sampleDiagrams[sampleName];
+                
+                if (!sampleData) {
+                    console.error('Sample diagram not found:', sampleName);
+                    showSnackbar('Error: Sample diagram not found');
+                    return;
+                }
+
+                console.log('Loading sample diagram:', sampleName, sampleData);
+                canvas.loadFromJSON(sampleData);
+                canvas.render();
+                saveToStorage(canvas.toJSON());
+            } catch (error) {
+                console.error('Error loading sample diagram:', error);
+                showSnackbar('Error loading sample diagram');
+            }
         });
     });
 
