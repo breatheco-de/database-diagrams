@@ -20,12 +20,52 @@ A powerful Entity Relationship Diagram (ERD) designer that can be embedded in yo
 Add the ERD designer to your web application using an iframe:
 
 ```html
+<!-- Basic usage -->
 <iframe 
-  src="https://your-erd-designer-url?theme=dark&readOnly=false" 
+  src="https://erd.4geeks.com?theme=dark" 
   width="100%" 
   height="600px"
   frameborder="0">
 </iframe>
+
+<!-- Read-only mode -->
+<iframe 
+  src="https://erd.4geeks.com?readOnly=true&theme=dark" 
+  width="100%" 
+  height="600px"
+  frameborder="0">
+</iframe>
+
+<!-- With initial diagram -->
+<iframe id="erdDesigner"
+  src="https://erd.4geeks.com?theme=dark" 
+  width="100%" 
+  height="600px"
+  frameborder="0">
+</iframe>
+<script>
+  // Load initial diagram
+  const erdFrame = document.getElementById('erdDesigner');
+  erdFrame.addEventListener('load', () => {
+    erdFrame.contentWindow.postMessage({
+      type: 'loadERD',
+      diagram: {
+        tables: [
+          {
+            id: "t1",
+            name: "Users",
+            x: 100,
+            y: 100,
+            attributes: [
+              { name: "id", type: "number", isPrimary: true },
+              { name: "email", type: "string" }
+            ]
+          }
+        ]
+      }
+    }, '*');
+  });
+</script>
 ```
 
 ### Query Parameters
@@ -128,20 +168,40 @@ window.addEventListener('message', (event) => {
         {
           "name": "email",
           "type": "string"
+        },
+        {
+          "name": "created_at",
+          "type": "date"
+        }
+      ]
+    },
+    {
+      "id": "t2",
+      "name": "Posts",
+      "x": 350,
+      "y": 100,
+      "attributes": [
+        {
+          "name": "id",
+          "type": "number",
+          "isPrimary": true
+        },
+        {
+          "name": "user_id",
+          "type": "number",
+          "references": "Users.id"
+        },
+        {
+          "name": "title",
+          "type": "string"
         }
       ]
     }
   ],
-  "relationships": [
-    {
-      "sourceId": "t1",
-      "targetId": "t2",
-      "type": "oneToMany"
-    }
-  ],
   "viewState": {
     "offset": { "x": 0, "y": 0 },
-    "scale": 1.0
+    "scale": 1.0,
+    "zoomIndex": 2
   }
 }
 ```
