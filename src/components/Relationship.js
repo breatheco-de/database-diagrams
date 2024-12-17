@@ -511,7 +511,7 @@ export class Relationship {
             return this.getSimpleNearestPoints(sourcePoints, targetPoints);
         }
 
-        // Get parallel relationships (relationships between the same tables)
+        // Get parallel relationships between the same tables
         const parallelRelationships = Array.from(this.canvas.relationships).filter(
             (rel) =>
                 rel !== this &&
@@ -521,16 +521,12 @@ export class Relationship {
                         rel.targetTable === this.sourceTable))
         );
 
-        // Track used connection points
+        // Calculate connection point usage without recursion
         const usedPoints = new Set();
         parallelRelationships.forEach(rel => {
-            const points = rel.getNearestPoints(
-                rel.sourceTable.getConnectionPoints(),
-                rel.targetTable.getConnectionPoints()
-            );
-            if (points.start && points.end) {
-                usedPoints.add(`${points.start.position}-${Math.round(points.start.y)}`);
-                usedPoints.add(`${points.end.position}-${Math.round(points.end.y)}`);
+            if (rel.sourcePoint && rel.targetPoint) {
+                usedPoints.add(`${rel.sourcePoint.position}-${Math.round(rel.sourcePoint.y)}`);
+                usedPoints.add(`${rel.targetPoint.position}-${Math.round(rel.targetPoint.y)}`);
             }
         });
 
@@ -644,6 +640,9 @@ export class Relationship {
                             start: { ...sp },
                             end: { ...tp }
                         };
+                        // Store the selected points for future reference
+                        this.sourcePoint = { ...sp };
+                        this.targetPoint = { ...tp };
                     }
                 }
             }
