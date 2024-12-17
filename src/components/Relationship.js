@@ -43,19 +43,27 @@ export class Relationship {
         );
 
         // Get existing relationships between these tables
-        const parallelRelationships = Array.from(this.canvas.relationships).filter(rel =>
-            rel !== this &&
-            ((rel.sourceTable === this.sourceTable && rel.targetTable === this.targetTable) ||
-             (rel.sourceTable === this.targetTable && rel.targetTable === this.sourceTable))
+        const parallelRelationships = Array.from(
+            this.canvas.relationships,
+        ).filter(
+            (rel) =>
+                rel !== this &&
+                ((rel.sourceTable === this.sourceTable &&
+                    rel.targetTable === this.targetTable) ||
+                    (rel.sourceTable === this.targetTable &&
+                        rel.targetTable === this.sourceTable)),
         );
 
         // Calculate path offset based on the number of parallel relationships
         const relationshipIndex = parallelRelationships.indexOf(this);
         // Increase base offset and alternate sides for better separation
         const baseOffset = 40; // Increased from 20
-        const offset = relationshipIndex >= 0 
-            ? (Math.floor(relationshipIndex / 2) + 1) * baseOffset * (relationshipIndex % 2 === 0 ? 1 : -1)
-            : 0;
+        const offset =
+            relationshipIndex >= 0
+                ? (Math.floor(relationshipIndex / 2) + 1) *
+                  baseOffset *
+                  (relationshipIndex % 2 === 0 ? 1 : -1)
+                : 0;
 
         // Adjust start and end points for parallel paths
         const dx = end.x - start.x;
@@ -67,25 +75,25 @@ export class Relationship {
         let offsetStart = {
             x: start.x + offset * Math.cos(perpAngle),
             y: start.y + offset * Math.sin(perpAngle),
-            position: start.position
+            position: start.position,
         };
 
         let offsetEnd = {
             x: end.x + offset * Math.cos(perpAngle),
             y: end.y + offset * Math.sin(perpAngle),
-            position: end.position
+            position: end.position,
         };
 
         // Adjust offset based on connection point positions
-        if (start.position === 'left' || start.position === 'right') {
+        if (start.position === "left" || start.position === "right") {
             offsetStart.y = start.y;
-        } else if (start.position === 'top' || start.position === 'bottom') {
+        } else if (start.position === "top" || start.position === "bottom") {
             offsetStart.x = start.x;
         }
 
-        if (end.position === 'left' || end.position === 'right') {
+        if (end.position === "left" || end.position === "right") {
             offsetEnd.y = end.y;
-        } else if (end.position === 'top' || end.position === 'bottom') {
+        } else if (end.position === "top" || end.position === "bottom") {
             offsetEnd.x = end.x;
         }
 
@@ -425,24 +433,29 @@ export class Relationship {
         if (!this.canvas) {
             return this.getSimpleNearestPoints(sourcePoints, targetPoints);
         }
-
         // Get existing relationships between these tables
-        const existingRelationships = Array.from(this.canvas.relationships).filter(rel => 
-            (rel !== this) && 
-            ((rel.sourceTable.id === this.sourceTable.id && rel.targetTable.id === this.targetTable.id) ||
-             (rel.sourceTable.id === this.targetTable.id && rel.targetTable.id === this.sourceTable.id))
+        const existingRelationships = Array.from(
+            this.canvas.relationships,
+        ).filter(
+            (rel) =>
+                rel !== this &&
+                ((rel.sourceTable.id === this.sourceTable.id &&
+                    rel.targetTable.id === this.targetTable.id) ||
+                    (rel.sourceTable.id === this.targetTable.id &&
+                        rel.targetTable.id === this.sourceTable.id)),
         );
 
+        console.log(existingRelationships);
         // Track used connection points
         const usedConnectionPoints = new Set();
-        existingRelationships.forEach(rel => {
-            sourcePoints.forEach(sp => {
+        existingRelationships.forEach((rel) => {
+            sourcePoints.forEach((sp) => {
                 const key = `${Math.round(sp.x)},${Math.round(sp.y)}`;
                 if (this.isPointNearConnection(sp, rel)) {
                     usedConnectionPoints.add(key);
                 }
             });
-            targetPoints.forEach(tp => {
+            targetPoints.forEach((tp) => {
                 const key = `${Math.round(tp.x)},${Math.round(tp.y)}`;
                 if (this.isPointNearConnection(tp, rel)) {
                     usedConnectionPoints.add(key);
@@ -454,30 +467,32 @@ export class Relationship {
         let minScore = Infinity;
 
         // Find best unused connection points
-        sourcePoints.forEach(sp => {
+        sourcePoints.forEach((sp) => {
             const sourceKey = `${Math.round(sp.x)},${Math.round(sp.y)}`;
             const sourceUsed = usedConnectionPoints.has(sourceKey);
 
-            targetPoints.forEach(tp => {
+            targetPoints.forEach((tp) => {
                 const targetKey = `${Math.round(tp.x)},${Math.round(tp.y)}`;
                 const targetUsed = usedConnectionPoints.has(targetKey);
 
                 const distance = Math.hypot(tp.x - sp.x, tp.y - sp.y);
                 const angle = Math.atan2(tp.y - sp.y, tp.x - sp.x);
-                
+
                 // Scoring system
                 let score = distance;
-                
+
                 // Prefer horizontal/vertical connections
                 score += Math.abs(angle % (Math.PI / 2)) * 50;
-                
+
                 // Heavy penalty for used points
                 if (sourceUsed) score += 500;
                 if (targetUsed) score += 500;
-                
+
                 // Penalty for top/bottom connections
-                if (sp.position === 'top' || sp.position === 'bottom') score += 100;
-                if (tp.position === 'top' || tp.position === 'bottom') score += 100;
+                if (sp.position === "top" || sp.position === "bottom")
+                    score += 100;
+                if (tp.position === "top" || tp.position === "bottom")
+                    score += 100;
 
                 if (score < minScore) {
                     minScore = score;
@@ -486,15 +501,17 @@ export class Relationship {
             });
         });
 
-        return bestPoints.start && bestPoints.end ? bestPoints : this.getSimpleNearestPoints(sourcePoints, targetPoints);
+        return bestPoints.start && bestPoints.end
+            ? bestPoints
+            : this.getSimpleNearestPoints(sourcePoints, targetPoints);
     }
 
     getSimpleNearestPoints(sourcePoints, targetPoints) {
         let bestPoints = { start: null, end: null };
         let minDistance = Infinity;
 
-        sourcePoints.forEach(sp => {
-            targetPoints.forEach(tp => {
+        sourcePoints.forEach((sp) => {
+            targetPoints.forEach((tp) => {
                 const distance = Math.hypot(tp.x - sp.x, tp.y - sp.y);
                 if (distance < minDistance) {
                     minDistance = distance;
@@ -508,12 +525,15 @@ export class Relationship {
 
     isPointNearConnection(point, relationship) {
         const tolerance = 5; // pixels
-        if (!relationship.sourceConnectionPoint || !relationship.targetConnectionPoint) {
-            return false;
-        }
+        // Get actual connection points for the relationship
+        const points = relationship.getNearestPoints(
+            relationship.sourceTable.getConnectionPoints(),
+            relationship.targetTable.getConnectionPoints()
+        );
+
         return (
-            Math.hypot(point.x - relationship.sourceConnectionPoint.x, point.y - relationship.sourceConnectionPoint.y) < tolerance ||
-            Math.hypot(point.x - relationship.targetConnectionPoint.x, point.y - relationship.targetConnectionPoint.y) < tolerance
+            Math.hypot(point.x - points.start.x, point.y - points.start.y) < tolerance ||
+            Math.hypot(point.x - points.end.x, point.y - points.end.y) < tolerance
         );
     }
 
