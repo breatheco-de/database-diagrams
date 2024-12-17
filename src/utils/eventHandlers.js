@@ -342,6 +342,10 @@ export function initializeEventHandlers(canvas) {
         canvas.loadFromJSON({ tables: [], relationships: [] });
         canvas.render();
         saveToStorage(canvas.toJSON());
+        // Clear diagram parameter from URL
+        const url = new URL(window.location.href);
+        url.searchParams.delete('diagram');
+        window.history.replaceState({}, '', url.toString());
     });
 
     // Handle loading sample diagrams
@@ -361,6 +365,11 @@ export function initializeEventHandlers(canvas) {
                 canvas.loadFromJSON(sampleData);
                 canvas.render();
                 saveToStorage(canvas.toJSON());
+                
+                // Update URL to reflect loaded sample
+                const url = new URL(window.location.href);
+                url.searchParams.set('diagram', sampleName);
+                window.history.replaceState({}, '', url.toString());
             } catch (error) {
                 console.error('Error loading sample diagram:', error);
                 showSnackbar('Error loading sample diagram');

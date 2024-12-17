@@ -12,16 +12,30 @@ async function initializeApplication() {
         Object.assign(sampleDiagrams, loadedDiagrams);
         console.log('Sample diagrams loaded:', sampleDiagrams);
 
-        // Initialize the canvas with stored data or default school diagram
-        const initialData = loadFromStorage();
-        if (initialData) {
-            canvas.loadDiagram(initialData);
-        } else if (sampleDiagrams.school) {
-            // Load school diagram as default if no stored data
-            console.log('Loading default school diagram');
-            canvas.loadDiagram(sampleDiagrams.school);
-            // Save to storage so it persists
+        // Check for diagram parameter in URL
+        const params = new URLSearchParams(window.location.search);
+        const diagramParam = params.get('diagram');
+        
+        // Initialize the canvas with diagram from URL, stored data, or default school diagram
+        if (diagramParam && sampleDiagrams[diagramParam]) {
+            console.log('Loading diagram from URL parameter:', diagramParam);
+            canvas.loadDiagram(sampleDiagrams[diagramParam]);
             saveToStorage(canvas.toJSON());
+        } else {
+            const initialData = loadFromStorage();
+            if (initialData) {
+                canvas.loadDiagram(initialData);
+            } else if (sampleDiagrams.school) {
+                // Load school diagram as default if no stored data
+                console.log('Loading default school diagram');
+                canvas.loadDiagram(sampleDiagrams.school);
+                // Save to storage so it persists
+                saveToStorage(canvas.toJSON());
+                // Update URL to reflect default diagram
+                const url = new URL(window.location.href);
+                url.searchParams.set('diagram', 'school');
+                window.history.replaceState({}, '', url.toString());
+            }
         }
 
         // Setup message handlers for iframe communication
