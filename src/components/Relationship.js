@@ -521,8 +521,19 @@ export class Relationship {
                         rel.targetTable === this.sourceTable))
         );
 
-        const relationshipIndex = parallelRelationships.indexOf(this);
-        
+        // Track used connection points
+        const usedPoints = new Set();
+        parallelRelationships.forEach(rel => {
+            const points = rel.getNearestPoints(
+                rel.sourceTable.getConnectionPoints(),
+                rel.targetTable.getConnectionPoints()
+            );
+            if (points.start && points.end) {
+                usedPoints.add(`${points.start.position}-${Math.round(points.start.y)}`);
+                usedPoints.add(`${points.end.position}-${Math.round(points.end.y)}`);
+            }
+        });
+
         // Group connection points by side
         const sourceGroups = {
             left: sourcePoints.filter(p => p.position === "left"),
@@ -538,90 +549,110 @@ export class Relationship {
             bottom: targetPoints.filter(p => p.position === "bottom")
         };
 
-        // Preferred connection patterns based on relative table positions
+        // Calculate relative position between tables
         const dx = this.targetTable.x - this.sourceTable.x;
         const dy = this.targetTable.y - this.sourceTable.y;
         
-        let preferredPairs = [];
+        // Determine optimal connection sides based on table positions
+        let sidePairs = [];
         
-        // Determine preferred connection sides based on relative positions
         if (Math.abs(dx) > Math.abs(dy)) {
             // Tables are more horizontal than vertical
             if (dx > 0) {
                 // Target is to the right
-                preferredPairs.push(["right", "left"]);
-                preferredPairs.push(["top", "top"]);
-                preferredPairs.push(["bottom", "bottom"]);
+                sidePairs = [
+                    ["right", "left"],   // Horizontal connection
+                    ["top", "top"],      // Top parallel
+                    ["bottom", "bottom"], // Bottom parallel
+                    ["right", "top"],     // Alternative angles
+                    ["right", "bottom"],
+                    ["top", "left"],
+                    ["bottom", "left"]
+                ];
             } else {
                 // Target is to the left
-                preferredPairs.push(["left", "right"]);
-                preferredPairs.push(["top", "top"]);
-                preferredPairs.push(["bottom", "bottom"]);
+                sidePairs = [
+                    ["left", "right"],   // Horizontal connection
+                    ["top", "top"],      // Top parallel
+                    ["bottom", "bottom"], // Bottom parallel
+                    ["left", "top"],      // Alternative angles
+                    ["left", "bottom"],
+                    ["top", "right"],
+                    ["bottom", "right"]
+                ];
             }
         } else {
             // Tables are more vertical than horizontal
             if (dy > 0) {
                 // Target is below
-                preferredPairs.push(["bottom", "top"]);
-                preferredPairs.push(["left", "left"]);
-                preferredPairs.push(["right", "right"]);
+                sidePairs = [
+                    ["bottom", "top"],    // Vertical connection
+                    ["left", "left"],     // Left parallel
+                    ["right", "right"],   // Right parallel
+                    ["bottom", "left"],   // Alternative angles
+                    ["bottom", "right"],
+                    ["left", "top"],
+                    ["right", "top"]
+                ];
             } else {
                 // Target is above
-                preferredPairs.push(["top", "bottom"]);
-                preferredPairs.push(["left", "left"]);
-                preferredPairs.push(["right", "right"]);
+                sidePairs = [
+                    ["top", "bottom"],    // Vertical connection
+                    ["left", "left"],     // Left parallel
+                    ["right", "right"],   // Right parallel
+                    ["top", "left"],      // Alternative angles
+                    ["top", "right"],
+                    ["left", "bottom"],
+                    ["right", "bottom"]
+                ];
             }
         }
 
-        // Find the best connection points based on preferred pairs
+        // Find best unused connection points
         let bestPoints = null;
         let bestScore = Infinity;
 
-        for (const [sourceSide, targetSide] of preferredPairs) {
+        for (const [sourceSide, targetSide] of sidePairs) {
             const sourceOptions = sourceGroups[sourceSide];
             const targetOptions = targetGroups[targetSide];
 
             if (!sourceOptions.length || !targetOptions.length) continue;
 
-            // Calculate index-based offsets
-            const baseSpacing = 30; // Base spacing between parallel relationships
-            const offset = relationshipIndex * baseSpacing;
-
-            // Apply offset based on side
             for (const sp of sourceOptions) {
+                const sourceKey = `${sp.position}-${Math.round(sp.y)}`;
+                const sourceUsed = usedPoints.has(sourceKey);
+
                 for (const tp of targetOptions) {
-                    let adjustedSource = { ...sp };
-                    let adjustedTarget = { ...tp };
+                    const targetKey = `${tp.position}-${Math.round(tp.y)}`;
+                    const targetUsed = usedPoints.has(targetKey);
 
-                    // Apply offsets based on connection sides
-                    if (sourceSide === "left" || sourceSide === "right") {
-                        adjustedSource.y += offset;
-                    } else {
-                        adjustedSource.x += offset;
-                    }
+                    // Calculate base score from distance
+                    let score = Math.hypot(tp.x - sp.x, tp.y - sp.y);
 
-                    if (targetSide === "left" || targetSide === "right") {
-                        adjustedTarget.y += offset;
-                    } else {
-                        adjustedTarget.x += offset;
-                    }
+                    // Penalties for used points
+                    if (sourceUsed) score += 1000;
+                    if (targetUsed) score += 1000;
 
-                    const score = Math.hypot(
-                        adjustedTarget.x - adjustedSource.x,
-                        adjustedTarget.y - adjustedSource.y
-                    );
+                    // Prefer points that create more natural paths
+                    const angle = Math.atan2(tp.y - sp.y, tp.x - sp.x);
+                    const idealAngle = sidePairs.indexOf([sourceSide, targetSide]) === 0 ? 0 : Math.PI / 2;
+                    score += Math.abs(angle - idealAngle) * 100;
 
                     if (score < bestScore) {
                         bestScore = score;
-                        bestPoints = { start: adjustedSource, end: adjustedTarget };
+                        bestPoints = { 
+                            start: { ...sp },
+                            end: { ...tp }
+                        };
                     }
                 }
             }
 
-            // If we found points using the current preferred pair, use them
-            if (bestPoints) break;
+            // If we found unused points, use them
+            if (bestPoints && bestScore < 1000) break;
         }
 
+        // If no good unused points found, use simple nearest points
         return bestPoints || this.getSimpleNearestPoints(sourcePoints, targetPoints);
     }
 
