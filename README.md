@@ -1,4 +1,4 @@
-# ERD Designer
+# ERD Designer - Database Diagram Builder
 
 > Open the demo here: https://diagram.4geeks.com/
 
