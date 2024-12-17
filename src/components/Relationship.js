@@ -294,13 +294,14 @@ export class Relationship {
     }
 
     drawOneToMany(ctx, point, angle) {
-        const length = 15;
+        const length = 20; // Increased length
         const spread = Math.PI / 4; // 45 degrees spread
 
         // Ensure angle is aligned to nearest 90 degrees for orthogonal lines
         const normalizedAngle = Math.round(angle / (Math.PI / 2)) * (Math.PI / 2);
         
         // Draw the base line
+        ctx.strokeStyle = "var(--bs-warning)";  // Set to orange
         ctx.moveTo(point.x, point.y);
         ctx.lineTo(
             point.x - length * Math.cos(normalizedAngle),

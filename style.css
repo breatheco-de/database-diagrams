@@ -1,6 +1,6 @@
 :root {
-    --canvas-bg: var(--bs-secondary-bg);
-    --grid-color: rgba(0, 0, 0, 0.1);
+    --canvas-bg: var(--bs-tertiary-bg);
+    --grid-color: rgba(0, 0, 0, 0.15);
 }
 
 body {
