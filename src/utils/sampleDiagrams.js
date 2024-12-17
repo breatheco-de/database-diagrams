@@ -10,9 +10,9 @@ export const sampleDiagrams = {
                     { name: "id", type: "number", isPrimary: true },
                     { name: "departure_time", type: "datetime" },
                     { name: "arrival_time", type: "datetime" },
-                    { name: "aircraft_id", type: "number", isForeignKey: true, references: "Aircraft" },
-                    { name: "departure_airport_id", type: "number", isForeignKey: true, references: "Airport" },
-                    { name: "arrival_airport_id", type: "number", isForeignKey: true, references: "Airport" }
+                    { name: "aircraft_id", type: "number", isForeignKey: true, references: "Aircraft.id" },
+                    { name: "departure_airport_id", type: "number", isForeignKey: true, references: "Airport.id" },
+                    { name: "arrival_airport_id", type: "number", isForeignKey: true, references: "Airport.id" }
                 ]
             },
             {
@@ -24,7 +24,7 @@ export const sampleDiagrams = {
                     { name: "id", type: "number", isPrimary: true },
                     { name: "model", type: "string" },
                     { name: "capacity", type: "number" },
-                    { name: "airline_id", type: "number", isForeignKey: true, references: "Airline" }
+                    { name: "airline_id", type: "number", isForeignKey: true, references: "Airline.id" }
                 ]
             },
             {
@@ -70,19 +70,12 @@ export const sampleDiagrams = {
                 y: 300,
                 attributes: [
                     { name: "id", type: "number", isPrimary: true },
-                    { name: "flight_id", type: "number", isForeignKey: true, references: "Flight" },
-                    { name: "passenger_id", type: "number", isForeignKey: true, references: "Passenger" },
+                    { name: "flight_id", type: "number", isForeignKey: true, references: "Flight.id" },
+                    { name: "passenger_id", type: "number", isForeignKey: true, references: "Passenger.id" },
                     { name: "seat_number", type: "string" },
                     { name: "booking_date", type: "datetime" }
                 ]
             }
-        ],
-        relationships: [
-            { sourceId: "flight", targetId: "aircraft", type: "oneToMany" },
-            { sourceId: "flight", targetId: "airport", type: "oneToMany" },
-            { sourceId: "booking", targetId: "flight", type: "oneToMany" },
-            { sourceId: "booking", targetId: "passenger", type: "oneToMany" },
-            { sourceId: "airline", targetId: "aircraft", type: "oneToMany" }
         ]
     },
     school: {
@@ -97,7 +90,7 @@ export const sampleDiagrams = {
                     { name: "name", type: "string" },
                     { name: "grade_level", type: "number" },
                     { name: "email", type: "string" },
-                    { name: "department_id", type: "number", isForeignKey: true, references: "Department" }
+                    { name: "department_id", type: "number", isForeignKey: true, references: "Department.department_id" }
                 ]
             },
             {
@@ -109,7 +102,7 @@ export const sampleDiagrams = {
                     { name: "course_id", type: "number", isPrimary: true },
                     { name: "title", type: "string" },
                     { name: "credits", type: "number" },
-                    { name: "department_id", type: "number", isForeignKey: true, references: "Department" }
+                    { name: "department_id", type: "number", isForeignKey: true, references: "Department.department_id" }
                 ]
             },
             {
@@ -121,7 +114,7 @@ export const sampleDiagrams = {
                     { name: "teacher_id", type: "number", isPrimary: true },
                     { name: "name", type: "string" },
                     { name: "email", type: "string" },
-                    { name: "department_id", type: "number", isForeignKey: true, references: "Department" }
+                    { name: "department_id", type: "number", isForeignKey: true, references: "Department.department_id" }
                 ]
             },
             {
@@ -142,8 +135,8 @@ export const sampleDiagrams = {
                 y: 300,
                 attributes: [
                     { name: "enrollment_id", type: "number", isPrimary: true },
-                    { name: "student_id", type: "number", isForeignKey: true, references: "Student" },
-                    { name: "course_id", type: "number", isForeignKey: true, references: "Course" },
+                    { name: "student_id", type: "number", isForeignKey: true, references: "Student.student_id" },
+                    { name: "course_id", type: "number", isForeignKey: true, references: "Course.course_id" },
                     { name: "grade", type: "string" },
                     { name: "semester", type: "string" }
                 ]
@@ -155,7 +148,7 @@ export const sampleDiagrams = {
                 y: 300,
                 attributes: [
                     { name: "assignment_id", type: "number", isPrimary: true },
-                    { name: "course_id", type: "number", isForeignKey: true, references: "Course" },
+                    { name: "course_id", type: "number", isForeignKey: true, references: "Course.course_id" },
                     { name: "title", type: "string" },
                     { name: "due_date", type: "datetime" },
                     { name: "total_points", type: "number" }
@@ -186,7 +179,7 @@ export const sampleDiagrams = {
                     { name: "year", type: "number" },
                     { name: "price", type: "number" },
                     { name: "status", type: "string" },
-                    { name: "dealership_id", type: "number", isForeignKey: true, references: "Dealership" }
+                    { name: "dealership_id", type: "number", isForeignKey: true, references: "Dealership.dealership_id" }
                 ]
             },
             {
@@ -211,9 +204,9 @@ export const sampleDiagrams = {
                     { name: "sale_id", type: "number", isPrimary: true },
                     { name: "date", type: "date" },
                     { name: "price", type: "number" },
-                    { name: "car_vin", type: "string", isForeignKey: true, references: "Car" },
-                    { name: "customer_id", type: "number", isForeignKey: true, references: "Customer" },
-                    { name: "salesperson_id", type: "number", isForeignKey: true, references: "Salesperson" }
+                    { name: "car_vin", type: "string", isForeignKey: true, references: "Car.vin" },
+                    { name: "customer_id", type: "number", isForeignKey: true, references: "Customer.customer_id" },
+                    { name: "salesperson_id", type: "number", isForeignKey: true, references: "Salesperson.salesperson_id" }
                 ]
             },
             {
@@ -238,7 +231,7 @@ export const sampleDiagrams = {
                     { name: "name", type: "string" },
                     { name: "email", type: "string" },
                     { name: "phone", type: "string" },
-                    { name: "dealership_id", type: "number", isForeignKey: true, references: "Dealership" }
+                    { name: "dealership_id", type: "number", isForeignKey: true, references: "Dealership.dealership_id" }
                 ]
             },
             {
@@ -248,7 +241,7 @@ export const sampleDiagrams = {
                 y: 500,
                 attributes: [
                     { name: "service_id", type: "number", isPrimary: true },
-                    { name: "car_vin", type: "string", isForeignKey: true, references: "Car" },
+                    { name: "car_vin", type: "string", isForeignKey: true, references: "Car.vin" },
                     { name: "date", type: "date" },
                     { name: "description", type: "string" },
                     { name: "cost", type: "number" }
@@ -277,8 +270,8 @@ export const sampleDiagrams = {
                     { name: "description", type: "string" },
                     { name: "price", type: "number" },
                     { name: "stock", type: "number" },
-                    { name: "category_id", type: "number", isForeignKey: true, references: "Category" },
-                    { name: "supplier_id", type: "number", isForeignKey: true, references: "Supplier" }
+                    { name: "category_id", type: "number", isForeignKey: true, references: "Category.category_id" },
+                    { name: "supplier_id", type: "number", isForeignKey: true, references: "Supplier.supplier_id" }
                 ]
             },
             {
@@ -290,7 +283,7 @@ export const sampleDiagrams = {
                     { name: "category_id", type: "number", isPrimary: true },
                     { name: "name", type: "string" },
                     { name: "description", type: "string" },
-                    { name: "parent_category_id", type: "number", isForeignKey: true, references: "Category" }
+                    { name: "parent_category_id", type: "number", isForeignKey: true, references: "Category.category_id" }
                 ]
             },
             {
@@ -315,7 +308,7 @@ export const sampleDiagrams = {
                     { name: "date", type: "date" },
                     { name: "status", type: "string" },
                     { name: "total", type: "number" },
-                    { name: "customer_id", type: "number", isForeignKey: true, references: "Customer" }
+                    { name: "customer_id", type: "number", isForeignKey: true, references: "Customer.customer_id" }
                 ]
             },
             {
@@ -325,8 +318,8 @@ export const sampleDiagrams = {
                 y: 500,
                 attributes: [
                     { name: "order_item_id", type: "number", isPrimary: true },
-                    { name: "order_id", type: "number", isForeignKey: true, references: "Order" },
-                    { name: "product_id", type: "number", isForeignKey: true, references: "Product" },
+                    { name: "order_id", type: "number", isForeignKey: true, references: "Order.order_id" },
+                    { name: "product_id", type: "number", isForeignKey: true, references: "Product.product_id" },
                     { name: "quantity", type: "number" },
                     { name: "price", type: "number" }
                 ]
@@ -351,8 +344,8 @@ export const sampleDiagrams = {
                 y: 500,
                 attributes: [
                     { name: "review_id", type: "number", isPrimary: true },
-                    { name: "product_id", type: "number", isForeignKey: true, references: "Product" },
-                    { name: "customer_id", type: "number", isForeignKey: true, references: "Customer" },
+                    { name: "product_id", type: "number", isForeignKey: true, references: "Product.product_id" },
+                    { name: "customer_id", type: "number", isForeignKey: true, references: "Customer.customer_id" },
                     { name: "rating", type: "number" },
                     { name: "comment", type: "string" },
                     { name: "date", type: "date" }
