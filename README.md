@@ -1,0 +1,157 @@
+# ERD Designer
+
+A powerful Entity Relationship Diagram (ERD) designer that can be embedded in your web applications. Built with modern web technologies, it provides an intuitive interface for creating and managing database schemas with real-time updates.
+
+## Features
+
+- Interactive diagram creation and editing
+- Support for different relationship types (one-to-one, one-to-many, many-to-many)
+- Arrow-based relationship notation
+- Pan and zoom capabilities
+- Undo/redo functionality
+- Export diagrams as PNG
+- Real-time updates via postMessage
+- iframe integration support
+
+## Embedding the ERD Designer
+
+### Basic Integration
+
+Add the ERD designer to your web application using an iframe:
+
+```html
+<iframe 
+  src="https://your-erd-designer-url?theme=dark&readOnly=false" 
+  width="100%" 
+  height="600px"
+  frameborder="0">
+</iframe>
+```
+
+### Query Parameters
+
+| Parameter | Description | Possible Values | Default |
+|-----------|-------------|-----------------|---------|
+| theme | UI theme preference | 'light', 'dark' | 'dark' |
+| readOnly | Disable editing capabilities | 'true', 'false' | 'false' |
+| initialScale | Initial zoom level | '0.5' to '2.0' | '1.0' |
+| showGrid | Display background grid | 'true', 'false' | 'true' |
+| allowExport | Enable export functionality | 'true', 'false' | 'true' |
+
+### PostMessage Communication
+
+The ERD designer supports bi-directional communication with the parent window using the postMessage API.
+
+#### Sending Messages to ERD Designer
+
+```javascript
+// Load a diagram
+iframe.contentWindow.postMessage({
+  type: 'loadERD',
+  diagram: {
+    tables: [
+      {
+        name: 'Users',
+        x: 100,
+        y: 100,
+        attributes: [
+          { name: 'id', type: 'number', isPrimary: true }
+        ]
+      }
+    ]
+  }
+}, '*');
+
+// Load diagram from URL
+iframe.contentWindow.postMessage({
+  type: 'loadERDFromUrl',
+  url: 'https://your-api.com/diagrams/123'
+}, '*');
+```
+
+#### Receiving Messages from ERD Designer
+
+```javascript
+window.addEventListener('message', (event) => {
+  switch (event.data.type) {
+    case 'erdUpdate':
+      // Diagram was modified
+      console.log('Diagram updated:', event.data.diagram);
+      break;
+    
+    case 'erdLoaded':
+      // Diagram was loaded successfully
+      console.log('Diagram loaded:', event.data.diagram);
+      break;
+      
+    case 'erdError':
+      // An error occurred
+      console.error('ERD error:', event.data.message);
+      break;
+  }
+});
+```
+
+#### Message Types
+
+##### Incoming Messages (Parent → ERD Designer)
+
+| Type | Description | Payload |
+|------|-------------|---------|
+| loadERD | Load diagram directly | `{ diagram: Object }` |
+| loadERDFromUrl | Load diagram from URL | `{ url: String }` |
+
+##### Outgoing Messages (ERD Designer → Parent)
+
+| Type | Description | Payload |
+|------|-------------|---------|
+| erdUpdate | Diagram was modified | `{ diagram: Object, timestamp: String }` |
+| erdLoaded | Diagram loaded successfully | `{ diagram: Object, timestamp: String }` |
+| erdError | Error occurred | `{ message: String, timestamp: String }` |
+
+### Example Diagram Object Structure
+
+```javascript
+{
+  "tables": [
+    {
+      "id": "t1",
+      "name": "Users",
+      "x": 100,
+      "y": 100,
+      "attributes": [
+        {
+          "name": "id",
+          "type": "number",
+          "isPrimary": true
+        },
+        {
+          "name": "email",
+          "type": "string"
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "sourceId": "t1",
+      "targetId": "t2",
+      "type": "oneToMany"
+    }
+  ],
+  "viewState": {
+    "offset": { "x": 0, "y": 0 },
+    "scale": 1.0
+  }
+}
+```
+
+## Development
+
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Start development server: `npm run dev`
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
