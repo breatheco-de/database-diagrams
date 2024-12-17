@@ -320,15 +320,15 @@ export class Relationship {
         // Left foot
         ctx.moveTo(baseEndX, baseEndY);
         ctx.lineTo(
-            baseEndX + footLength * Math.cos(normalizedAngle) + spreadDist * Math.cos(perpAngle),
-            baseEndY + footLength * Math.sin(normalizedAngle) + spreadDist * Math.sin(perpAngle)
+            baseEndX - footLength * Math.cos(normalizedAngle) + spreadDist * Math.cos(perpAngle),
+            baseEndY - footLength * Math.sin(normalizedAngle) + spreadDist * Math.sin(perpAngle)
         );
         
         // Right foot
         ctx.moveTo(baseEndX, baseEndY);
         ctx.lineTo(
-            baseEndX + footLength * Math.cos(normalizedAngle) - spreadDist * Math.cos(perpAngle),
-            baseEndY + footLength * Math.sin(normalizedAngle) - spreadDist * Math.sin(perpAngle)
+            baseEndX - footLength * Math.cos(normalizedAngle) - spreadDist * Math.cos(perpAngle),
+            baseEndY - footLength * Math.sin(normalizedAngle) - spreadDist * Math.sin(perpAngle)
         );
     }
 
