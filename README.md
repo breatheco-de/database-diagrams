@@ -20,23 +20,31 @@ A powerful Entity Relationship Diagram (ERD) designer that can be embedded in yo
 Add the ERD designer to your web application using an iframe:
 
 ```html
-<!-- Basic usage -->
-<iframe 
-  src="https://diagram.4geeks.com?allowExport=png,json" 
-  width="100%" 
-  height="600px"
-  frameborder="0">
-</iframe>
-
 <!-- Read-only mode -->
 <iframe 
-  src="https://diagram.4geeks.com?readOnly=true&theme=dark" 
+  src="https://diagram.4geeks.com"
   width="100%" 
   height="600px"
   frameborder="0">
 </iframe>
+```
 
-<!-- With initial diagram -->
+#### Read-only mode
+
+```html
+<!-- Read-only mode -->
+<iframe 
+  src="https://diagram.4geeks.com/?allowExport=false&readOnly=true&zoomLevel=0.75&diagram=dealership" 
+  width="100%" 
+  height="600px"
+  frameborder="0">
+</iframe>
+```
+
+#### Loading a diagram using postMessage
+
+```html
+<!-- Loading a diagram using postMessage -->
 <iframe id="erdDesigner"
   src="https://diagram.4geeks.com?theme=dark" 
   width="100%" 
@@ -74,9 +82,11 @@ Add the ERD designer to your web application using an iframe:
 |-----------|-------------|-----------------|---------|
 | theme | UI theme preference | 'light', 'dark' | 'dark' |
 | readOnly | Disable editing capabilities | 'true', 'false' | 'false' |
-| initialScale | Initial zoom level | '0.5' to '2.0' | '1.0' |
+| zoomLevel | Initial zoom level | '0.5' to '2.0' | '1.0' |
 | showGrid | Display background grid | 'true', 'false' | 'true' |
-| allowExport | Enable export functionality | 'true', 'false' | 'true' |
+| allowExport | Enable export functionality | 'true', 'false', 'png,json' | 'true' |
+| diagram | Load a specific sample diagram | 'airline', 'school', 'dealership', 'store' | 'school' |
+| allowNew | Control new diagram creation options | 'new,samples,load' or comma-separated subset | all enabled |
 
 ### PostMessage Communication
 
