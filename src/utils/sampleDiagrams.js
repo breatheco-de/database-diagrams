@@ -8,6 +8,12 @@ export async function loadSampleDiagrams() {
             fetch('/samples/store.json').then(r => r.json())
         ]);
 
+        // Process diagrams and add metadata
+        airline.hiddenOnMenu = false;
+        school.hiddenOnMenu = false;
+        dealership.hiddenOnMenu = false;
+        store.hiddenOnMenu = false;
+        
         return {
             airline,
             school,

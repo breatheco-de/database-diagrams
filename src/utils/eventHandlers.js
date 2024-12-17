@@ -105,6 +105,14 @@ function configureToolbar(canvas) {
                 const header = newDropdown.querySelector('.dropdown-header');
                 if (divider) divider.style.display = 'none';
                 if (header) header.style.display = 'none';
+            } else {
+                // Hide samples marked with hiddenOnMenu
+                sampleItems.forEach(item => {
+                    const sampleName = item.dataset.sample;
+                    if (sampleDiagrams[sampleName]?.hiddenOnMenu) {
+                        item.style.display = 'none';
+                    }
+                });
             }
             // Handle load from JSON visibility
             const loadJson = newDropdown.querySelector('#loadJson');
