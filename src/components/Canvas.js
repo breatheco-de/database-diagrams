@@ -143,9 +143,9 @@ export class Canvas {
         return {
             tables: Array.from(this.tables.values()).map(t => t.toJSON()),
             viewState: {
-                offset: this.offset,
-                scale: this.scale,
-                zoomIndex: this.zoomIndex
+                offset: this.offset || { x: 0, y: 0 },
+                scale: this.scale || ZOOM_LEVELS[DEFAULT_ZOOM_INDEX],
+                zoomIndex: this.zoomIndex || DEFAULT_ZOOM_INDEX
             }
         };
     }
@@ -156,11 +156,10 @@ export class Canvas {
         this.history.clear();  // Clear history when loading new diagram
         
         // Load view state if present
-        if (data.viewState) {
-            this.offset = data.viewState.offset || { x: 0, y: 0 };
-            this.scale = data.viewState.scale || 1;
-            this.zoomIndex = data.viewState.zoomIndex || DEFAULT_ZOOM_INDEX;
-        }
+        const viewState = data.viewState || {};
+        this.offset = viewState.offset || { x: 0, y: 0 };
+        this.scale = viewState.scale || ZOOM_LEVELS[DEFAULT_ZOOM_INDEX];
+        this.zoomIndex = viewState.zoomIndex || DEFAULT_ZOOM_INDEX;
         
         // Load tables and create relationships from foreign key references
         if (data.tables) {
