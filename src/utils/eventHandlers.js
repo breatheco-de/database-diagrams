@@ -78,7 +78,13 @@ function configureToolbar(canvas) {
     
     if (isReadOnly) {
         addTableBtn.style.display = "none";
-        if (newDropdown) newDropdown.style.display = "none";
+        // Hide both the dropdown and its parent container in readOnly mode
+        if (newDropdown) {
+            const dropdownParent = newDropdown.parentElement;
+            if (dropdownParent) {
+                dropdownParent.style.display = "none";
+            }
+        }
     } else if (allowNew) {
         const allowedOptions = allowNew.toLowerCase().split(',');
         // Handle "New" button visibility
