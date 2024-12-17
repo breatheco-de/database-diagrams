@@ -295,7 +295,7 @@ export class Relationship {
 
     drawOneToMany(ctx, point, angle) {
         const length = 20; // Increased length
-        const spread = Math.PI / 4; // 45 degrees spread
+        const spread = Math.PI / 6; // 30 degrees spread
 
         // Ensure angle is aligned to nearest 90 degrees for orthogonal lines
         const normalizedAngle = Math.round(angle / (Math.PI / 2)) * (Math.PI / 2);
@@ -308,20 +308,27 @@ export class Relationship {
             point.y - length * Math.sin(normalizedAngle),
         );
 
-        // Draw the crow's foot lines
-        const footX = point.x - (length * 0.7) * Math.cos(normalizedAngle);
-        const footY = point.y - (length * 0.7) * Math.sin(normalizedAngle);
+        // Draw the crow's foot lines - start from the base line end point
+        const baseEndX = point.x - length * Math.cos(normalizedAngle);
+        const baseEndY = point.y - length * Math.sin(normalizedAngle);
         
-        ctx.moveTo(footX, footY);
+        // Calculate perpendicular direction for spread
+        const perpAngle = normalizedAngle + Math.PI / 2;
+        const footLength = length * 0.4; // Length of the foot lines
+        const spreadDist = length * 0.3; // How far to spread the feet
+        
+        // Left foot
+        ctx.moveTo(baseEndX, baseEndY);
         ctx.lineTo(
-            point.x + length * 0.3 * Math.cos(normalizedAngle - spread),
-            point.y + length * 0.3 * Math.sin(normalizedAngle - spread)
+            baseEndX + footLength * Math.cos(normalizedAngle) + spreadDist * Math.cos(perpAngle),
+            baseEndY + footLength * Math.sin(normalizedAngle) + spreadDist * Math.sin(perpAngle)
         );
         
-        ctx.moveTo(footX, footY);
+        // Right foot
+        ctx.moveTo(baseEndX, baseEndY);
         ctx.lineTo(
-            point.x + length * 0.3 * Math.cos(normalizedAngle + spread),
-            point.y + length * 0.3 * Math.sin(normalizedAngle + spread)
+            baseEndX + footLength * Math.cos(normalizedAngle) - spreadDist * Math.cos(perpAngle),
+            baseEndY + footLength * Math.sin(normalizedAngle) - spreadDist * Math.sin(perpAngle)
         );
     }
 
