@@ -8,40 +8,47 @@ async function initializeApplication() {
     
     try {
         // Check for diagram parameter in URL
-        const params = new URLSearchParams(window.location.search);
-        const diagramParam = params.get('diagram');
+        const urlParams = new URLSearchParams(window.location.search);
+        const diagramParam = urlParams.get('diagram');
         
         // Initialize the canvas with diagram from URL, stored data, or default school diagram
         if (diagramParam && SAMPLE_DIAGRAMS.includes(diagramParam)) {
             try {
                 console.log('Loading diagram from URL parameter:', diagramParam);
                 const diagram = await loadSampleDiagram(diagramParam);
-                canvas.loadDiagram(diagram);
-                saveToStorage(canvas.toJSON());
+                if (diagram) {
+                    canvas.loadDiagram(diagram);
+                    saveToStorage(canvas.toJSON());
+                } else {
+                    console.error('Failed to load diagram:', diagramParam);
+                    throw new Error('Failed to load diagram');
+                }
             } catch (error) {
                 console.error('Failed to load diagram from URL:', error);
                 // If URL diagram fails to load, try loading from storage
-                const initialData = loadFromStorage();
-                if (initialData) {
-                    canvas.loadDiagram(initialData);
+                const storedData = loadFromStorage();
+                if (storedData) {
+                    canvas.loadDiagram(storedData);
                 }
             }
         } else {
-            const initialData = loadFromStorage();
-            if (initialData) {
-                canvas.loadDiagram(initialData);
+            // No valid diagram parameter, try loading from storage
+            const storedData = loadFromStorage();
+            if (storedData) {
+                canvas.loadDiagram(storedData);
             } else {
                 try {
                     // Load school diagram as default if no stored data
                     console.log('Loading default school diagram');
                     const defaultDiagram = await loadSampleDiagram('school');
-                    canvas.loadDiagram(defaultDiagram);
-                    // Save to storage so it persists
-                    saveToStorage(canvas.toJSON());
-                    // Update URL to reflect default diagram
-                    const url = new URL(window.location.href);
-                    url.searchParams.set('diagram', 'school');
-                    window.history.replaceState({}, '', url.toString());
+                    if (defaultDiagram) {
+                        canvas.loadDiagram(defaultDiagram);
+                        saveToStorage(canvas.toJSON());
+                        // Update URL to reflect default diagram
+                        const url = new URL(window.location.href);
+                        url.searchParams.set('diagram', 'school');
+                        window.history.replaceState({}, '', url.toString());
+                    }
                 } catch (error) {
                     console.error('Failed to load default diagram:', error);
                 }

@@ -1,4 +1,4 @@
-export const SAMPLE_DIAGRAMS = ['airline', 'school', 'dealership', 'store'];
+export const SAMPLE_DIAGRAMS = ['airline', 'school', 'dealership', 'store', 'database-modeling-lesson'];
 
 // Cache for loaded diagrams
 export let sampleDiagrams = {};
@@ -15,19 +15,44 @@ export async function loadSampleDiagram(name) {
             return sampleDiagrams[name];
         }
 
-        // Load the diagram
-        const response = await fetch(`/samples/${name}.json`);
-        if (!response.ok) {
-            throw new Error(`Failed to load diagram ${name}: ${response.statusText}`);
+        // Load the diagram from possible locations
+        let response = null;
+        let error = null;
+
+        // Try loading from src/utils/samples/json first
+        try {
+            response = await fetch(`/src/utils/samples/json/${name}.json`);
+            if (response.ok) {
+                const data = await response.json();
+                // Set hiddenOnMenu to true by default if not explicitly set
+                data.hiddenOnMenu = data.hiddenOnMenu ?? true;
+                // Cache the loaded diagram
+                sampleDiagrams[name] = data;
+                return data;
+            }
+        } catch (e) {
+            error = e;
         }
 
-        const data = await response.json();
-        // Set hiddenOnMenu to true by default if not explicitly set
-        data.hiddenOnMenu = data.hiddenOnMenu ?? true;
-        
-        // Cache the loaded diagram
-        sampleDiagrams[name] = data;
-        return data;
+        // If that fails, try loading from /samples
+        if (!response?.ok) {
+            try {
+                response = await fetch(`/samples/${name}.json`);
+                if (response.ok) {
+                    const data = await response.json();
+                    // Set hiddenOnMenu to true by default if not explicitly set
+                    data.hiddenOnMenu = data.hiddenOnMenu ?? true;
+                    // Cache the loaded diagram
+                    sampleDiagrams[name] = data;
+                    return data;
+                }
+            } catch (e) {
+                error = e;
+            }
+        }
+
+        // If both attempts fail, throw an error with details
+        throw new Error(`Failed to load diagram ${name}: ${error?.message || response?.statusText || 'Unknown error'}`);
     } catch (error) {
         console.error(`Error loading sample diagram ${name}:`, error);
         throw error;
