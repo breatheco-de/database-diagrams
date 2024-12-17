@@ -321,8 +321,8 @@ export class Relationship {
 
     drawOneToMany(ctx, point, angle) {
         const length = 20; // Base line length
-        const footLength = length * 0.7; // Length of each foot
-        const spread = Math.PI / 4; // 45 degrees spread for natural V shape
+        const footLength = length * 0.6; // Shorter feet for better proportion
+        const spread = Math.PI / 6; // 30 degrees spread for more natural V shape
 
         // Draw the base line
         ctx.strokeStyle = "var(--bs-warning)";  // Set to orange
@@ -331,22 +331,31 @@ export class Relationship {
         const baseEndY = point.y - length * Math.sin(angle);
         ctx.lineTo(baseEndX, baseEndY);
 
-        // Calculate angles for the V shape
-        const leftAngle = angle - spread;
-        const rightAngle = angle + spread;
+        // Calculate the direction vector of the base line
+        const dirX = Math.cos(angle);
+        const dirY = Math.sin(angle);
 
-        // Draw left foot of the crow
+        // Calculate perpendicular vector for creating the V shape
+        const perpX = -dirY;
+        const perpY = dirX;
+
+        // Calculate points for the V shape
+        const footSpread = length * 0.3; // How wide the V spreads
+        const vBaseX = baseEndX + footLength * 0.2 * dirX; // Move V base slightly forward
+        const vBaseY = baseEndY + footLength * 0.2 * dirY;
+
+        // Draw left foot
         ctx.moveTo(baseEndX, baseEndY);
         ctx.lineTo(
-            baseEndX - footLength * Math.cos(leftAngle),
-            baseEndY - footLength * Math.sin(leftAngle)
+            vBaseX + footSpread * perpX,
+            vBaseY + footSpread * perpY
         );
 
-        // Draw right foot of the crow
+        // Draw right foot
         ctx.moveTo(baseEndX, baseEndY);
         ctx.lineTo(
-            baseEndX - footLength * Math.cos(rightAngle),
-            baseEndY - footLength * Math.sin(rightAngle)
+            vBaseX - footSpread * perpX,
+            vBaseY - footSpread * perpY
         );
     }
 
