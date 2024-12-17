@@ -4,6 +4,9 @@ export class Relationship {
         this.targetTable = targetTable;
         this.type = type;
         this.canvas = canvas || sourceTable?.canvas || targetTable?.canvas;
+        this.sourcePoint = null;
+        this.targetPoint = null;
+        this.cachedPath = null;
     }
 
     draw(ctx) {
@@ -33,9 +36,25 @@ export class Relationship {
     }
 
     getPathAvoidingTables(start, end) {
+        // Use cached path if connection points haven't changed
+        if (this.cachedPath && 
+            this.sourcePoint && 
+            this.targetPoint &&
+            this.sourcePoint.x === start.x &&
+            this.sourcePoint.y === start.y &&
+            this.targetPoint.x === end.x &&
+            this.targetPoint.y === end.y) {
+            return this.cachedPath;
+        }
+
+        // Store connection points
+        this.sourcePoint = { ...start };
+        this.targetPoint = { ...end };
+
         // If no canvas or no other tables, return direct path
         if (!this.canvas || this.canvas.tables.size <= 2) {
-            return [start, end];
+            this.cachedPath = [start, end];
+            return this.cachedPath;
         }
 
         const tables = Array.from(this.canvas.tables.values()).filter(
@@ -56,14 +75,16 @@ export class Relationship {
 
         // Calculate path offset based on the number of parallel relationships
         const relationshipIndex = parallelRelationships.indexOf(this);
-        // Increase base offset and alternate sides for better separation
-        const baseOffset = 40; // Increased from 20
-        const offset =
-            relationshipIndex >= 0
-                ? (Math.floor(relationshipIndex / 2) + 1) *
-                  baseOffset *
-                  (relationshipIndex % 2 === 0 ? 1 : -1)
-                : 0;
+        // Use larger base offset and smart positioning
+        const baseOffset = 60; // Increased for better separation
+        let offset = 0;
+
+        if (relationshipIndex >= 0) {
+            // Alternate between sides with increasing distance
+            const side = relationshipIndex % 2 === 0 ? 1 : -1;
+            const distance = Math.floor(relationshipIndex / 2) + 1;
+            offset = baseOffset * distance * side;
+        }
 
         // Adjust start and end points for parallel paths
         const dx = end.x - start.x;
@@ -71,39 +92,32 @@ export class Relationship {
         const angle = Math.atan2(dy, dx);
         const perpAngle = angle + Math.PI / 2;
 
-        // Apply offset with position-based adjustments
-        let offsetStart = {
-            x: start.x + offset * Math.cos(perpAngle),
-            y: start.y + offset * Math.sin(perpAngle),
-            position: start.position,
-        };
+        // Create offset points with position-aware adjustments
+        let offsetStart = { ...start };
+        let offsetEnd = { ...end };
 
-        let offsetEnd = {
-            x: end.x + offset * Math.cos(perpAngle),
-            y: end.y + offset * Math.sin(perpAngle),
-            position: end.position,
-        };
-
-        // Adjust offset based on connection point positions
+        // Apply offset based on connection point positions
         if (start.position === "left" || start.position === "right") {
-            offsetStart.y = start.y;
+            offsetStart.y += offset;
         } else if (start.position === "top" || start.position === "bottom") {
-            offsetStart.x = start.x;
+            offsetStart.x += offset;
         }
 
         if (end.position === "left" || end.position === "right") {
-            offsetEnd.y = end.y;
+            offsetEnd.y += offset;
         } else if (end.position === "top" || end.position === "bottom") {
-            offsetEnd.x = end.x;
+            offsetEnd.x += offset;
         }
 
         // Check if direct path intersects any tables
         if (!this.pathIntersectsTables(offsetStart, offsetEnd, tables)) {
-            return [offsetStart, offsetEnd];
+            this.cachedPath = [offsetStart, offsetEnd];
+            return this.cachedPath;
         }
 
         // Find intermediate points to avoid tables
         const path = this.findPathAroundTables(offsetStart, offsetEnd, tables);
+        this.cachedPath = path;
         return path;
     }
 
@@ -445,19 +459,20 @@ export class Relationship {
                         rel.targetTable.id === this.sourceTable.id)),
         );
 
-        console.log(existingRelationships);
         // Track used connection points
         const usedConnectionPoints = new Set();
         existingRelationships.forEach((rel) => {
             sourcePoints.forEach((sp) => {
                 const key = `${Math.round(sp.x)},${Math.round(sp.y)}`;
                 if (this.isPointNearConnection(sp, rel)) {
+                    console.log("there is a near x connection", key);
                     usedConnectionPoints.add(key);
                 }
             });
             targetPoints.forEach((tp) => {
                 const key = `${Math.round(tp.x)},${Math.round(tp.y)}`;
                 if (this.isPointNearConnection(tp, rel)) {
+                    console.log("there is a near y connection", key);
                     usedConnectionPoints.add(key);
                 }
             });
@@ -525,22 +540,26 @@ export class Relationship {
 
     isPointNearConnection(point, relationship) {
         const tolerance = 5; // pixels
+
         // Check if point is near any of the potential connection points
         const sourcePoints = relationship.sourceTable.getConnectionPoints();
         const targetPoints = relationship.targetTable.getConnectionPoints();
-        
+        console.log("new point", point);
+        console.log("sourcePoints", sourcePoints);
+        console.log("targetPoints", targetPoints);
+
         for (const sp of sourcePoints) {
             if (Math.hypot(point.x - sp.x, point.y - sp.y) < tolerance) {
                 return true;
             }
         }
-        
+
         for (const tp of targetPoints) {
             if (Math.hypot(point.x - tp.x, point.y - tp.y) < tolerance) {
                 return true;
             }
         }
-        
+
         return false;
     }
 
