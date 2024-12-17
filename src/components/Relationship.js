@@ -21,14 +21,14 @@ export class Relationship {
         for (let i = 1; i < pathPoints.length; i++) {
             ctx.lineTo(pathPoints[i].x, pathPoints[i].y);
         }
-        ctx.strokeStyle = "var(--bs-warning)";  // Use Bootstrap's warning color (orange)
+        ctx.strokeStyle = "var(--bs-warning)"; // Use Bootstrap's warning color (orange)
         ctx.lineWidth = 2;
         ctx.stroke();
 
         // Draw crow's foot at the end point
         this.drawCrowFoot(ctx, {
             start: pathPoints[pathPoints.length - 2] || source.start,
-            end: pathPoints[pathPoints.length - 1]
+            end: pathPoints[pathPoints.length - 1],
         });
     }
 
@@ -38,8 +38,9 @@ export class Relationship {
             return [start, end];
         }
 
-        const tables = Array.from(this.canvas.tables.values())
-            .filter(table => table !== this.sourceTable && table !== this.targetTable);
+        const tables = Array.from(this.canvas.tables.values()).filter(
+            (table) => table !== this.sourceTable && table !== this.targetTable,
+        );
 
         // Check if direct path intersects any tables
         if (!this.pathIntersectsTables(start, end, tables)) {
@@ -52,12 +53,12 @@ export class Relationship {
     }
 
     pathIntersectsTables(start, end, tables) {
-        return tables.some(table => {
+        return tables.some((table) => {
             const rect = {
                 left: table.x - 10,
                 right: table.x + table.width + 10,
                 top: table.y - 10,
-                bottom: table.y + table.height + 10
+                bottom: table.y + table.height + 10,
             };
             return this.lineIntersectsRect(start, end, rect);
         });
@@ -66,24 +67,28 @@ export class Relationship {
     lineIntersectsRect(start, end, rect) {
         // Check if line segment intersects with rectangle
         const left = this.lineIntersectsLine(
-            start, end,
-            {x: rect.left, y: rect.top},
-            {x: rect.left, y: rect.bottom}
+            start,
+            end,
+            { x: rect.left, y: rect.top },
+            { x: rect.left, y: rect.bottom },
         );
         const right = this.lineIntersectsLine(
-            start, end,
-            {x: rect.right, y: rect.top},
-            {x: rect.right, y: rect.bottom}
+            start,
+            end,
+            { x: rect.right, y: rect.top },
+            { x: rect.right, y: rect.bottom },
         );
         const top = this.lineIntersectsLine(
-            start, end,
-            {x: rect.left, y: rect.top},
-            {x: rect.right, y: rect.top}
+            start,
+            end,
+            { x: rect.left, y: rect.top },
+            { x: rect.right, y: rect.top },
         );
         const bottom = this.lineIntersectsLine(
-            start, end,
-            {x: rect.left, y: rect.bottom},
-            {x: rect.right, y: rect.bottom}
+            start,
+            end,
+            { x: rect.left, y: rect.bottom },
+            { x: rect.right, y: rect.bottom },
         );
 
         return left || right || top || bottom;
@@ -91,43 +96,50 @@ export class Relationship {
 
     lineIntersectsLine(a, b, c, d) {
         // Returns true if line segments AB and CD intersect
-        const denominator = ((b.x - a.x) * (d.y - c.y)) - ((b.y - a.y) * (d.x - c.x));
+        const denominator =
+            (b.x - a.x) * (d.y - c.y) - (b.y - a.y) * (d.x - c.x);
         if (denominator === 0) return false;
 
-        const ua = (((c.x - a.x) * (d.y - c.y)) - ((c.y - a.y) * (d.x - c.x))) / denominator;
-        const ub = (((c.x - a.x) * (b.y - a.y)) - ((c.y - a.y) * (b.x - a.x))) / denominator;
+        const ua =
+            ((c.x - a.x) * (d.y - c.y) - (c.y - a.y) * (d.x - c.x)) /
+            denominator;
+        const ub =
+            ((c.x - a.x) * (b.y - a.y) - (c.y - a.y) * (b.x - a.x)) /
+            denominator;
 
-        return (ua >= 0 && ua <= 1) && (ub >= 0 && ub <= 1);
+        return ua >= 0 && ua <= 1 && ub >= 0 && ub <= 1;
     }
 
     findPathAroundTables(start, end, tables) {
         // Add padding to avoid tight corners
         const padding = 30;
-        
+
         // Determine the direction of connection points
-        const startPosition = start.position || 'right';
-        const endPosition = end.position || 'left';
-        
+        const startPosition = start.position || "right";
+        const endPosition = end.position || "left";
+
         // Calculate initial direction based on connection points
         let firstDirection, secondDirection;
-        
+
         // Helper function to determine if we should go horizontal first
         const shouldGoHorizontalFirst = () => {
             // If start and end points are aligned vertically, prefer vertical path
             if (Math.abs(start.x - end.x) < padding) return false;
-            
+
             // If points are on opposite sides horizontally, prefer horizontal path
-            if ((startPosition === 'right' && endPosition === 'left') ||
-                (startPosition === 'left' && endPosition === 'right')) {
+            if (
+                (startPosition === "right" && endPosition === "left") ||
+                (startPosition === "left" && endPosition === "right")
+            ) {
                 return true;
             }
-            
+
             // Default to the longer distance
             return Math.abs(end.x - start.x) > Math.abs(end.y - start.y);
         };
-        
+
         const goHorizontal = shouldGoHorizontalFirst();
-        
+
         // Generate path points based on the determined direction
         let pathPoints = [];
         if (goHorizontal) {
@@ -137,7 +149,7 @@ export class Relationship {
                 start,
                 { x: midX, y: start.y },
                 { x: midX, y: end.y },
-                end
+                end,
             ];
         } else {
             // Vertical first
@@ -146,19 +158,25 @@ export class Relationship {
                 start,
                 { x: start.x, y: midY },
                 { x: end.x, y: midY },
-                end
+                end,
             ];
         }
-        
+
         // Check if path intersects with any tables
         let hasIntersection = false;
         for (let i = 0; i < pathPoints.length - 1; i++) {
-            if (this.pathIntersectsTables(pathPoints[i], pathPoints[i + 1], tables)) {
+            if (
+                this.pathIntersectsTables(
+                    pathPoints[i],
+                    pathPoints[i + 1],
+                    tables,
+                )
+            ) {
                 hasIntersection = true;
                 break;
             }
         }
-        
+
         // If there's an intersection, try alternative path
         if (hasIntersection) {
             if (goHorizontal) {
@@ -168,7 +186,7 @@ export class Relationship {
                     start,
                     { x: start.x, y: midY },
                     { x: end.x, y: midY },
-                    end
+                    end,
                 ];
             } else {
                 // Try horizontal first instead
@@ -177,20 +195,26 @@ export class Relationship {
                     start,
                     { x: midX, y: start.y },
                     { x: midX, y: end.y },
-                    end
+                    end,
                 ];
             }
         }
-        
+
         // If still intersecting, add more intermediate points
         hasIntersection = false;
         for (let i = 0; i < pathPoints.length - 1; i++) {
-            if (this.pathIntersectsTables(pathPoints[i], pathPoints[i + 1], tables)) {
+            if (
+                this.pathIntersectsTables(
+                    pathPoints[i],
+                    pathPoints[i + 1],
+                    tables,
+                )
+            ) {
                 hasIntersection = true;
                 break;
             }
         }
-        
+
         if (hasIntersection) {
             // Create a path that goes around using more points
             const dx = end.x - start.x;
@@ -199,40 +223,42 @@ export class Relationship {
             const midX2 = start.x + (dx * 2) / 3;
             const midY1 = start.y + dy / 3;
             const midY2 = start.y + (dy * 2) / 3;
-            
+
             pathPoints = [
                 start,
                 { x: midX1, y: start.y },
                 { x: midX1, y: midY1 },
                 { x: midX2, y: midY2 },
                 { x: midX2, y: end.y },
-                end
+                end,
             ];
         }
-        
+
         return this.simplifyPath(pathPoints);
     }
-    
+
     simplifyPath(path) {
         if (path.length <= 2) return path;
-        
+
         const result = [path[0]];
         let current = path[0];
-        
+
         for (let i = 1; i < path.length - 1; i++) {
             const prev = path[i - 1];
             const next = path[i + 1];
             const point = path[i];
-            
+
             // Skip point if it's collinear with previous and next points
-            if ((point.x === prev.x && point.x === next.x) ||
-                (point.y === prev.y && point.y === next.y)) {
+            if (
+                (point.x === prev.x && point.x === next.x) ||
+                (point.y === prev.y && point.y === next.y)
+            ) {
                 continue;
             }
-            
+
             result.push(point);
         }
-        
+
         result.push(path[path.length - 1]);
         return result;
     }
@@ -241,8 +267,8 @@ export class Relationship {
         let length = 0;
         for (let i = 1; i < path.length; i++) {
             length += Math.hypot(
-                path[i].x - path[i-1].x,
-                path[i].y - path[i-1].y
+                path[i].x - path[i - 1].x,
+                path[i].y - path[i - 1].y,
             );
         }
         return length;
@@ -294,38 +320,33 @@ export class Relationship {
     }
 
     drawOneToMany(ctx, point, angle) {
-        const length = 20; // Increased length
-        const spread = Math.PI / 6; // 30 degrees spread
-        
+        const length = 20; // Base line length
+        const footLength = length * 0.7; // Length of each foot
+        const spread = Math.PI / 4; // 45 degrees spread for natural V shape
+
         // Draw the base line
         ctx.strokeStyle = "var(--bs-warning)";  // Set to orange
         ctx.moveTo(point.x, point.y);
-        ctx.lineTo(
-            point.x - length * Math.cos(angle),
-            point.y - length * Math.sin(angle),
-        );
-
-        // Draw the crow's foot lines - start from the base line end point
         const baseEndX = point.x - length * Math.cos(angle);
         const baseEndY = point.y - length * Math.sin(angle);
-        
-        // Calculate perpendicular direction for spread
-        const perpAngle = angle + Math.PI / 2;
-        const footLength = length * 0.4; // Length of the foot lines
-        const spreadDist = length * 0.3; // How far to spread the feet
-        
-        // Left foot
+        ctx.lineTo(baseEndX, baseEndY);
+
+        // Calculate angles for the V shape
+        const leftAngle = angle - spread;
+        const rightAngle = angle + spread;
+
+        // Draw left foot of the crow
         ctx.moveTo(baseEndX, baseEndY);
         ctx.lineTo(
-            baseEndX - footLength * Math.cos(angle) + spreadDist * Math.cos(perpAngle),
-            baseEndY - footLength * Math.sin(angle) + spreadDist * Math.sin(perpAngle)
+            baseEndX - footLength * Math.cos(leftAngle),
+            baseEndY - footLength * Math.sin(leftAngle)
         );
-        
-        // Right foot
+
+        // Draw right foot of the crow
         ctx.moveTo(baseEndX, baseEndY);
         ctx.lineTo(
-            baseEndX - footLength * Math.cos(angle) - spreadDist * Math.cos(perpAngle),
-            baseEndY - footLength * Math.sin(angle) - spreadDist * Math.sin(perpAngle)
+            baseEndX - footLength * Math.cos(rightAngle),
+            baseEndY - footLength * Math.sin(rightAngle)
         );
     }
 
@@ -353,73 +374,82 @@ export class Relationship {
     getNearestPoints(sourcePoints, targetPoints) {
         let minDistance = Infinity;
         let result = { start: null, end: null };
-        
+
         // Get all existing relationships, or empty array if canvas not available
-        const relationships = this.canvas ? Array.from(this.canvas.relationships) : [];
-        
+        const relationships = this.canvas
+            ? Array.from(this.canvas.relationships)
+            : [];
+
         // Track used incoming points for each table with their relationships
         const usedIncomingPoints = new Map();
-        
+
         // First pass: collect all current connection points usage
-        relationships.forEach(rel => {
+        relationships.forEach((rel) => {
             if (rel !== this) {
                 const targetId = rel.targetTable.id;
                 if (!usedIncomingPoints.has(targetId)) {
                     usedIncomingPoints.set(targetId, new Map());
                 }
-                
+
                 const tablePoints = rel.targetTable.getConnectionPoints();
-                
+
                 // Find the nearest point currently being used by this relationship
                 let nearestPoint = null;
                 let minDist = Infinity;
-                
-                tablePoints.forEach(point => {
+
+                tablePoints.forEach((point) => {
                     const dist = Math.hypot(
-                        point.x - (rel.sourceTable.x + rel.sourceTable.width/2),
-                        point.y - (rel.sourceTable.y + rel.sourceTable.height/2)
+                        point.x -
+                            (rel.sourceTable.x + rel.sourceTable.width / 2),
+                        point.y -
+                            (rel.sourceTable.y + rel.sourceTable.height / 2),
                     );
                     if (dist < minDist) {
                         minDist = dist;
                         nearestPoint = point;
                     }
                 });
-                
+
                 if (nearestPoint) {
                     const pointKey = `${nearestPoint.x},${nearestPoint.y}`;
-                    const relationshipsAtPoint = usedIncomingPoints.get(targetId).get(pointKey) || [];
+                    const relationshipsAtPoint =
+                        usedIncomingPoints.get(targetId).get(pointKey) || [];
                     relationshipsAtPoint.push(rel);
-                    usedIncomingPoints.get(targetId).set(pointKey, relationshipsAtPoint);
+                    usedIncomingPoints
+                        .get(targetId)
+                        .set(pointKey, relationshipsAtPoint);
                 }
             }
         });
 
         // For the current relationship's target table
         const targetId = this.targetTable.id;
-        const currentTablePoints = usedIncomingPoints.get(targetId) || new Map();
-        
+        const currentTablePoints =
+            usedIncomingPoints.get(targetId) || new Map();
+
         // Find the best connection point considering angle and usage
         sourcePoints.forEach((sp) => {
             targetPoints.forEach((tp) => {
                 const pointKey = `${tp.x},${tp.y}`;
-                const relationshipsAtPoint = currentTablePoints.get(pointKey) || [];
+                const relationshipsAtPoint =
+                    currentTablePoints.get(pointKey) || [];
                 const distance = Math.hypot(tp.x - sp.x, tp.y - sp.y);
-                
+
                 // Calculate angle score (prefer points that maintain better angles)
                 const angle = Math.atan2(tp.y - sp.y, tp.x - sp.x);
                 const angleScore = Math.abs(angle % (Math.PI / 2)); // Prefer horizontal/vertical connections
-                
+
                 // Weighted score combining distance and angle
                 const usagePenalty = relationshipsAtPoint.length * 100; // Heavy penalty for used points
                 const totalScore = distance + angleScore * 50 + usagePenalty;
-                
+
                 if (totalScore < minDistance) {
                     minDistance = totalScore;
                     result = { start: sp, end: tp };
                 }
             });
         });
-        
+
         return result;
     }
 
@@ -427,16 +457,19 @@ export class Relationship {
         // Get the actual connection points being used
         const points = this.getNearestPoints(
             this.sourceTable.getConnectionPoints(),
-            this.targetTable.getConnectionPoints()
+            this.targetTable.getConnectionPoints(),
         );
-        
+
         // Calculate distance from point to line segment
         const distanceToSegment = this.pointToLineDistance(
-            x, y,
-            points.start.x, points.start.y,
-            points.end.x, points.end.y
+            x,
+            y,
+            points.start.x,
+            points.start.y,
+            points.end.x,
+            points.end.y,
         );
-        
+
         // Return true if point is within 5 pixels of the line
         return distanceToSegment < 5;
     }
