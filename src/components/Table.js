@@ -6,8 +6,8 @@ export class Table {
         this.name = name;
         this.x = x;
         this.y = y;
-        this.width = 200;
-        this.height = 40;
+        this.width = 250;
+        this.height = 80;
         this.attributes = attributes;
         this.isHovered = false;
         this.isEditingName = false;
@@ -58,8 +58,8 @@ export class Table {
                 const deleteBtn = {
                     x: this.x + this.width - 20,
                     y: this.y + 20,
-                    width: 16,
-                    height: 16,
+                    width: 18,
+                    height: 18,
                 };
                 ctx.fillText("\uf1f8", deleteBtn.x, deleteBtn.y); // fa-trash unicode
             }
@@ -98,9 +98,9 @@ export class Table {
 
             // Draw edit pencil icon - conditionally rendered
             if (!window.isReadOnly) {
-                ctx.font = "14px FontAwesome"; // Only change font for the icon
+                ctx.font = "18px FontAwesome"; // Only change font for the icon
                 ctx.fillStyle = "var(--bs-primary)";
-                ctx.fillText("\uf040", this.x + this.width - 25, yPos); // fa-pencil unicode
+                ctx.fillText("\uf040", this.x + this.width - 35, yPos); // fa-pencil unicode
             }
 
             // Restore font settings
