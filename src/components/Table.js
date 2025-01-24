@@ -201,7 +201,7 @@ export class Table {
     isAddButtonClicked(x, y) {
         const buttonY = this.y + this.height - 15;
         const buttonX = this.x + this.width / 2;
-        const radius = 20;
+        const radius = 10;
         return Math.hypot(x - buttonX, y - buttonY) <= radius;
     }
 
