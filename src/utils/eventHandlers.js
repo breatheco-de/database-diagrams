@@ -546,7 +546,18 @@ export function initializeEventHandlers(canvas) {
                                 table.updateHeight();
                                 canvas.render();
                                 saveToStorage(canvas.toJSON());
-                            }, attribute); // Pass existing attribute data
+                            },
+                            () => {
+                                // Remove the attribute
+                                table.attributes.splice(
+                                    attributeIndex,
+                                    1,
+                                );
+                                table.updateHeight();
+                                canvas.render();
+                                saveToStorage(canvas.toJSON());
+                            },
+                             attribute); // Pass existing attribute data
                             return;
                         }
 
@@ -577,6 +588,10 @@ export function initializeEventHandlers(canvas) {
                             console.log("starting drag...");
                             selectedTable = table;
                             isDragging = true;
+                            canvas.dragStart = {
+                                x: e.clientX - table.x,
+                                y: e.clientY - table.y,
+                            };
                         }
                         return;
                     }
