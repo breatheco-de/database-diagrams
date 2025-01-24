@@ -54,7 +54,7 @@ export class AttributeForm {
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                         <button type="button" class="btn btn-danger" id="deleteAttribute" style="display: none;">Delete</button>
-                        <button type="button" class="btn btn-primary" id="saveAttribute">Add</button>
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="saveAttribute">Add</button>
                     </div>
                 </div>
             </div>
