@@ -53,7 +53,8 @@ export class AttributeForm {
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary" id="saveAttribute">Add</button>
+                        <button type="button" class="btn btn-danger" id="deleteAttribute" style="display: none;">Delete</button>
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="saveAttribute">Add</button>
                     </div>
                 </div>
             </div>
@@ -62,9 +63,10 @@ export class AttributeForm {
         return modal;
     }
 
-    show(onSave, existingAttribute = null) {
+    show(onSave, onDelete, existingAttribute = null) {
         const modal = new bootstrap.Modal(this.modal);
         const saveBtn = this.modal.querySelector('#saveAttribute');
+        const deleteBtn = this.modal.querySelector('#deleteAttribute');
         const form = this.modal.querySelector('#attributeForm');
         const modalTitle = this.modal.querySelector('.modal-title');
         const referencesField = this.modal.querySelector('#referencesField');
@@ -74,6 +76,7 @@ export class AttributeForm {
         // Update modal title and button text based on mode
         modalTitle.textContent = existingAttribute ? 'Edit Attribute' : 'Add Attribute';
         saveBtn.textContent = existingAttribute ? 'Save Changes' : 'Add';
+        deleteBtn.style.display = existingAttribute ? 'block' : 'none';
 
         // Add delete relationship handler
         if (deleteRelationshipBtn && existingAttribute?.isForeignKey) {
@@ -156,7 +159,14 @@ export class AttributeForm {
             }
         };
 
+        const handleDelete = () => {
+            onDelete(existingAttribute);
+            modal.hide();
+            form.reset();
+        };
+
         saveBtn.onclick = handleSave;
+        deleteBtn.onclick = handleDelete;
         modal.show();
     }
 }
