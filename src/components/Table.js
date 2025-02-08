@@ -58,8 +58,8 @@ export class Table {
                 const deleteBtn = {
                     x: this.x + this.width - 20,
                     y: this.y + 20,
-                    width: 18,
-                    height: 18,
+                    width: 16,
+                    height: 16,
                 };
                 ctx.fillText("\uf1f8", deleteBtn.x, deleteBtn.y); // fa-trash unicode
             }
@@ -199,9 +199,9 @@ export class Table {
     }
 
     isAddButtonClicked(x, y) {
-        const buttonY = this.y + this.height - 35;
+        const buttonY = this.y + this.height - 20;
         const buttonX = this.x + this.width / 2;
-        const radius = 10;
+        const radius = 12;
         return Math.hypot(x - buttonX, y - buttonY) <= radius;
     }
 
