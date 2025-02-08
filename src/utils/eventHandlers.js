@@ -580,20 +580,20 @@ export function initializeEventHandlers(canvas) {
                         }
 
                      
-                        // if (
-                        //     !isIconClicked &&
-                        //     !isAddButtonClicked &&
-                        //     !isDeleteButtonClicked
-                        // ) {
-                        //     console.log("starting drag...");
-                        //     selectedTable = table;
-                        //     isDragging = true;
-                        //     canvas.dragStart = {
-                        //         x: e.clientX - table.x,
-                        //         y: e.clientY - table.y,
-                        //     };
-                        // }
-                        // return;
+                        if (
+                            !isIconClicked &&
+                            !isAddButtonClicked &&
+                            !isDeleteButtonClicked
+                        ) {
+                            console.log("starting drag...");
+                            selectedTable = table;
+                            isDragging = true;
+                            canvas.dragStart = {
+                                x: e.clientX - table.x,
+                                y: e.clientY - table.y,
+                            };
+                            return;
+                        }
                     }
                 });
 
