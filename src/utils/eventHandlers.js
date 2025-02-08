@@ -474,7 +474,7 @@ export function initializeEventHandlers(canvas) {
                             return;
                         }
 
-                        isDeleteButtonClicked = isDeleteButtonClicked || table.isDeleteButtonClicked(pos.x, pos.y);
+                        isDeleteButtonClicked = table.isDeleteButtonClicked(pos.x, pos.y);
                         // Check if clicking delete button (trash icon)
                         if (
                             pos.x >= table.x + table.width - 30 &&

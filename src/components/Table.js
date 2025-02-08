@@ -56,10 +56,10 @@ export class Table {
                 ctx.font = "14px FontAwesome";
                 ctx.textAlign = "center";
                 const deleteBtn = {
-                    x: this.x + this.width - 20,
-                    y: this.y + 20,
-                    width: 16,
-                    height: 16,
+                    x: this.x + this.width - 30,
+                    y: this.y + 25,
+                    width: 18,
+                    height: 18,
                 };
                 ctx.fillText("\uf1f8", deleteBtn.x, deleteBtn.y); // fa-trash unicode
             }
@@ -209,14 +209,19 @@ export class Table {
         const deleteBtn = {
             x: this.x + this.width - 20,
             y: this.y + 20,
-            width: 16,
-            height: 16,
+            width: 18,
+            height: 18,
         };
+        const padding = 10; 
         return (
-            x >= deleteBtn.x - 8 &&
-            x <= deleteBtn.x + 8 &&
-            y >= deleteBtn.y - 8 &&
-            y <= deleteBtn.y + 8
+            x >= deleteBtn.x - padding &&
+            x <= deleteBtn.x + deleteBtn.width + padding &&
+            y >= deleteBtn.y - padding &&
+            y <= deleteBtn.y + deleteBtn.height + padding
+            // x >= deleteBtn.x - 8 &&
+            // x <= deleteBtn.x + 8 &&
+            // y >= deleteBtn.y - 8 &&
+            // y <= deleteBtn.y + 8
         );
     }
 
