@@ -434,20 +434,33 @@ export function initializeEventHandlers(canvas) {
 
                 // Check if clicking on a table
                 canvas.tables.forEach((table) => {
-                    const attributeIndex = table.isEditIconClicked(
-                        pos.x,
-                        pos.y,
-                    );
-                    isIconClicked = isIconClicked || attributeIndex !== -1;
-                    isAddButtonClicked =
-                        isAddButtonClicked ||
-                        table.isAddButtonClicked(pos.x, pos.y);
-                    isDeleteButtonClicked =
-                        isDeleteButtonClicked ||
-                        table.isDeleteButtonClicked(pos.x, pos.y);
 
                     if (table.containsPoint(pos.x, pos.y)) {
-                        // First check connection points
+
+                        isAddButtonClicked = table.isAddButtonClicked(pos.x, pos.y);
+                        // Check if clicking add attribute button
+                        if (isAddButtonClicked) {
+                            attributeForm.show((attribute) => {
+                                if (!attribute) return;
+                                const command = createAddAttributeCommand(
+                                    table,
+                                    {
+                                        name: attribute.name,
+                                        type: attribute.type,
+                                        isPrimary: attribute.isPrimary,
+                                    },
+                                );
+                                
+                                canvas.history.execute(command);
+                                canvas.render();
+                                saveToStorage(canvas.toJSON());
+                                updateUndoRedoButtons();
+                            });
+                            return;
+                        }
+
+
+                        // Check connection points
                         const connectionPoint = findNearestConnectionPoint(
                             table,
                             pos,
@@ -461,6 +474,7 @@ export function initializeEventHandlers(canvas) {
                             return;
                         }
 
+                        isDeleteButtonClicked = table.isDeleteButtonClicked(pos.x, pos.y);
                         // Check if clicking delete button (trash icon)
                         if (
                             pos.x >= table.x + table.width - 30 &&
@@ -516,7 +530,11 @@ export function initializeEventHandlers(canvas) {
                             return;
                         }
 
-                        // Check if clicking edit icon
+                    
+                    const attributeIndex = table.isEditIconClicked(pos.x, pos.y);
+                    isIconClicked = isIconClicked || attributeIndex !== -1;
+                      
+                        // // Check if clicking edit icon
                         if (isIconClicked) {
                             const attribute = table.attributes[attributeIndex];
                             attributeForm.show((updatedAttribute) => {
@@ -561,25 +579,7 @@ export function initializeEventHandlers(canvas) {
                             return;
                         }
 
-                        // Check if clicking add attribute button
-                        if (isAddButtonClicked) {
-                            attributeForm.show((attribute) => {
-                                const command = createAddAttributeCommand(
-                                    table,
-                                    {
-                                        name: attribute.name,
-                                        type: attribute.type,
-                                        isPrimary: attribute.isPrimary,
-                                    },
-                                );
-                                canvas.history.execute(command);
-                                canvas.render();
-                                saveToStorage(canvas.toJSON());
-                                updateUndoRedoButtons();
-                            });
-                            return;
-                        }
-
+                     
                         if (
                             !isIconClicked &&
                             !isAddButtonClicked &&
@@ -592,8 +592,8 @@ export function initializeEventHandlers(canvas) {
                                 x: e.clientX - table.x,
                                 y: e.clientY - table.y,
                             };
+                            return;
                         }
-                        return;
                     }
                 });
 
