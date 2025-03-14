@@ -225,8 +225,8 @@ export class Table {
         );
     }
 
-    addAttribute(name, type = "string", isPrimary = false) {
-        this.attributes.push({ name, type, isPrimary });
+    addAttribute(name, type = "string", isPrimary = false, isForeignKey = false, references = null) {
+        this.attributes.push({ name, type, isPrimary, isForeignKey, references });
         this.updateHeight();
     }
 

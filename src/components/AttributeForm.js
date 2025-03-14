@@ -139,6 +139,11 @@ export class AttributeForm {
             referencesField.style.display = 'none';
         }
 
+        // Enable foreign key checkbox when a type is selected
+        this.modal.querySelector('#attrType').addEventListener('change', (e) => {
+            foreignKeyCheckbox.disabled = !e.target.value;
+        });
+
         const handleSave = () => {
             const name = this.modal.querySelector('#attrName').value;
             const type = this.modal.querySelector('#attrType').value;
